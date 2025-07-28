@@ -3,8 +3,26 @@
 #include <iostream>
 
 namespace Engine {
-	void PrintMessage()
+	void Engine::SetUp()
 	{
-		std::cout << "Hello World!" << std::endl;
+	}
+
+	void Engine::Terminate()
+	{
+
+	}
+
+	void Engine::Step()
+	{
+
+	}
+
+	void Engine::Test()
+	{
+
+	}
+	void Engine::Test1()
+	{
+
 	}
 }

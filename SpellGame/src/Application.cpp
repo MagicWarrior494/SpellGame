@@ -1,7 +1,10 @@
-#include "Constructor.h"
-
 
 int main()
 {
-	Engine::PrintMessage();
+	/*
+	Load Settings File
+	Create Engine()
+	LoadWorld()
+	RunWorld()
+	*/
 }
