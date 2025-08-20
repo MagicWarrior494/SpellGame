@@ -158,16 +158,14 @@ namespace Vulkan {
 			RenderSurface& surface = it->second->renderSurface;
 			if (glfwWindowShouldClose(surface.vulkanSurface.p_GLFWWindow)) {
 				CloseVulkanRenderSurface(vulkanCore, surface.vulkanSurface);
-				windows.erase(it);
-				if (windows.size() == 0)
-					return;
+				it = windows.erase(it);
 			}
 			else {
 				it++;
 			}
 		}
-		for (size_t i = 0; i < windows.size(); i++) {
-			RenderSurface& surface = windows[i]->renderSurface;
+		for (auto it = windows.begin(); it != windows.end(); it++) {
+			RenderSurface& surface = it->second->renderSurface;
 			if (surface.resized) {
 				int width = 0, height = 0;
 				glfwGetFramebufferSize(surface.vulkanSurface.p_GLFWWindow, &width, &height);
