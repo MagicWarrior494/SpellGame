@@ -80,18 +80,20 @@ namespace Vulkan {
 
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 	{
-		Window* window = static_cast<Window*>(glfwGetWindowUserPointer(window));
+		Window* windowObj = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
 		KeySet keyset{};
 		keyset.keys.push_back(key);
+		windowObj->keysets.push_back(keyset);
 
 	}
 
 	static void mouseButton_callback(GLFWwindow* window, int mouseButton, int action, int mods)
 	{
-		Window* window = static_cast<Window*>(glfwGetWindowUserPointer(window));
+		Window* windowObj = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
 		KeySet keyset{};
 		keyset.mouseButtons.push_back(mouseButton);
+		windowObj->keysets.push_back(keyset);
 	}
 }

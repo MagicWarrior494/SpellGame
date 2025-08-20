@@ -45,9 +45,6 @@
     <ClInclude Include="src\Engine.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\Event\EventController.h">
-      <Filter>src\Event</Filter>
-    </ClInclude>
     <ClInclude Include="src\Render\RenderingController.h">
       <Filter>src\Render</Filter>
     </ClInclude>
@@ -60,10 +57,6 @@
     <ClInclude Include="src\World\WorldController.h">
       <Filter>src\World</Filter>
     </ClInclude>
-    <ClInclude Include="src\Event\Io\KeyCodes.h" />
-    <ClInclude Include="src\Event\Io\KeyInputData.h" />
-    <ClInclude Include="src\Event\Io\EventData.h" />
-    <ClInclude Include="src\Event\Io\ConversionData.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dependencies\ImGui\imgui.cpp">
@@ -83,9 +76,6 @@
     </ClCompile>
     <ClCompile Include="src\Engine.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Event\EventController.cpp">
-      <Filter>src\Event</Filter>
     </ClCompile>
     <ClCompile Include="src\Render\RenderingController.cpp">
       <Filter>src\Render</Filter>

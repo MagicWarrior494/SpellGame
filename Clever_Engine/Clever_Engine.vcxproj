@@ -109,11 +109,6 @@
     <ClInclude Include="Dependencies\ImGui\imstb_textedit.h" />
     <ClInclude Include="Dependencies\ImGui\imstb_truetype.h" />
     <ClInclude Include="src\Engine.h" />
-    <ClInclude Include="src\Event\EventController.h" />
-    <ClInclude Include="src\Event\Io\ConversionData.h" />
-    <ClInclude Include="src\Event\Io\EventData.h" />
-    <ClInclude Include="src\Event\Io\KeyCodes.h" />
-    <ClInclude Include="src\Event\Io\KeyInputData.h" />
     <ClInclude Include="src\Render\RenderingController.h" />
     <ClInclude Include="src\Render\Window\Window.h" />
     <ClInclude Include="src\Render\Window\WindowManager.h" />
@@ -126,7 +121,6 @@
     <ClCompile Include="Dependencies\ImGui\imgui_tables.cpp" />
     <ClCompile Include="Dependencies\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="src\Engine.cpp" />
-    <ClCompile Include="src\Event\EventController.cpp" />
     <ClCompile Include="src\Render\RenderingController.cpp" />
     <ClCompile Include="src\Render\Window\Window.cpp" />
     <ClCompile Include="src\Render\Window\WindowManager.cpp" />
