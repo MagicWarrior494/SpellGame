@@ -16,27 +16,30 @@
     <Filter Include="src\Render">
       <UniqueIdentifier>{FC94E62B-E84C-2879-5154-01D53D2BC369}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Render\Window">
+      <UniqueIdentifier>{63AE91A1-CFC4-8F37-183C-1B59849160BF}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\World">
       <UniqueIdentifier>{A43321B4-109E-D52A-59DC-86D0C585B37F}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Dependencies\ImGui\imconfig.h">
+    <ClInclude Include="Dependencies\ImGui\imconfig.h">
       <Filter>Dependencies\ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="..\Dependencies\ImGui\imgui.h">
+    <ClInclude Include="Dependencies\ImGui\imgui.h">
       <Filter>Dependencies\ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="..\Dependencies\ImGui\imgui_internal.h">
+    <ClInclude Include="Dependencies\ImGui\imgui_internal.h">
       <Filter>Dependencies\ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="..\Dependencies\ImGui\imstb_rectpack.h">
+    <ClInclude Include="Dependencies\ImGui\imstb_rectpack.h">
       <Filter>Dependencies\ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="..\Dependencies\ImGui\imstb_textedit.h">
+    <ClInclude Include="Dependencies\ImGui\imstb_textedit.h">
       <Filter>Dependencies\ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="..\Dependencies\ImGui\imstb_truetype.h">
+    <ClInclude Include="Dependencies\ImGui\imstb_truetype.h">
       <Filter>Dependencies\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="src\Engine.h">
@@ -48,24 +51,34 @@
     <ClInclude Include="src\Render\RenderingController.h">
       <Filter>src\Render</Filter>
     </ClInclude>
+    <ClInclude Include="src\Render\Window\Window.h">
+      <Filter>src\Render\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Render\Window\WindowManager.h">
+      <Filter>src\Render\Window</Filter>
+    </ClInclude>
     <ClInclude Include="src\World\WorldController.h">
       <Filter>src\World</Filter>
     </ClInclude>
+    <ClInclude Include="src\Event\Io\KeyCodes.h" />
+    <ClInclude Include="src\Event\Io\KeyInputData.h" />
+    <ClInclude Include="src\Event\Io\EventData.h" />
+    <ClInclude Include="src\Event\Io\ConversionData.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Dependencies\ImGui\imgui.cpp">
+    <ClCompile Include="Dependencies\ImGui\imgui.cpp">
       <Filter>Dependencies\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="..\Dependencies\ImGui\imgui_demo.cpp">
+    <ClCompile Include="Dependencies\ImGui\imgui_demo.cpp">
       <Filter>Dependencies\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="..\Dependencies\ImGui\imgui_draw.cpp">
+    <ClCompile Include="Dependencies\ImGui\imgui_draw.cpp">
       <Filter>Dependencies\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="..\Dependencies\ImGui\imgui_tables.cpp">
+    <ClCompile Include="Dependencies\ImGui\imgui_tables.cpp">
       <Filter>Dependencies\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="..\Dependencies\ImGui\imgui_widgets.cpp">
+    <ClCompile Include="Dependencies\ImGui\imgui_widgets.cpp">
       <Filter>Dependencies\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="src\Engine.cpp">
@@ -76,6 +89,12 @@
     </ClCompile>
     <ClCompile Include="src\Render\RenderingController.cpp">
       <Filter>src\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Render\Window\Window.cpp">
+      <Filter>src\Render\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Render\Window\WindowManager.cpp">
+      <Filter>src\Render\Window</Filter>
     </ClCompile>
     <ClCompile Include="src\World\WorldController.cpp">
       <Filter>src\World</Filter>

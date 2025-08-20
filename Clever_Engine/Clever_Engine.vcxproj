@@ -55,11 +55,11 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>src;..\Dependencies\ImGui;..\Dependencies\glm;..\Dependencies\stb_image;..\Dependencies\tinyobjloader;..\Dependencies\spdlog\include;C:\VulkanSDK\1.3.231.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;Dependencies\glm\glm;Dependencies\stb_image;Dependencies\tinyobjloader;Dependencies\spdlog\include\spdlog;Dependencies\ImGui;Dependencies\GLFW\include;C:\VulkanSDK\1.3.231.1\Include;Vulkan\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -67,8 +67,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.231.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>Dependencies\GLFW\lib-vc2022;C:\VulkanSDK\1.3.231.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
     <PreBuildEvent>
       <Command>IF NOT EXIST Docs (mkdir Docs)</Command>
@@ -81,14 +81,14 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>src;..\Dependencies\ImGui;..\Dependencies\glm;..\Dependencies\stb_image;..\Dependencies\tinyobjloader;..\Dependencies\spdlog\include;C:\VulkanSDK\1.3.231.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;Dependencies\glm\glm;Dependencies\stb_image;Dependencies\tinyobjloader;Dependencies\spdlog\include\spdlog;Dependencies\ImGui;Dependencies\GLFW\include;C:\VulkanSDK\1.3.231.1\Include;Vulkan\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -97,32 +97,45 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.231.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>Dependencies\GLFW\lib-vc2022;C:\VulkanSDK\1.3.231.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\Dependencies\ImGui\imconfig.h" />
-    <ClInclude Include="..\Dependencies\ImGui\imgui.h" />
-    <ClInclude Include="..\Dependencies\ImGui\imgui_internal.h" />
-    <ClInclude Include="..\Dependencies\ImGui\imstb_rectpack.h" />
-    <ClInclude Include="..\Dependencies\ImGui\imstb_textedit.h" />
-    <ClInclude Include="..\Dependencies\ImGui\imstb_truetype.h" />
+    <ClInclude Include="Dependencies\ImGui\imconfig.h" />
+    <ClInclude Include="Dependencies\ImGui\imgui.h" />
+    <ClInclude Include="Dependencies\ImGui\imgui_internal.h" />
+    <ClInclude Include="Dependencies\ImGui\imstb_rectpack.h" />
+    <ClInclude Include="Dependencies\ImGui\imstb_textedit.h" />
+    <ClInclude Include="Dependencies\ImGui\imstb_truetype.h" />
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\Event\EventController.h" />
+    <ClInclude Include="src\Event\Io\ConversionData.h" />
+    <ClInclude Include="src\Event\Io\EventData.h" />
+    <ClInclude Include="src\Event\Io\KeyCodes.h" />
+    <ClInclude Include="src\Event\Io\KeyInputData.h" />
     <ClInclude Include="src\Render\RenderingController.h" />
+    <ClInclude Include="src\Render\Window\Window.h" />
+    <ClInclude Include="src\Render\Window\WindowManager.h" />
     <ClInclude Include="src\World\WorldController.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Dependencies\ImGui\imgui.cpp" />
-    <ClCompile Include="..\Dependencies\ImGui\imgui_demo.cpp" />
-    <ClCompile Include="..\Dependencies\ImGui\imgui_draw.cpp" />
-    <ClCompile Include="..\Dependencies\ImGui\imgui_tables.cpp" />
-    <ClCompile Include="..\Dependencies\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="Dependencies\ImGui\imgui.cpp" />
+    <ClCompile Include="Dependencies\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="Dependencies\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="Dependencies\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="Dependencies\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="src\Engine.cpp" />
     <ClCompile Include="src\Event\EventController.cpp" />
     <ClCompile Include="src\Render\RenderingController.cpp" />
+    <ClCompile Include="src\Render\Window\Window.cpp" />
+    <ClCompile Include="src\Render\Window\WindowManager.cpp" />
     <ClCompile Include="src\World\WorldController.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Vulkan\Vulkan.vcxproj">
+      <Project>{D6EAFCD8-C28C-27AF-AB47-3B039788AEFF}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

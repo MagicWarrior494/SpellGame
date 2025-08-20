@@ -1,3 +1,4 @@
+#include "Engine.h"
 
 int main()
 {
@@ -7,4 +8,7 @@ int main()
 	LoadWorld()
 	RunWorld()
 	*/
+	Engine::Engine engine{};
+	engine.SetUp();
+	engine.Terminate();
 }

@@ -1,24 +1,35 @@
 #pragma once
-#include "Event/EventController.h"
-#include "Render/RenderingController.h"
-#include "World/WorldController.h"
+
+#include "Context/VulkanContext.h"
+
+#include "Render/Window/WindowManager.h"
+
+#include <stdexcept>
+#include <string>
 
 namespace Engine {
 
-	class Engine 
+	class Engine
 	{
 	public:
-		void SetUp();
-		void Terminate();
+		/*
+		This is the INIT for the Engine, It takes a file path which contains JSON data about anything the engine would like
+		to remember from run to run. Like How many windows, window positions, file locations for model and texture data,
+		Optimization for different Vulkan object and stuff like that.
+		This is not The WORLD SCENE DATA, nothing about the in world object themselves.
+		*/
+		Engine();
 
-		//TODO: Add ticking, so calling Step is not required but all per frame updates get added to a 
-		//      queue to be processed next(or subsequent) frame(s)
-		void Step();
-		void Test();
-		void Test1();
+		void SetUp(std::string setUpFilePath);
+
+		//Default Setup
+		void SetUp();
+
+
+		void Terminate();
 	private:
-		/*RenderingController renderingController;
-		EventController eventController;*/
-		WorldController worldController;
+		std::string m_SetUpFilePath;
+		WindowManager windowManager;
+		std::shared_ptr<Vulkan::VulkanContext> vulkanContext;
 	};
 }
