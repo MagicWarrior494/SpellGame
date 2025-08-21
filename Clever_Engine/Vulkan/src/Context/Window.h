@@ -2,7 +2,10 @@
 
 #include "ContextVulkanData.h"
 #include "Surface/SurfaceFlags.h"
+
+#include <vector>
 #include <memory>
+#include <string>
 
 namespace Vulkan {
 	struct RenderSurface
@@ -16,6 +19,19 @@ namespace Vulkan {
 	{
 		std::vector<int> keys;
 		std::vector<int> mouseButtons;
+
+		std::string to_string() {
+			std::string return_string;
+			for (int key : keys)
+			{
+				return_string += std::to_string(key) + " ";
+			}
+			for (int mouseButton : mouseButtons)
+			{
+				return_string += std::to_string(mouseButton) + " ";
+			}
+			return return_string;
+		}
 	};
 
 	class Window {
@@ -26,6 +42,8 @@ namespace Vulkan {
 		std::vector<KeySet> keysets;
 
 		Window(std::shared_ptr<VulkanCore> core, SurfaceFlags flags);
+
+		void ClearKeySets();
 
 		void InitWindow(int width, int height, std::string title, int posx, int posy);  // Initialize window and OpenGL context
 		void CloseWindow();                                         // Close window and unload OpenGL context

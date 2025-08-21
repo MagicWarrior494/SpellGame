@@ -36,7 +36,6 @@ namespace Engine {
 		//Event::EventSystem ES{};
 
 		windowManager.CreateNewWindow();
-		windowManager.CreateNewWindow();
 
 		while (true)
 		{

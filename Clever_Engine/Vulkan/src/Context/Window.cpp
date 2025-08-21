@@ -50,4 +50,9 @@ namespace Vulkan {
 		glfwSetKeyCallback(vulkanSurface.p_GLFWWindow, key_callback);
 		glfwSetMouseButtonCallback(vulkanSurface.p_GLFWWindow, mouseButton_callback);
 	}
+
+	void Window::ClearKeySets()
+	{
+		keysets.clear();
+	}
 }

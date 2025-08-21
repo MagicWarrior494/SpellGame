@@ -150,7 +150,7 @@ namespace Vulkan {
 
 	void VulkanContext::Update()
 	{
-		if (windows.size() == 0)
+		if (windows.empty())
 			return;
 
 		glfwPollEvents();
@@ -184,6 +184,15 @@ namespace Vulkan {
 				CreateFrameBuffers(vulkanCore, surface.vulkanSurface, surface.flags);
 				surface.resized = false;
 			}
+		}
+
+		for (auto it = windows.begin(); it != windows.end(); it++) {
+			std::vector<KeySet>& keysets = it->second->keysets;
+			for (auto keyset : keysets)
+			{
+				std::cout << keyset.to_string() << std::endl;
+			}
+			it->second->ClearKeySets();
 		}
 	}
 
