@@ -112,6 +112,10 @@
     <ClInclude Include="src\Event\EventController.h" />
     <ClInclude Include="src\Event\Io\ConversionData.h" />
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+    <ClInclude Include="src\Event\Io\EventData.h" />
+>>>>>>> Stashed changes
 =======
     <ClInclude Include="src\Event\Io\EventData.h" />
 >>>>>>> Stashed changes
