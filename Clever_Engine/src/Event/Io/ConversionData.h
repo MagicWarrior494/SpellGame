@@ -319,16 +319,38 @@ static std::unordered_map<int, std::string> keyboardCleverToStringName
 	{Keyboard::KEY_RIGHT_ALT		,	"RIGHT_ALT"	}
 };
 
-static std::unordered_map<int, int> mouseGLFWtoCleverButtonCodes
+static std::unordered_map<int, int> mouseGLFWtoCleverKeyCodes
 {
 	{GLFW_MOUSE_BUTTON_1, Mouse::BUTTON_1},
 	{GLFW_MOUSE_BUTTON_2, Mouse::BUTTON_2},
-	{GLFW_MOUSE_BUTTON_3, Mouse::BUTTON_3}
+	{GLFW_MOUSE_BUTTON_3, Mouse::BUTTON_3},
+	{GLFW_MOUSE_BUTTON_4, Mouse::BUTTON_4},
+	{GLFW_MOUSE_BUTTON_5, Mouse::BUTTON_5},
+	{GLFW_MOUSE_BUTTON_6, Mouse::BUTTON_6},
+	{GLFW_MOUSE_BUTTON_7, Mouse::BUTTON_7},
+	{GLFW_MOUSE_BUTTON_8, Mouse::BUTTON_8}
 };
 
-static std::unordered_map<int, int> mouseClevertoGLFWButtonCodes
+static std::unordered_map<int, int> mouseCleverToGLFWKeyCodes
 {
 	{Mouse::BUTTON_1, GLFW_MOUSE_BUTTON_1},
 	{Mouse::BUTTON_2, GLFW_MOUSE_BUTTON_2},
-	{Mouse::BUTTON_3, GLFW_MOUSE_BUTTON_3}
+	{Mouse::BUTTON_3, GLFW_MOUSE_BUTTON_3},
+	{Mouse::BUTTON_4, GLFW_MOUSE_BUTTON_4},
+	{Mouse::BUTTON_5, GLFW_MOUSE_BUTTON_5},
+	{Mouse::BUTTON_6, GLFW_MOUSE_BUTTON_6},
+	{Mouse::BUTTON_7, GLFW_MOUSE_BUTTON_7},
+	{Mouse::BUTTON_8, GLFW_MOUSE_BUTTON_8}
+};
+
+static std::unordered_map<int, std::string> mouseCleverToStringName
+{
+	{Mouse::BUTTON_1, "BUTTON_1"},
+	{Mouse::BUTTON_2, "BUTTON_2"},
+	{Mouse::BUTTON_3, "BUTTON_3"},
+	{Mouse::BUTTON_4, "BUTTON_4"},
+	{Mouse::BUTTON_5, "BUTTON_5"},
+	{Mouse::BUTTON_6, "BUTTON_6"},
+	{Mouse::BUTTON_7, "BUTTON_7"},
+	{Mouse::BUTTON_8, "BUTTON_8"}
 };

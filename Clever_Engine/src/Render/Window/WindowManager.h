@@ -16,11 +16,13 @@ public:
 	void Update();
 	void SetUp(std::shared_ptr<Vulkan::VulkanContext> vulkanContext);
 
-	inline int WindowCount() { return windows.size(); }
+	inline int WindowCount() { return windows->size(); }
 
-	void CreateNewWindow();
+	void CreateNewWindow(std::string title);
+
+	inline std::shared_ptr<std::map<int, Window>> GetWindows() { return windows; }
 
 private:
 	std::shared_ptr<Vulkan::VulkanContext> vulkanContext;
-	std::map<int, Window> windows;
+	std::shared_ptr<std::map<int, Window>> windows;
 };

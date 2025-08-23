@@ -44,6 +44,7 @@ namespace Vulkan {
 		Window(std::shared_ptr<VulkanCore> core, SurfaceFlags flags);
 
 		void ClearKeySets();
+		std::vector<KeySet> GetKeySet();
 
 		void InitWindow(int width, int height, std::string title, int posx, int posy);  // Initialize window and OpenGL context
 		void CloseWindow();                                         // Close window and unload OpenGL context
@@ -94,6 +95,10 @@ namespace Vulkan {
 		//Image GetClipboardImage(void);                              // Get clipboard image
 		void EnableEventWaiting();                              // Enable waiting for events on EndDrawing(), no automatic event polling
 		void DisableEventWaiting();
+
+	public:
+		std::string title;
+
 	};
 
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)

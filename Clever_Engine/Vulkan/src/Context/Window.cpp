@@ -49,10 +49,19 @@ namespace Vulkan {
 		);
 		glfwSetKeyCallback(vulkanSurface.p_GLFWWindow, key_callback);
 		glfwSetMouseButtonCallback(vulkanSurface.p_GLFWWindow, mouseButton_callback);
+
+		this->title = title;
 	}
 
 	void Window::ClearKeySets()
 	{
 		keysets.clear();
+	}
+
+	std::vector<KeySet> Window::GetKeySet()
+	{
+		std::vector<KeySet> returnKetSets(keysets);
+		ClearKeySets();
+		return returnKetSets;
 	}
 }

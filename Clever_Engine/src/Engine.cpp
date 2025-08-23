@@ -13,6 +13,7 @@ namespace Engine {
 
 		vulkanContext->Init();
 		windowManager.SetUp(vulkanContext);
+		eventController.Init(windowManager.GetWindows());
 	}
 
 	void Engine::SetUp(std::string setUpFilePath)
@@ -35,12 +36,14 @@ namespace Engine {
 		 
 		//Event::EventSystem ES{};
 
-		windowManager.CreateNewWindow();
+		windowManager.CreateNewWindow("Window1");
+		windowManager.CreateNewWindow("Window2");
 
 		while (true)
 		{
 			vulkanContext->Update();
 			windowManager.Update();
+			eventController.Update();
 
 			vulkanContext->RenderAllWindows();
 			

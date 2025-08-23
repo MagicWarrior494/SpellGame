@@ -3,8 +3,8 @@
 #include "Context/VulkanContext.h"
 #include "Context/Window.h"
 #include <glm.hpp>
-
-
+#include "Event/Io/KeyInputData.h"
+#include "Event/Io/ConversionData.h"
 
 class Window 
 {
@@ -19,6 +19,8 @@ public:
 public:
 	bool IsWindowStillValid();
 	int GetVulkanContextWindowId();
+
+	KeySet GetWindowInputs();
 
 	void InitWindow(int width, int height, std::string title, int posx, int posy);  // Initialize window and OpenGL context
 	void CloseWindow();                                         // Close window and unload OpenGL context
@@ -48,6 +50,7 @@ public:
 	void SetWindowSize(int width, int height);                  // Set window dimensions
 	void SetWindowOpacity(float opacity);                       // Set window opacity [0.0f..1.0f]
 	void SetWindowFocused();                                    // Set window focused
+	std::string GetWindowTitle();                               // Get window title
 	void* GetWindowHandle();                                    // Get native window handle
 	int GetScreenWidth();                                       // Get current screen width
 	int GetScreenHeight();                                      // Get current screen height
@@ -71,9 +74,11 @@ public:
 	void DisableEventWaiting();
 
 private:
+	Vulkan::Window& GetVulkanWindow();
+
+private:
 	Vulkan::SurfaceFlags defaultVulkanWindowFlags = Vulkan::SurfaceFlags::EnableDepth | Vulkan::SurfaceFlags::Resizeable | Vulkan::SurfaceFlags::Fullscreenable;
 
 	std::shared_ptr<Vulkan::VulkanContext> vulkanContext;
 	uint8_t vulkanWindowId;
-
 };

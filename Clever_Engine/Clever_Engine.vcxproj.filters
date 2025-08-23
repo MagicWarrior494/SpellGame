@@ -57,6 +57,10 @@
     <ClInclude Include="src\World\WorldController.h">
       <Filter>src\World</Filter>
     </ClInclude>
+    <ClInclude Include="src\Event\EventController.h" />
+    <ClInclude Include="src\Event\Io\KeyInputData.h" />
+    <ClInclude Include="src\Event\Io\KeyCodes.h" />
+    <ClInclude Include="src\Event\Io\ConversionData.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dependencies\ImGui\imgui.cpp">
@@ -89,5 +93,6 @@
     <ClCompile Include="src\World\WorldController.cpp">
       <Filter>src\World</Filter>
     </ClCompile>
+    <ClCompile Include="src\Event\EventController.cpp" />
   </ItemGroup>
 </Project>

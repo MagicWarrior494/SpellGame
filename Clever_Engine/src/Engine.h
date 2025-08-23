@@ -3,6 +3,7 @@
 #include "Context/VulkanContext.h"
 
 #include "Render/Window/WindowManager.h"
+#include "Event/EventController.h"
 
 #include <stdexcept>
 #include <string>
@@ -30,6 +31,7 @@ namespace Engine {
 	private:
 		std::string m_SetUpFilePath;
 		WindowManager windowManager;
+		EventController eventController;
 		std::shared_ptr<Vulkan::VulkanContext> vulkanContext;
 	};
 }

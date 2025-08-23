@@ -185,15 +185,6 @@ namespace Vulkan {
 				surface.resized = false;
 			}
 		}
-
-		for (auto it = windows.begin(); it != windows.end(); it++) {
-			std::vector<KeySet>& keysets = it->second->keysets;
-			for (auto keyset : keysets)
-			{
-				std::cout << keyset.to_string() << std::endl;
-			}
-			it->second->ClearKeySets();
-		}
 	}
 
 	uint8_t VulkanContext::CreateNewWindow(SurfaceFlags flags)
