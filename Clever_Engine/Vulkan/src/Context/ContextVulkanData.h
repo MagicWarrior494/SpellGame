@@ -69,8 +69,6 @@ namespace Vulkan {
 		uint8_t imageFrameCounter = 0;//This will range from 0 to {MAX_FRAMES_IN_FLIGHT}
 
 		glm::uvec2 windowSize;
-		glm::uvec2 windowPos;
-		std::string windowTitle;
 		GLFWwindow* p_GLFWWindow;
 
 		VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
@@ -189,6 +187,4 @@ namespace Vulkan {
 		//1 per texture type
 		std::vector<VkSampler> sceneVkSamplers{};
 	};
-
-	
 }

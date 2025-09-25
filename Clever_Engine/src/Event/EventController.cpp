@@ -1,33 +1,64 @@
 #include "EventController.h"
-#include "Io/ConversionData.h"
+
+#include <vector>
 #include <iostream>
+#include "Io/ConversionData.h"
 
 
-void EventController::Init(std::shared_ptr<std::map<int, Window>> windows)
+EventController::EventController(std::map<int, std::unique_ptr<Window>>& windows)
+	: windows(windows)
 {
-	this->windows = windows;
+}
+
+void EventController::Init()
+{
 }
 
 void EventController::Update()
 {
-	for (auto& window : *windows)
+	glfwPollEvents();
+	for (auto& [id, window] : windows)
 	{
-		KeySet keyset = window.second.GetWindowInputs();
+		KeySet windowKeyset = window->GetKeySet();
 		
-		for (auto key : keyset.keys)
+		for (auto [eventKeyset, lambdafunction] : eventSubscriberList)
 		{
-			std::cout << window.second.GetWindowTitle() << ": " << keyboardCleverToStringName[key] << std::endl;
+			bool success = true;
+			for (const auto& key : eventKeyset.keys) {
+				if (std::find(windowKeyset.keys.begin(), windowKeyset.keys.end(), key) == windowKeyset.keys.end()) {
+					success = false;
+					break;
+				}
+			}
+
+			if (success == false) break;
+
+			for (const auto& mousebutton : eventKeyset.mouseButtons) {
+				if (std::find(windowKeyset.mouseButtons.begin(), windowKeyset.mouseButtons.end(), mousebutton) == windowKeyset.mouseButtons.end()) {
+					success = false;
+					break;
+				}
+			}
+
+			if (success == false) break;
+
+			lambdafunction();
 		}
-		for (auto mouse : keyset.mouseButtons)
-		{
-			std::cout << window.second.GetWindowTitle() << ": " << mouseCleverToStringName[mouse] << std::endl;
-		}
+
+		window->ClearKeySets();
 	}
 }
+
+
 
 void EventController::CleanUp()
 {
 
+}
+
+void EventController::RegisterFunction(KeySet keyset, std::function<void()> func)
+{
+	eventSubscriberList.insert({ keyset, std::move(func) });
 }
 
 //void EventController::setKey(InputCodes::Keyboard key, bool state)

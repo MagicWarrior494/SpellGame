@@ -29,9 +29,9 @@ namespace Engine {
 
 		void Terminate();
 	private:
-		std::string m_SetUpFilePath;
+		std::shared_ptr<Vulkan::VulkanContext> vulkanContext;
 		WindowManager windowManager;
 		EventController eventController;
-		std::shared_ptr<Vulkan::VulkanContext> vulkanContext;
+		std::string m_SetUpFilePath;
 	};
 }

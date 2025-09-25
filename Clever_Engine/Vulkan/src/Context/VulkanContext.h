@@ -7,10 +7,12 @@
 
 #include "ContextVulkanData.h"
 #include "Surface/SurfaceFlags.h"
-#include "Window.h"
+#include "RenderSurface.h"
+
 
 namespace Vulkan 
 {
+
 	/*
 	This is what "owns" the Vulkan Data. The Engine is what modify and does the function calling but this owns the data
 	*/
@@ -23,25 +25,21 @@ namespace Vulkan
 
 		uint8_t CreateNewWindow(SurfaceFlags flags);
 
-		VkResult RenderWindow(std::shared_ptr<Window> window);
-		inline void RenderAllWindows() {
-			for (auto window : windows)
-			{
-				RenderWindow(window.second);
+		VkResult RenderWindow(std::shared_ptr<RenderSurface> renderSurface);
+
+		//RETURNS NULLPTR if not found
+		inline std::shared_ptr<RenderSurface> GetRenderSurface(uint8_t id)
+		{
+			if (renderSurfaces.find(id) != renderSurfaces.end()) {
+				return renderSurfaces.at(id);
 			}
-		};
-		
-		inline std::shared_ptr<Window> GetWindow(uint8_t windowID) {
-			if (windows.find(windowID) == windows.end()) {
-				return nullptr;
-			}
-			return windows[windowID];
+			return nullptr;
 		}
 
 	private:
 
 		std::shared_ptr<VulkanCore> vulkanCore;
-		std::map<uint8_t, std::shared_ptr<Window>> windows;
+		std::map<uint8_t, std::shared_ptr<RenderSurface>> renderSurfaces;
 		uint8_t nextWindowID = 0;
 	};
 }

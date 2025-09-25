@@ -26,10 +26,18 @@ namespace Vulkan {
 		CreateCommandPool(vulkanCore);
 	}
 
-	VkResult VulkanContext::RenderWindow(std::shared_ptr<Window> window)
+	VkResult VulkanContext::RenderWindow(std::shared_ptr<RenderSurface> renderSurface)
 	{
-		VulkanSurface& vulkanSurface = window->renderSurface.vulkanSurface;
+		VulkanSurface& vulkanSurface = renderSurface->vulkanSurface;
 
+		if (renderSurface->needsToBeRecreated)
+		{
+			renderSurface->RecreateSwapChain();
+		}
+		if (renderSurface->needsToBeRecreated == true)
+		{
+			return VK_ERROR_OUT_OF_DATE_KHR;
+		}
 		vkWaitForFences(
 			vulkanCore->vkDevice,
 			1,
@@ -50,7 +58,7 @@ namespace Vulkan {
 		);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-			window->renderSurface.resized = true;
+			renderSurface->needsToBeRecreated = true;
 			return result; // Swapchain out of date, needs recreation
 		}
 		else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -135,7 +143,7 @@ namespace Vulkan {
 		result = vkQueuePresentKHR(vulkanCore->presentQueue, &presentInfo);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-			window->renderSurface.resized = true;
+			renderSurface->needsToBeRecreated = true;
 			return VK_ERROR_OUT_OF_DATE_KHR;
 		}
 		else if (result != VK_SUCCESS) {
@@ -150,47 +158,26 @@ namespace Vulkan {
 
 	void VulkanContext::Update()
 	{
-		if (windows.empty())
+		if (renderSurfaces.empty())
 			return;
 
-		glfwPollEvents();
-		for (auto it = windows.begin(); it != windows.end();) {
-			RenderSurface& surface = it->second->renderSurface;
-			if (glfwWindowShouldClose(surface.vulkanSurface.p_GLFWWindow)) {
-				CloseVulkanRenderSurface(vulkanCore, surface.vulkanSurface);
-				it = windows.erase(it);
+		//glfwPollEvents();
+		//Remove renderSurface from list when the VulkanSurface OBJ within has been cleared.
+		for (auto it = renderSurfaces.begin(); it != renderSurfaces.end();) {
+			std::shared_ptr<RenderSurface> renderSurface = it->second;
+			if (renderSurface->vulkanSurface.p_GLFWWindow == nullptr) {
+				it = renderSurfaces.erase(it);
 			}
 			else {
 				it++;
-			}
-		}
-		for (auto it = windows.begin(); it != windows.end(); it++) {
-			RenderSurface& surface = it->second->renderSurface;
-			if (surface.resized) {
-				int width = 0, height = 0;
-				glfwGetFramebufferSize(surface.vulkanSurface.p_GLFWWindow, &width, &height);
-
-				// Wait until window is not minimized
-				while (width == 0 || height == 0) {
-					glfwWaitEvents();
-					glfwGetFramebufferSize(surface.vulkanSurface.p_GLFWWindow, &width, &height);
-				}
-				vkDeviceWaitIdle(vulkanCore->vkDevice);
-				CleanUpFrameBuffers(vulkanCore, surface.vulkanSurface);
-				CleanupSwapchainImages(vulkanCore, surface.vulkanSurface);
-				CleanupSwapchain(vulkanCore, surface.vulkanSurface);
-				CreateSwapchain(vulkanCore, surface.vulkanSurface, surface.flags);
-				CreateSwapchainImages(vulkanCore, surface.vulkanSurface, surface.flags);
-				CreateFrameBuffers(vulkanCore, surface.vulkanSurface, surface.flags);
-				surface.resized = false;
 			}
 		}
 	}
 
 	uint8_t VulkanContext::CreateNewWindow(SurfaceFlags flags)
 	{
-		std::shared_ptr<Window> window = std::make_shared<Window>(vulkanCore, flags);
-		windows.insert({ nextWindowID, std::move(window)});
+		std::shared_ptr<RenderSurface> renderSurface = std::make_shared<RenderSurface>(vulkanCore, flags, nextWindowID);
+		renderSurfaces.insert({ nextWindowID, std::move(renderSurface)});
 		nextWindowID++;
 		return nextWindowID - 1;
 	}

@@ -58,7 +58,7 @@
       <Filter>src\World</Filter>
     </ClInclude>
     <ClInclude Include="src\Event\EventController.h" />
-    <ClInclude Include="src\Event\Io\KeyInputData.h" />
+    <ClInclude Include="src\Event\Io\KeySet.h" />
     <ClInclude Include="src\Event\Io\KeyCodes.h" />
     <ClInclude Include="src\Event\Io\ConversionData.h" />
   </ItemGroup>

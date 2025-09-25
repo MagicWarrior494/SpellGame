@@ -4,25 +4,28 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <iostream>
 
 #include "Window.h"
 #include "Context/VulkanContext.h"
 
 class WindowManager {
 public:
-	WindowManager() = default;
+	WindowManager(std::shared_ptr<Vulkan::VulkanContext> vulkanContext);
 	~WindowManager() = default;
 
 	void Update();
-	void SetUp(std::shared_ptr<Vulkan::VulkanContext> vulkanContext);
+	void SetUp();
 
-	inline int WindowCount() { return windows->size(); }
+	inline int WindowCount() { return windows.size(); }
 
-	void CreateNewWindow(std::string title);
+	void CreateNewWindow(std::string title, int width, int height, int posx = 0, int posy = 0);
 
-	inline std::shared_ptr<std::map<int, Window>> GetWindows() { return windows; }
+	void RenderAllWindows();
+
+	inline std::map<int, std::unique_ptr<Window>>& GetWindows() { return windows; }
 
 private:
 	std::shared_ptr<Vulkan::VulkanContext> vulkanContext;
-	std::shared_ptr<std::map<int, Window>> windows;
+	std::map<int, std::unique_ptr<Window>> windows;
 };

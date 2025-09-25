@@ -1,29 +1,40 @@
 #pragma once
 #include <string>
-#include "Context/VulkanContext.h"
-#include "Context/Window.h"
 #include <glm.hpp>
-#include "Event/Io/KeyInputData.h"
+#include <memory>
+#include "Context/VulkanContext.h"
+#include "Event/Io/KeySet.h"
 #include "Event/Io/ConversionData.h"
 
 class Window 
 {
 
 public:
-	Window(std::shared_ptr<Vulkan::VulkanContext> vulkanContext)
-		: vulkanContext(vulkanContext)
-	{
-		vulkanWindowId = vulkanContext->CreateNewWindow(defaultVulkanWindowFlags);
-	}
+	Window(std::shared_ptr<Vulkan::VulkanContext> vulkanContext, std::string title, int width, int height, int posx, int posy);
 
+public:
+	KeySet keyset;
+
+	std::string title;
+	uint8_t width = 0;
+	uint8_t height = 0;
+	uint8_t posx = 0;
+	uint8_t posy = 0;
+
+	GLFWwindow* p_GLFWWindow;
 public:
 	bool IsWindowStillValid();
 	int GetVulkanContextWindowId();
+	std::shared_ptr<Vulkan::RenderSurface> GetVulkanWindow();
 
-	KeySet GetWindowInputs();
 
-	void InitWindow(int width, int height, std::string title, int posx, int posy);  // Initialize window and OpenGL context
+	inline void ClearKeySets() { keyset.clear(); }
+	inline KeySet GetKeySet() { return keyset; }
+
+	void InitWindow();  // Initialize window and OpenGL context
 	void CloseWindow();                                         // Close window and unload OpenGL context
+	void Update();
+	
 	bool WindowShouldClose();                                   // Check if application should close (KEY_ESCAPE pressed or windows close icon clicked)
 	bool IsWindowReady();                                       // Check if window has been initialized successfully
 	bool IsWindowFullscreen();                                  // Check if window is currently fullscreen
@@ -74,11 +85,23 @@ public:
 	void DisableEventWaiting();
 
 private:
-	Vulkan::Window& GetVulkanWindow();
-
-private:
 	Vulkan::SurfaceFlags defaultVulkanWindowFlags = Vulkan::SurfaceFlags::EnableDepth | Vulkan::SurfaceFlags::Resizeable | Vulkan::SurfaceFlags::Fullscreenable;
 
+	std::shared_ptr<Vulkan::RenderSurface> renderSurface;
 	std::shared_ptr<Vulkan::VulkanContext> vulkanContext;
 	uint8_t vulkanWindowId;
 };
+
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	Window* windowObj = static_cast<Window*>(glfwGetWindowUserPointer(window));
+
+	windowObj->keyset.keys.push_back((InputCodes::Keyboard)keyboardGLFWtoCleverKeyCodes.at(key));
+
+}
+
+static void mouseButton_callback(GLFWwindow* window, int mouseButton, int action, int mods)
+{
+	Window* windowObj = static_cast<Window*>(glfwGetWindowUserPointer(window));
+	windowObj->keyset.mouseButtons.push_back((InputCodes::Mouse)mouseGLFWtoCleverKeyCodes.at(mouseButton));
+}

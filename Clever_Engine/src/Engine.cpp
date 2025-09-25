@@ -7,13 +7,10 @@
 
 namespace Engine {
 
-	Engine::Engine()
+	Engine::Engine() :
+		vulkanContext(std::make_shared<Vulkan::VulkanContext>()), windowManager(vulkanContext), eventController(windowManager.GetWindows())
 	{
-		vulkanContext = std::make_shared<Vulkan::VulkanContext>();
-
 		vulkanContext->Init();
-		windowManager.SetUp(vulkanContext);
-		eventController.Init(windowManager.GetWindows());
 	}
 
 	void Engine::SetUp(std::string setUpFilePath)
@@ -24,6 +21,7 @@ namespace Engine {
 		Create Graphics Context 
 		Start capturing events
 		*/
+
 	}
 
 	void Engine::SetUp()
@@ -36,16 +34,19 @@ namespace Engine {
 		 
 		//Event::EventSystem ES{};
 
-		windowManager.CreateNewWindow("Window1");
-		windowManager.CreateNewWindow("Window2");
+		windowManager.CreateNewWindow("Window1", 800, 600);
+		windowManager.CreateNewWindow("Window2", 800, 600);
+
+		eventController.RegisterFunction(KeySet{ Keyboard::KEY_N }, [this] {
+			this->windowManager.CreateNewWindow("NewWindow", 800, 600);
+		});
 
 		while (true)
 		{
-			vulkanContext->Update();
 			windowManager.Update();
 			eventController.Update();
 
-			vulkanContext->RenderAllWindows();
+			windowManager.RenderAllWindows();
 			
 
 			if (windowManager.WindowCount() == 0)

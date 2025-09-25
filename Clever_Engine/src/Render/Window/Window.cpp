@@ -1,8 +1,75 @@
 #include "Window.h"
 
+
+
+
+Window::Window(std::shared_ptr<Vulkan::VulkanContext> vulkanContext, std::string title, int width, int height, int posx, int posy)
+	: vulkanContext(vulkanContext), title(title), width(width), posx(posx), posy(posy)
+{
+	Vulkan::SurfaceFlags flags = defaultVulkanWindowFlags;
+
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+	if ((flags & Vulkan::SurfaceFlags::Resizeable) != Vulkan::SurfaceFlags::None) {
+		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+	}
+	else {
+		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	}
+	if ((flags & Vulkan::SurfaceFlags::Fullscreenable) != Vulkan::SurfaceFlags::None) {
+		glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
+	}
+	else {
+		glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+	}
+
+	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+	p_GLFWWindow = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+
+	if ((flags & Vulkan::SurfaceFlags::Fullscreen) != Vulkan::SurfaceFlags::None) {
+		glfwSetWindowMonitor(p_GLFWWindow, monitor, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
+	}
+	else {
+		if (posx == 0 && posy == 0)
+		{
+			posx = mode->width / 4;
+			posy = mode->height / 4;
+		}
+		glfwSetWindowMonitor(p_GLFWWindow, nullptr, posx, posy, width, height, GLFW_DONT_CARE);
+	}
+
+	glfwShowWindow(p_GLFWWindow);
+
+	vulkanWindowId = vulkanContext->CreateNewWindow(defaultVulkanWindowFlags);
+
+
+	glfwSetWindowUserPointer(p_GLFWWindow, this);
+
+	glfwSetFramebufferSizeCallback(p_GLFWWindow,
+		[](GLFWwindow* window, int width, int height) {
+			// Retrieve the SurfaceData pointer from the user pointer
+			Window* sd = static_cast<Window*>(glfwGetWindowUserPointer(window));
+			if (sd) {
+				sd->GetVulkanWindow()->needsToBeRecreated = true;
+
+				// Optional: you can update stored window size here if you want
+				sd->width = width;
+				sd->height = height;
+			};
+		}
+	);
+
+	glfwSetKeyCallback(p_GLFWWindow, key_callback);
+	glfwSetMouseButtonCallback(p_GLFWWindow, mouseButton_callback);
+
+	renderSurface = vulkanContext->GetRenderSurface(vulkanWindowId);
+}
+
 bool Window::IsWindowStillValid()
 {
-	if (vulkanContext->GetWindow(vulkanWindowId) == nullptr)
+	if (renderSurface == nullptr)
 	{
 		return false;
 	}
@@ -14,38 +81,38 @@ int Window::GetVulkanContextWindowId()
 	return vulkanWindowId;
 }
 
-void Window::InitWindow(int width, int height, std::string title, int posx = 0, int posy = 0)
+void Window::InitWindow()
 {
 	if(IsWindowStillValid())
-		GetVulkanWindow().InitWindow(width, height, title, posx, posy);
+		GetVulkanWindow()->InitRenderSurface(p_GLFWWindow);
 }
 
-KeySet Window::GetWindowInputs()
+void Window::CloseWindow()
 {
-	std::vector<Vulkan::KeySet> keysets = GetVulkanWindow().GetKeySet();
-	KeySet new_keysets;
-	for (int i = 0; i < keysets.size(); i++)
-	{
-
-		for (auto& key : keysets[i].keys)
-		{
-			new_keysets.keys.push_back((InputCodes::Keyboard)keyboardGLFWtoCleverKeyCodes[key]);
-		}
-
-		for (auto& mouseButton : keysets[i].mouseButtons)
-		{
-			new_keysets.mouseButtons.push_back((InputCodes::Mouse)mouseGLFWtoCleverKeyCodes[mouseButton]);
-		}
+	renderSurface->CloseRenderSurface();
+	if (p_GLFWWindow) {
+		glfwDestroyWindow(p_GLFWWindow);
+		p_GLFWWindow = nullptr;
+		renderSurface = nullptr;
 	}
-	return new_keysets;
+}
+
+void Window::Update()
+{
+	vulkanContext->RenderWindow(GetVulkanWindow());
+}
+
+bool Window::WindowShouldClose()
+{
+	return glfwWindowShouldClose(p_GLFWWindow);
+}
+
+std::shared_ptr<Vulkan::RenderSurface> Window::GetVulkanWindow()
+{
+	return renderSurface;
 }
 
 std::string Window::GetWindowTitle()
 {
-	return GetVulkanWindow().title;
-}
-
-Vulkan::Window& Window::GetVulkanWindow()
-{
-	return *vulkanContext->GetWindow(vulkanWindowId);
+	return title;
 }
