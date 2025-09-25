@@ -1,6 +1,7 @@
 -- ================================
 -- SpellGame (Executable)
 -- ================================
+
 project "SpellGame"
     location "."
     kind "ConsoleApp"

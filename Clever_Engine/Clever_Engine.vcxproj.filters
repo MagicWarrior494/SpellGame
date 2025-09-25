@@ -13,6 +13,9 @@
     <Filter Include="src\Event">
       <UniqueIdentifier>{3E1ADFB2-AA84-9329-F3C2-44CF5F6C717E}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Event\Io">
+      <UniqueIdentifier>{45ABE3C8-310E-736D-DA93-AB23C6D53EF0}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Render">
       <UniqueIdentifier>{FC94E62B-E84C-2879-5154-01D53D2BC369}</UniqueIdentifier>
     </Filter>
@@ -44,6 +47,21 @@
     </ClInclude>
     <ClInclude Include="src\Engine.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Event\EventController.h">
+      <Filter>src\Event</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Event\Io\ConversionData.h">
+      <Filter>src\Event\Io</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Event\Io\EventData.h">
+      <Filter>src\Event\Io</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Event\Io\KeyCodes.h">
+      <Filter>src\Event\Io</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Event\Io\KeyInputData.h">
+      <Filter>src\Event\Io</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\RenderingController.h">
       <Filter>src\Render</Filter>
@@ -80,6 +98,9 @@
     </ClCompile>
     <ClCompile Include="src\Engine.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Event\EventController.cpp">
+      <Filter>src\Event</Filter>
     </ClCompile>
     <ClCompile Include="src\Render\RenderingController.cpp">
       <Filter>src\Render</Filter>
