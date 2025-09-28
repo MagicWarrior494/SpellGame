@@ -25,8 +25,6 @@ namespace Vulkan
 
 		uint8_t CreateNewWindow(SurfaceFlags flags);
 
-		VkResult RenderWindow(std::shared_ptr<RenderSurface> renderSurface);
-
 		//RETURNS NULLPTR if not found
 		inline std::shared_ptr<RenderSurface> GetRenderSurface(uint8_t id)
 		{
@@ -41,5 +39,6 @@ namespace Vulkan
 		std::shared_ptr<VulkanCore> vulkanCore;
 		std::map<uint8_t, std::shared_ptr<RenderSurface>> renderSurfaces;
 		uint8_t nextWindowID = 0;
+		uint8_t nextSceneID = 0;
 	};
 }

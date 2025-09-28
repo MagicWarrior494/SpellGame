@@ -34,11 +34,15 @@ namespace Engine {
 		 
 		//Event::EventSystem ES{};
 
-		windowManager.CreateNewWindow("Window1", 800, 600);
-		windowManager.CreateNewWindow("Window2", 800, 600);
+		int windowID1 = windowManager.CreateNewWindow("Window1", 800, 600);
+		windowManager.getWindow(windowID1).addTriangle();
 
-		eventController.RegisterFunction(KeySet{ Keyboard::KEY_N }, [this] {
-			this->windowManager.CreateNewWindow("NewWindow", 800, 600);
+		eventController.RegisterFunction(KeySet{ Keyboard::KEY_N }, [this] (Window& window) {
+			int id = this->windowManager.CreateNewWindow("NewWindow", 800, 600);
+		});
+
+		eventController.RegisterFunction(KeySet{ Keyboard::KEY_T }, [this] (Window& window) {
+			window.addTriangle();
 		});
 
 		while (true)

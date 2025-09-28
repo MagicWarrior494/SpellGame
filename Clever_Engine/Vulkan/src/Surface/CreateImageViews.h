@@ -59,8 +59,8 @@ namespace Vulkan {
 				? VK_FORMAT_D24_UNORM_S8_UINT
 				: VK_FORMAT_D32_SFLOAT;
 
-			vulkanSurface.surfaceDepthImages.resize(vulkanSurface.MAX_FRAMES_IN_FLIGHT);
-			vulkanSurface.surfaceDepthImages = initImageByType(vulkanCore, ImageType::Depth, vulkanSurface.windowSize.x, vulkanSurface.windowSize.y, vulkanSurface.MAX_FRAMES_IN_FLIGHT);
+			vulkanSurface.surfaceDepthImages.resize(VC->MAX_FRAMES_IN_FLIGHT);
+			vulkanSurface.surfaceDepthImages = initImageByType(vulkanCore, ImageType::Depth, vulkanSurface.windowSize.x, vulkanSurface.windowSize.y, VC->MAX_FRAMES_IN_FLIGHT);
 		}
 	}
 

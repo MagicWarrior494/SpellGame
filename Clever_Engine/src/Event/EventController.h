@@ -18,7 +18,7 @@ public:
 	void Update();
 	void CleanUp();
 
-	void RegisterFunction(KeySet keyset, std::function<void()> func);
+	void RegisterFunction(KeySet keyset, std::function<void(Window& window)> func);
 
 	//void setKey(InputCodes::Keyboard key, bool state);
 	//void setMouseButton(InputCodes::Mouse button, bool state);
@@ -27,8 +27,8 @@ public:
 	std::map<int, std::unique_ptr<Window>>& windows;
 
 private:
-	std::unordered_map<KeySet, std::function<void()>, KeySetHash> eventSubscriberList;
-
+	std::unordered_map<KeySet, std::function<void(Window& window)>, KeySetHash> eventSubscriberList;
+	
 	//std::shared_ptr<EventData> eventData = std::make_shared<EventData>();
 	//std::shared_ptr<KeyInputData> keyInputData = std::make_shared<KeyInputData>();
 };

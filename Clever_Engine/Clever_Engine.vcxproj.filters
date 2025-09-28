@@ -25,6 +25,9 @@
     <Filter Include="src\World">
       <UniqueIdentifier>{A43321B4-109E-D52A-59DC-86D0C585B37F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\World\Object">
+      <UniqueIdentifier>{AA20F8FD-9619-1750-BF4B-FCD4ABA3F65B}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\ImGui\imconfig.h">
@@ -54,13 +57,10 @@
     <ClInclude Include="src\Event\Io\ConversionData.h">
       <Filter>src\Event\Io</Filter>
     </ClInclude>
-    <ClInclude Include="src\Event\Io\EventData.h">
-      <Filter>src\Event\Io</Filter>
-    </ClInclude>
     <ClInclude Include="src\Event\Io\KeyCodes.h">
       <Filter>src\Event\Io</Filter>
     </ClInclude>
-    <ClInclude Include="src\Event\Io\KeyInputData.h">
+    <ClInclude Include="src\Event\Io\KeySet.h">
       <Filter>src\Event\Io</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\RenderingController.h">
@@ -72,13 +72,15 @@
     <ClInclude Include="src\Render\Window\WindowManager.h">
       <Filter>src\Render\Window</Filter>
     </ClInclude>
+    <ClInclude Include="src\World\Object\Element.h">
+      <Filter>src\World\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\Object\UIElement.h">
+      <Filter>src\World\Object</Filter>
+    </ClInclude>
     <ClInclude Include="src\World\WorldController.h">
       <Filter>src\World</Filter>
     </ClInclude>
-    <ClInclude Include="src\Event\EventController.h" />
-    <ClInclude Include="src\Event\Io\KeySet.h" />
-    <ClInclude Include="src\Event\Io\KeyCodes.h" />
-    <ClInclude Include="src\Event\Io\ConversionData.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dependencies\ImGui\imgui.cpp">
@@ -111,9 +113,11 @@
     <ClCompile Include="src\Render\Window\WindowManager.cpp">
       <Filter>src\Render\Window</Filter>
     </ClCompile>
+    <ClCompile Include="src\World\Object\Element.cpp">
+      <Filter>src\World\Object</Filter>
+    </ClCompile>
     <ClCompile Include="src\World\WorldController.cpp">
       <Filter>src\World</Filter>
     </ClCompile>
-    <ClCompile Include="src\Event\EventController.cpp" />
   </ItemGroup>
 </Project>

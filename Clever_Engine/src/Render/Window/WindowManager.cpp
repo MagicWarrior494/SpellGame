@@ -33,11 +33,17 @@ void WindowManager::Update()
 	vulkanContext->Update();
 }
 
-void WindowManager::CreateNewWindow(std::string title, int width, int height, int posx, int posy)
+int WindowManager::CreateNewWindow(std::string title, int width, int height, int posx, int posy)
 {
 	std::unique_ptr<Window> window = std::make_unique<Window>(vulkanContext, title, width, height, posx, posy);
 	window->InitWindow();
+	window->CreateScene();
+
+	int id = window->GetVulkanContextWindowId();
+
 	windows.insert({ window->GetVulkanContextWindowId(), std::move(window)});
+
+	return id;
 }
 
 void WindowManager::RenderAllWindows()
@@ -45,7 +51,7 @@ void WindowManager::RenderAllWindows()
 	for (auto it = windows.begin(); it != windows.end(); it++)
 	{
 		Window& window = *(it->second);
-		vulkanContext->RenderWindow(window.GetVulkanWindow());
+		window.Update();
 	}
 }
 

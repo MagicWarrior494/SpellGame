@@ -34,7 +34,9 @@ public:
 	void InitWindow();  // Initialize window and OpenGL context
 	void CloseWindow();                                         // Close window and unload OpenGL context
 	void Update();
-	
+	void CreateScene();
+	void addTriangle();
+
 	bool WindowShouldClose();                                   // Check if application should close (KEY_ESCAPE pressed or windows close icon clicked)
 	bool IsWindowReady();                                       // Check if window has been initialized successfully
 	bool IsWindowFullscreen();                                  // Check if window is currently fullscreen
@@ -85,11 +87,12 @@ public:
 	void DisableEventWaiting();
 
 private:
-	Vulkan::SurfaceFlags defaultVulkanWindowFlags = Vulkan::SurfaceFlags::EnableDepth | Vulkan::SurfaceFlags::Resizeable | Vulkan::SurfaceFlags::Fullscreenable;
+	Vulkan::SurfaceFlags defaultVulkanWindowFlags = Vulkan::SurfaceFlags::Resizeable | Vulkan::SurfaceFlags::Fullscreenable;
 
 	std::shared_ptr<Vulkan::RenderSurface> renderSurface;
 	std::shared_ptr<Vulkan::VulkanContext> vulkanContext;
 	uint8_t vulkanWindowId;
+	uint8_t sceneID;
 };
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)

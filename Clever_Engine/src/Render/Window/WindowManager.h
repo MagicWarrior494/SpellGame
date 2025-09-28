@@ -19,9 +19,14 @@ public:
 
 	inline int WindowCount() { return windows.size(); }
 
-	void CreateNewWindow(std::string title, int width, int height, int posx = 0, int posy = 0);
+	int CreateNewWindow(std::string title, int width, int height, int posx = 0, int posy = 0);
 
 	void RenderAllWindows();
+
+	Window& getWindow(int windowID)
+	{
+		return *(windows.at(windowID));
+	}
 
 	inline std::map<int, std::unique_ptr<Window>>& GetWindows() { return windows; }
 

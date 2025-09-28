@@ -6,8 +6,8 @@ namespace Vulkan {
 	inline void CreateFrameBuffers(std::shared_ptr<VulkanCore> VC, VulkanSurface& vulkanSurface, SurfaceFlags flags)
 	{
 		VulkanCore& vulkanCore = *VC;
-		vulkanSurface.surfaceVkFrameBuffers.resize(vulkanSurface.MAX_FRAMES_IN_FLIGHT);
-		for (int i = 0; i < vulkanSurface.MAX_FRAMES_IN_FLIGHT; i++)
+		vulkanSurface.surfaceVkFrameBuffers.resize(vulkanSurface.surfaceSwapchainImages.size());
+		for (int i = 0; i < vulkanSurface.surfaceSwapchainImages.size(); i++)
 		{
 			VkImageView& imageView = vulkanSurface.surfaceSwapchainImages[i].view;
 			std::vector<VkImageView> attachments;

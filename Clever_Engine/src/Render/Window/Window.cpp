@@ -99,7 +99,17 @@ void Window::CloseWindow()
 
 void Window::Update()
 {
-	vulkanContext->RenderWindow(GetVulkanWindow());
+	renderSurface->RenderScene(sceneID);
+}
+
+void Window::CreateScene()
+{
+	sceneID = renderSurface->CreateNewScene();
+}
+
+void Window::addTriangle()
+{
+	renderSurface->AddRandomTriangle(sceneID);
 }
 
 bool Window::WindowShouldClose()

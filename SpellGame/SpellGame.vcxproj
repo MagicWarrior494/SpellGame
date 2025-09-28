@@ -57,7 +57,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>src;..\Clever_Engine\src;..\Clever_Engine\Vulkan\src;..\Clever_Engine\Dependencies\glm\glm;..\Clever_Engine\Dependencies\stb_image;..\Clever_Engine\Dependencies\tinyobjloader;..\Clever_Engine\Dependencies\spdlog\include\spdlog;..\Clever_Engine\Dependencies\ImGui;..\Clever_Engine\Dependencies\GLFW\include;C:\VulkanSDK\1.4.321.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;..\Clever_Engine\src;..\Clever_Engine\Vulkan\src;..\Clever_Engine\Dependencies\glm\glm;..\Clever_Engine\Dependencies\stb_image;..\Clever_Engine\Dependencies\tinyobjloader;..\Clever_Engine\Dependencies\spdlog\include\spdlog;..\Clever_Engine\Dependencies\ImGui;..\Clever_Engine\Dependencies\GLFW\include;C:\VulkanSDK\1.3.231.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -68,14 +68,14 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\Clever_Engine\Dependencies\GLFW\lib-vc2022;C:\VulkanSDK\1.4.321.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\Clever_Engine\Dependencies\GLFW\lib-vc2022;C:\VulkanSDK\1.3.231.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>src;..\Clever_Engine\src;..\Clever_Engine\Vulkan\src;..\Clever_Engine\Dependencies\glm\glm;..\Clever_Engine\Dependencies\stb_image;..\Clever_Engine\Dependencies\tinyobjloader;..\Clever_Engine\Dependencies\spdlog\include\spdlog;..\Clever_Engine\Dependencies\ImGui;..\Clever_Engine\Dependencies\GLFW\include;C:\VulkanSDK\1.4.321.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;..\Clever_Engine\src;..\Clever_Engine\Vulkan\src;..\Clever_Engine\Dependencies\glm\glm;..\Clever_Engine\Dependencies\stb_image;..\Clever_Engine\Dependencies\tinyobjloader;..\Clever_Engine\Dependencies\spdlog\include\spdlog;..\Clever_Engine\Dependencies\ImGui;..\Clever_Engine\Dependencies\GLFW\include;C:\VulkanSDK\1.3.231.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -90,7 +90,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\Clever_Engine\Dependencies\GLFW\lib-vc2022;C:\VulkanSDK\1.4.321.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\Clever_Engine\Dependencies\GLFW\lib-vc2022;C:\VulkanSDK\1.3.231.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

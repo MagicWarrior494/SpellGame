@@ -6,7 +6,7 @@ namespace Vulkan {
 	inline void CreateCommandBuffers(std::shared_ptr<VulkanCore> VC, VulkanSurface& vulkanSurface)
 	{
 		VulkanCore& vulkanCore = *VC;
-		vulkanSurface.surfaceVkCommandBuffers.resize(vulkanSurface.MAX_FRAMES_IN_FLIGHT);
+		vulkanSurface.surfaceVkCommandBuffers.resize(VC->MAX_FRAMES_IN_FLIGHT);
 
 		VkCommandBufferAllocateInfo allocationInfo{};
 		allocationInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;

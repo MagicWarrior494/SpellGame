@@ -31,18 +31,16 @@ void EventController::Update()
 				}
 			}
 
-			if (success == false) break;
-
 			for (const auto& mousebutton : eventKeyset.mouseButtons) {
 				if (std::find(windowKeyset.mouseButtons.begin(), windowKeyset.mouseButtons.end(), mousebutton) == windowKeyset.mouseButtons.end()) {
 					success = false;
 					break;
 				}
 			}
+			 
+			if (!success) continue;
 
-			if (success == false) break;
-
-			lambdafunction();
+			lambdafunction(*window);
 		}
 
 		window->ClearKeySets();
@@ -56,7 +54,7 @@ void EventController::CleanUp()
 
 }
 
-void EventController::RegisterFunction(KeySet keyset, std::function<void()> func)
+void EventController::RegisterFunction(KeySet keyset, std::function<void(Window& window)> func)
 {
 	eventSubscriberList.insert({ keyset, std::move(func) });
 }

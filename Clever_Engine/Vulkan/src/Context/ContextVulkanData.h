@@ -31,6 +31,11 @@ namespace Vulkan {
 		}
 	};
 
+	struct Vertex
+	{
+		glm::vec3 pos;
+	};
+
 	struct VulkanImage {
 		VkImage image;
 		VkDeviceMemory memory;
@@ -52,6 +57,18 @@ namespace Vulkan {
 		}
 	};
 
+	struct VulkanBuffer {
+		VkBuffer buffer = VK_NULL_HANDLE;
+		VkDeviceMemory memory = VK_NULL_HANDLE;
+		VkDeviceSize size{};
+	};
+
+	enum BufferTypes {
+		VertexBuffer,
+		IndexBuffer,
+		UniformBuffer
+	};
+
 	struct VulkanCore {
 		VkInstance vkInstance = VK_NULL_HANDLE;
 		VkDebugUtilsMessengerEXT vkDebugMesseneger = VK_NULL_HANDLE;
@@ -62,10 +79,11 @@ namespace Vulkan {
 		VkQueue presentQueue;
 		//Typically one per thread
 		std::vector<VkCommandPool> VkCommandPools{};
+		int MAX_FRAMES_IN_FLIGHT = 2;
 	};
 
 	struct VulkanSurface {
-		int MAX_FRAMES_IN_FLIGHT = 2;
+		
 		uint8_t imageFrameCounter = 0;//This will range from 0 to {MAX_FRAMES_IN_FLIGHT}
 
 		glm::uvec2 windowSize;
@@ -145,32 +163,14 @@ namespace Vulkan {
 				vkSurface = VK_NULL_HANDLE;
 			}
 		}
-		bool IsWindowFullscreen()
-		{
-			GLFWmonitor* monitor = glfwGetWindowMonitor(p_GLFWWindow);
-			if (monitor == NULL) {
-				return false;
-			}
-			return true;
-		};
-		bool IsWindowHidden();
-		bool IsWindowMinimized();
-		bool IsWindowMaximized();
-		bool IsWindowFocused();
-		bool IsWindowResized();
 	};
 
 	struct VulkanScene {
 
+		uint8_t sceneID;
 
 		//Make large enough for all of the Descriptor sets
 		VkDescriptorPool vkDesciptorPool = VK_NULL_HANDLE;
-
-		//need 1 per unique descriptor layout configuration
-		std::vector<VkPipelineLayout> sceneVkPipelineLayouts{};
-
-		//need 1 per unique shader/stage/render state combination
-		std::vector<VkPipeline> sceneVkPipelines{};
 
 		//need 1 per unique descriptor configuration
 		std::vector<VkDescriptorSetLayout> sceneVkDesciptoreSetLayouts{};
@@ -178,8 +178,16 @@ namespace Vulkan {
 		//1 per object type/material OR per frame for uniform buffers.
 		std::vector<VkDescriptorSet> sceneVkDescriptorSets{};
 
+		//need 1 per unique descriptor layout configuration
+		std::vector<VkPipelineLayout> sceneVkPipelineLayouts{};
+
+		//need 1 per unique shader/stage/render state combination
+		std::vector<VkPipeline> sceneVkPipelines{};
+
+		std::vector<Vertex> vertexData{};
+	
 		//1 per vertex/index/uniform buffer
-		std::vector<VkBuffer> sceneVkBuffers{};
+		std::vector<VulkanBuffer> sceneVkBuffers{};
 
 		//1 per texture/depth image/off-screen render target
 		std::vector<VulkanImage> sceneVkImages{};
