@@ -4,19 +4,17 @@
 #include <optional>
 #include <string>
 #include <glm.hpp>
+#include <memory>
+#include <array>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include "Surface/SurfaceFlags.h"
 
 namespace Vulkan {
-
-	enum class ImageType : uint8_t {
-		Depth,
-		Color,
-		Texture,
-		CubeMap,
-		Multisampled,
-		Storage
-	};
+	inline uint32_t GetNextSurfaceID() {
+		static uint32_t surfaceIDCounter = 0;
+		return surfaceIDCounter++;
+	}
 
 	struct PhysicalDeviceData
 	{
@@ -34,12 +32,38 @@ namespace Vulkan {
 	struct Vertex
 	{
 		glm::vec3 pos;
+
+		static VkVertexInputBindingDescription getBindingDescription() {
+			VkVertexInputBindingDescription bindingDescription{};
+			bindingDescription.binding = 0;                         // binding index in the shader
+			bindingDescription.stride = sizeof(Vertex);             // size of each vertex
+			bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX; // move to next data entry per vertex
+			return bindingDescription;
+		}
+
+		static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions() {
+			std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
+			attributeDescriptions.push_back(VkVertexInputAttributeDescription{});
+
+			// Position attribute
+			attributeDescriptions[0].binding = 0;                   // matches bindingDescription.binding
+			attributeDescriptions[0].location = 0;                  // location in the shader (layout(location = 0))
+			attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT; // vec3 = 3 floats
+			attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+			return attributeDescriptions;
+		}
 	};
 
 	struct VulkanImage {
 		VkImage image;
 		VkDeviceMemory memory;
 		VkImageView view;
+
+		VkFormat format = VK_FORMAT_UNDEFINED;
+		VkExtent3D extent{};
+		VkImageLayout currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		VkDeviceSize size = 0; // optional
 
 		void Destory(VkDevice& device) {
 			if (view != VK_NULL_HANDLE) {
@@ -61,12 +85,74 @@ namespace Vulkan {
 		VkBuffer buffer = VK_NULL_HANDLE;
 		VkDeviceMemory memory = VK_NULL_HANDLE;
 		VkDeviceSize size{};
+		bool isDeviceLocal = false;
 	};
 
 	enum BufferTypes {
 		VertexBuffer,
 		IndexBuffer,
 		UniformBuffer
+	};
+
+	enum class SwapchainAttachmentType {
+		ColorOnly,     // Only swapchain images (no depth)
+		ColorDepth,    // Swapchain + Depth
+		ColorDepthStencil // Swapchain + Depth+Stencil
+	};
+
+	struct DescriptorBindingInfo
+	{
+		uint32_t binding = 0;
+		VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		VkShaderStageFlags stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		std::vector<VkDescriptorBufferInfo> buffers; // For uniform/storage buffers
+		std::vector<VkDescriptorImageInfo> images;   // For sampled images/samplers
+		uint32_t count = 1;
+	};
+
+	struct DescriptorSetInfo {
+		std::vector<DescriptorBindingInfo> bindings;
+		uint32_t maxSets = 1; // how many sets we want
+	};
+
+	struct DescriptorResult {
+		VkDescriptorSetLayout layout = VK_NULL_HANDLE;
+		VkDescriptorPool pool;
+		std::vector<VkDescriptorSet> sets;
+	};
+
+	struct PipelineInfo {
+		std::string vertShaderPath;
+		std::string fragShaderPath;
+
+		VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+		VkRenderPass renderPass = VK_NULL_HANDLE;
+
+		// Optional settings
+		VkCullModeFlags cullMode = VK_CULL_MODE_NONE;
+		VkFrontFace frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		VkPolygonMode polygonMode = VK_POLYGON_MODE_FILL;
+
+		bool enableBlending = false;
+		bool enableDepthTest = false;
+
+		VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
+
+		// Vertex input
+		VkVertexInputBindingDescription bindingDescription{};
+		std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+
+		// Dynamic states
+		std::vector<VkDynamicState> dynamicStates = {
+			VK_DYNAMIC_STATE_VIEWPORT,
+			VK_DYNAMIC_STATE_SCISSOR
+		};
+	};
+
+	struct PipelineLayoutInfo {
+		std::vector<VkDescriptorSetLayout> setLayouts;
+		std::vector<VkPushConstantRange> pushConstants;
 	};
 
 	struct VulkanCore {
@@ -77,122 +163,121 @@ namespace Vulkan {
 		PhysicalDeviceData d_PhysicalDeviceData;
 		VkQueue graphicsQueue;
 		VkQueue presentQueue;
-		//Typically one per thread
-		std::vector<VkCommandPool> VkCommandPools{};
-		int MAX_FRAMES_IN_FLIGHT = 2;
+		VkCommandPool coreCommandPool = VK_NULL_HANDLE;
+		VkCommandBuffer coreCommandBuffer = VK_NULL_HANDLE;
 	};
 
-	struct VulkanSurface {
+	struct SurfacePushConstants
+	{
+		int sceneIndex;
+	};
+
+	class VulkanSurface {
+		public:
+			int MAX_FRAMES_IN_FLIGHT = 2;
+			SurfaceFlags flags = SurfaceFlags::None;
+			SwapchainAttachmentType surfaceType = SwapchainAttachmentType::ColorDepth;
+
+			uint8_t imageFrameCounter = 0;//This will range from 0 to {MAX_FRAMES_IN_FLIGHT}
+			glm::uvec2 windowSize{0, 0};
+			GLFWwindow* p_GLFWWindow = nullptr;///////////////////////////////////////////////
+
+			VkSurfaceKHR surfaceSurface = VK_NULL_HANDLE;
+			VkSwapchainKHR surfaceSwapChain = VK_NULL_HANDLE;
+			VkFormat surfaceswapChainImageFormat = VK_FORMAT_B8G8R8A8_UNORM;
+
+			std::vector<VulkanImage> surfaceColorImages{};
+			std::vector<VulkanImage> surfaceDepthImages{};
+			VkRenderPass surfaceRenderPass = VK_NULL_HANDLE;
+
+			std::vector<VkFramebuffer> surfaceFrameBuffers{};
+
+			VkCommandPool surfaceCommandPool = VK_NULL_HANDLE;
+			std::vector<VkCommandBuffer> surfacePresentCommandBuffers{};
+
+
+			std::vector<VkSemaphore> surfaceImageAvailableSemaphores{};
+			std::vector<VkSemaphore> surfaceRenderFinishedSemaphores{};
+			std::vector<VkFence> surfaceFences{};		
+
+			DescriptorSetInfo descriptorSetInfo{};
+			DescriptorResult SurfaceDescriptorResult{};
+
+			VkPipelineLayout surfacePipelineLayout = VK_NULL_HANDLE;
+			VkPipeline surfacePipeline = VK_NULL_HANDLE;
+
+			VkSampler offscreenSampler = VK_NULL_HANDLE;
+
+			std::vector<std::vector<VulkanImage>> dummyImages{};
+			std::vector<std::shared_ptr<std::vector<VulkanImage>>> offscreenImages{}; // Offscreen images for each frame in flight
+
+			int AddNewScene(std::shared_ptr<VulkanCore> vulkanCore, uint32_t width, uint32_t height);
+
+
+
+			void CreateSurfaceResources(std::shared_ptr<VulkanCore> vulkanCore, GLFWwindow* p_GLFWWindow);
+			// Recreate swapchain (window resize) — destroys & recreates swapchain-dependent objects
+			void RecreateSwapchain(std::shared_ptr<VulkanCore> core);
+			// Destroy everything owned by the surface (waits device idle)
+			void Destroy(std::shared_ptr<VulkanCore> vulkanCore);
+		private:
+			void CreateEmptyStartingDescriptors(std::shared_ptr<VulkanCore> vulkanCore, uint32_t maxSets);
+	};
+
+	struct SceneInfo {
+		uint32_t width = 600;
+		uint32_t height = 400;
+		int32_t xoffset = 0;//Of Surface when comositing
+		int32_t yoffset = 0;//Of Surface when comositing
+		std::string vertShaderPath;
+		std::string fragShaderPath;
+		bool enableDepth = true;
+
+	};
+
+	class VulkanScene {
+		public:
+			uint8_t sceneID;
+			uint32_t width = 600;
+			uint32_t height = 400;
+			int32_t xoffset = 0;//Of Surface when comositing
+			int32_t yoffset = 0;//Of Surface when comositing
+
+			int sceneIndex = -1; // Index of the scene in the surface's offscreenImages vector
+
+			int* MAX_FRAMES_IN_FLIGHT = nullptr; // Pointer to surface's max frames in flight 
+			uint8_t* imageFrameCounter = 0;
+
+			//Offscreen rendering
+			VkRenderPass sceneRenderPass = VK_NULL_HANDLE;
 		
-		uint8_t imageFrameCounter = 0;//This will range from 0 to {MAX_FRAMES_IN_FLIGHT}
+			std::shared_ptr<std::vector<VulkanImage>> sceneColorImage{};
+			std::vector<VulkanImage> scenedepthAttachment{};
 
-		glm::uvec2 windowSize;
-		GLFWwindow* p_GLFWWindow;
+			std::vector<VkFramebuffer>  sceneOffscreenFrameBuffers{};
 
-		VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
-		VkSwapchainKHR vkSwapChain = VK_NULL_HANDLE;
+			VkCommandPool sceneCommandPool = VK_NULL_HANDLE;
+			std::vector<VkCommandBuffer> sceneCommandBuffers{};
 
-		/*
-		* Frames in Flight, This will likely be 1-3 frames. used to Render, Present, and or transfer in parallel. Speeds things up
-		* You need each one of these per VkImage for the swapchain EI The next line down
-		*These are for the Swapchain
-		*/
 
-		std::vector<VulkanImage> surfaceSwapchainImages{};
-		std::vector<VulkanImage> surfaceDepthImages{};
+			std::vector<VkPipelineLayout> scenePipelineLayouts{}; 
+			std::vector<VkPipeline> scenePipelines{};
 
-		std::vector<VkFramebuffer> surfaceVkFrameBuffers{};
+			DescriptorResult SceneDescriptorResult{};
 
-		VkRenderPass vkRenderPass = VK_NULL_HANDLE;
+			std::vector<VkSemaphore> sceneImageAvailableSemaphores{};
+			std::vector<VkSemaphore> sceneRenderFinishedSemaphores{};
+			std::vector<VkFence> sceneFences{};
 
-		std::vector<VkCommandBuffer> surfaceVkCommandBuffers{};
+			std::vector<Vertex> vertexData{};
+			std::vector<VulkanBuffer> sceneBuffers{};
+			
 
-		std::vector<VkFence> surfaceVkFences{};
 
-		std::vector<VkSemaphore> imageAvailableSemaphores{};
-		std::vector<VkSemaphore> renderFinishedSemaphores{};
-
-		void Close(VulkanCore& vulkanCore) {
-			vkDeviceWaitIdle(vulkanCore.vkDevice);
-
-			// --- Destroy synchronization objects ---
-			for (auto fence : surfaceVkFences) {
-				if (fence != VK_NULL_HANDLE) {
-					vkDestroyFence(vulkanCore.vkDevice, fence, nullptr);
-				}
-			}
-			surfaceVkFences.clear();
-
-			for (auto semaphore : imageAvailableSemaphores) {
-				if (semaphore != VK_NULL_HANDLE) {
-					vkDestroySemaphore(vulkanCore.vkDevice, semaphore, nullptr);
-				}
-			}
-			imageAvailableSemaphores.clear();
-
-			for (auto semaphore : renderFinishedSemaphores) {
-				if (semaphore != VK_NULL_HANDLE) {
-					vkDestroySemaphore(vulkanCore.vkDevice, semaphore, nullptr);
-				}
-			}
-			renderFinishedSemaphores.clear();
-
-			// --- Destroy framebuffers ---
-			for (auto framebuffer : surfaceVkFrameBuffers) {
-				if (framebuffer != VK_NULL_HANDLE) {
-					vkDestroyFramebuffer(vulkanCore.vkDevice, framebuffer, nullptr);
-				}
-			}
-			surfaceVkFrameBuffers.clear();
-
-			// --- Destroy render pass ---
-			if (vkRenderPass != VK_NULL_HANDLE) {
-				vkDestroyRenderPass(vulkanCore.vkDevice, vkRenderPass, nullptr);
-				vkRenderPass = VK_NULL_HANDLE;
-			}
-
-			// --- Destroy swapchain ---
-			if (vkSwapChain != VK_NULL_HANDLE) {
-				vkDestroySwapchainKHR(vulkanCore.vkDevice, vkSwapChain, nullptr);
-				vkSwapChain = VK_NULL_HANDLE;
-			}
-
-			// --- Destroy surface ---
-			if (vkSurface != VK_NULL_HANDLE) {
-				vkDestroySurfaceKHR(vulkanCore.vkInstance, vkSurface, nullptr);
-				vkSurface = VK_NULL_HANDLE;
-			}
-		}
-	};
-
-	struct VulkanScene {
-
-		uint8_t sceneID;
-
-		//Make large enough for all of the Descriptor sets
-		VkDescriptorPool vkDesciptorPool = VK_NULL_HANDLE;
-
-		//need 1 per unique descriptor configuration
-		std::vector<VkDescriptorSetLayout> sceneVkDesciptoreSetLayouts{};
-
-		//1 per object type/material OR per frame for uniform buffers.
-		std::vector<VkDescriptorSet> sceneVkDescriptorSets{};
-
-		//need 1 per unique descriptor layout configuration
-		std::vector<VkPipelineLayout> sceneVkPipelineLayouts{};
-
-		//need 1 per unique shader/stage/render state combination
-		std::vector<VkPipeline> sceneVkPipelines{};
-
-		std::vector<Vertex> vertexData{};
-	
-		//1 per vertex/index/uniform buffer
-		std::vector<VulkanBuffer> sceneVkBuffers{};
-
-		//1 per texture/depth image/off-screen render target
-		std::vector<VulkanImage> sceneVkImages{};
-
-		//1 per texture type
-		std::vector<VkSampler> sceneVkSamplers{};
+			void CreateSceneResources(std::shared_ptr<VulkanCore> vulkanCore, VulkanSurface* vulkanSurface);
+			void UpdateSceneSurface(std::shared_ptr<VulkanCore> vulkanCore, VulkanSurface* vulkanSurface);
+			void ResizeScene(std::shared_ptr<VulkanCore> vulkanCore, VulkanSurface* vulkanSurfacePtr, uint32_t newWidth, uint32_t newHeight, uint32_t newX = 0, uint32_t newY = 0);
+			// Destroy everything owned by the scene (waits device idle)
+			void Destroy(VulkanCore& core);
 	};
 }

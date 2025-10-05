@@ -19,7 +19,7 @@ public:
 
 	inline int WindowCount() { return windows.size(); }
 
-	int CreateNewWindow(std::string title, int width, int height, int posx = 0, int posy = 0);
+	int CreateNewWindow(std::string title, uint32_t width, uint32_t height, int posx = 0, int posy = 0);
 
 	void RenderAllWindows();
 

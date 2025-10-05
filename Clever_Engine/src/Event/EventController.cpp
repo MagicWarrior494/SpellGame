@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <iostream>
+
 #include "Io/ConversionData.h"
 
 
@@ -21,7 +22,7 @@ void EventController::Update()
 	{
 		KeySet windowKeyset = window->GetKeySet();
 		
-		for (auto [eventKeyset, lambdafunction] : eventSubscriberList)
+		for (auto& [eventKeyset, eventAction] : eventSubscriberList)
 		{
 			bool success = true;
 			for (const auto& key : eventKeyset.keys) {
@@ -40,7 +41,12 @@ void EventController::Update()
 			 
 			if (!success) continue;
 
-			lambdafunction(*window);
+			uint32_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+			if (current_time - eventAction.time_at_last_press > eventAction.delay_between_presses)
+			{
+				eventAction.time_at_last_press = current_time;
+				eventAction.function(*window);
+			}
 		}
 
 		window->ClearKeySets();
@@ -54,9 +60,9 @@ void EventController::CleanUp()
 
 }
 
-void EventController::RegisterFunction(KeySet keyset, std::function<void(Window& window)> func)
+void EventController::RegisterFunction(KeySet keyset, EventAction eventAction)
 {
-	eventSubscriberList.insert({ keyset, std::move(func) });
+	eventSubscriberList.insert({ keyset, std::move(eventAction) });
 }
 
 //void EventController::setKey(InputCodes::Keyboard key, bool state)

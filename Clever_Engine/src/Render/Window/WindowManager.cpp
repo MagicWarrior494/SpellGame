@@ -33,7 +33,7 @@ void WindowManager::Update()
 	vulkanContext->Update();
 }
 
-int WindowManager::CreateNewWindow(std::string title, int width, int height, int posx, int posy)
+int WindowManager::CreateNewWindow(std::string title, uint32_t width, uint32_t height, int posx, int posy)
 {
 	std::unique_ptr<Window> window = std::make_unique<Window>(vulkanContext, title, width, height, posx, posy);
 	window->InitWindow();

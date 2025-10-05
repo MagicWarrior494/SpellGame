@@ -1,20 +1,10 @@
 #include "RenderSurface.h"
-
-#include "Surface/CreateVulkanSurface.h"
-#include "Surface/CreateSwapChain.h"
-#include "Surface/CreateImageViews.h"
-#include "Surface/CreateFrameBuffers.h"
-#include "Surface/CreateRenderpass.h"
-#include "Surface/CreateCommandBuffers.h"
-#include "Surface/CreateSyncObjects.h"
-#include "Surface/CreateImage.h"
-#include "Scene/CreateDescriptors.h"
-#include "Scene/CreatePipelines.h"
 #include "Buffers/CreateBuffer.h"
+#include <iostream>
 
 namespace Vulkan {
 	RenderSurface::RenderSurface(std::shared_ptr<VulkanCore> core, SurfaceFlags flags, uint8_t id) : 
-		vulkanCore(std::move(core)), flags(flags), renderSurfaceID(id)
+		vulkanCore(std::move(core)), flags(flags), surfaceId(id)
 	{
 		//vulkanSurface = VulkanSurface{};
 	}
@@ -24,200 +14,335 @@ namespace Vulkan {
 		vulkanSurface.p_GLFWWindow = glfwWindowptr;
 
 		if ((flags & SurfaceFlags::EnableTripleBuffer) != SurfaceFlags::None) {
-			vulkanCore->MAX_FRAMES_IN_FLIGHT = 3;
+			vulkanSurface.MAX_FRAMES_IN_FLIGHT = 3;
 		}
 
-		CreateVulkanRenderSurface(vulkanCore, vulkanSurface, flags);
-		CreateSwapchain(vulkanCore, vulkanSurface, flags);
-		CreateSwapchainImages(vulkanCore, vulkanSurface, flags);//Also makes DepthVulkanImages if Depth bit is set in flags
-		CreateRenderPass(vulkanCore, vulkanSurface, flags);
-		CreateFrameBuffers(vulkanCore, vulkanSurface, flags);
-		CreateCommandBuffers(vulkanCore, vulkanSurface);
-		CreateSyncObjects(vulkanCore, vulkanSurface);
-
+        vulkanSurface.CreateSurfaceResources(vulkanCore, glfwWindowptr);
 		if (vulkanScenes.size() > 0) return;
 		//CREATING FIRST SCENE OF RENDERSURFACE, might want to make a way to create a new rendersurface without making a new scene
-
-
 
 	}
 	void RenderSurface::CloseRenderSurface()
 	{
-		CloseVulkanSurface(vulkanCore, vulkanSurface);
-	}
-	void RenderSurface::RecreateSwapChain()
-	{
-		//glfwPollEvents();
-		int width = 0, height = 0;
-		glfwGetFramebufferSize(vulkanSurface.p_GLFWWindow, &width, &height);
-
-		if (width == 0 || height == 0)
-		{
-			//Because window is still minimized and shouldnt be processed.
-			return;
-		}
-
-		vkDeviceWaitIdle(vulkanCore->vkDevice);
-		CleanUpFrameBuffers(vulkanCore, vulkanSurface);
-		CleanupSwapchainImages(vulkanCore, vulkanSurface);
-		CleanupSwapchain(vulkanCore, vulkanSurface);
-		CreateSwapchain(vulkanCore, vulkanSurface, flags);
-		CreateSwapchainImages(vulkanCore, vulkanSurface, flags);
-		CreateFrameBuffers(vulkanCore, vulkanSurface, flags);
-		needsToBeRecreated = false;
+        vulkanSurface.Destroy(vulkanCore);
 	}
 
-    void RenderSurface::AddRandomTriangle(uint8_t sceneID)
+    void RenderSurface::AddRandomTriangle()
     {
-        // Random generator
-        std::random_device rd;
-        std::mt19937 gen(rd());
-
-        // X/Y in normalized device coordinates [-1, 1], Z in [0,1]
-        std::uniform_real_distribution<float> distXY(-1.0f, 1.0f);
-        //std::uniform_real_distribution<float> distZ(0.0f, 1.0f);
-
-        for (int i = 0; i < 3; ++i) {
-            Vertex vertex{};
-            vertex.pos = glm::vec3(distXY(gen), distXY(gen), 0.5f);
-            vulkanScenes[sceneID]->vertexData.push_back(vertex);
-        }
-
-        if (vulkanScenes[sceneID]->vertexData.size() == 3)
+        for (int sceneId = 0; sceneId < sceneIDCounter; sceneId++)
         {
-            //vulkanScenes[sceneID].sceneVkBuffers.push_back(CreateDeviceLocalBuffer(vulkanCore, sizeof(vulkanScenes[sceneID].vertexData[0]) * vulkanScenes[sceneID].vertexData.size(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vulkanScenes[sceneID].vertexData.data()));
-            vulkanScenes[sceneID]->sceneVkBuffers.push_back(CreateAndAllocateBuffer(vulkanCore, vulkanScenes[sceneID]->vertexData, BufferTypes::VertexBuffer));
-        }
-        else
-        {
-            vkWaitForFences(vulkanCore->vkDevice, vulkanSurface.surfaceVkFences.size(), vulkanSurface.surfaceVkFences.data(), VK_TRUE, UINT64_MAX);
-            UpdateBuffer(vulkanCore, vulkanScenes[sceneID]->sceneVkBuffers[0], vulkanScenes[sceneID]->vertexData, BufferTypes::VertexBuffer);
-            //UpdateDeviceLocalBuffer(vulkanCore, vulkanScenes[sceneID].sceneVkBuffers[0], vulkanScenes[sceneID].vertexData.data(), sizeof(vulkanScenes[sceneID].vertexData[0]) * vulkanScenes[sceneID].vertexData.size());
+            VulkanScene& scene = *vulkanScenes[sceneId];
+            // Random generator
+            std::random_device rd;
+            std::mt19937 gen(rd());
+
+            // X/Y in normalized device coordinates [-1, 1], Z in [0,1]
+            std::uniform_real_distribution<float> distXY(-1.0f, 1.0f);
+            //std::uniform_real_distribution<float> distZ(0.0f, 1.0f);
+
+            for (int i = 0; i < 3; ++i) {
+                Vertex vertex{};
+                vertex.pos = glm::vec3(distXY(gen), distXY(gen), 0.5f);
+                scene.vertexData.push_back(vertex);
+            }
+
+            if (scene.vertexData.size() == 3)
+            {
+                scene.sceneBuffers.push_back(CreateAndAllocateBuffer(vulkanCore, scene.vertexData, BufferTypes::VertexBuffer));
+            }
+            else
+            {
+                vkWaitForFences(vulkanCore->vkDevice, scene.sceneFences.size(), scene.sceneFences.data(), VK_TRUE, UINT64_MAX);
+                UpdateBuffer(vulkanCore, scene.sceneBuffers[0], scene.vertexData, BufferTypes::VertexBuffer);
+            }
         }
     }
 	
-	uint8_t RenderSurface::CreateNewScene(uint8_t width, uint8_t height, uint8_t posx, uint8_t posy)
-	{
-        std::shared_ptr<VulkanScene> vulkanScene = std::make_shared<VulkanScene>();
-        CreateDescriptorPool(vulkanCore, vulkanScene);
-        CreateDescriptorSetLayouts(vulkanCore, vulkanScene);
-        CreateDescriptorSets(vulkanCore, vulkanScene);
-        CreatePipelineLayouts(vulkanCore, vulkanScene);
-        CreatePipeline(vulkanCore, vulkanSurface, vulkanScene);
+    void RenderSurface::resizeScenes()
+    {
+        for (VkFence fence : vulkanSurface.surfaceFences)
+        {
+            vkWaitForFences(vulkanCore->vkDevice, 1, &fence, VK_TRUE, UINT64_MAX);
+        }
 
-        vulkanScene->sceneID = nextAvailableSceneID;
-        nextAvailableSceneID += 1;
-        vulkanScenes.push_back(vulkanScene);
-        return vulkanScene->sceneID;
-	}
+        size_t sceneCount = vulkanScenes.size();
+        if (sceneCount == 0) return;
 
-	void RenderSurface::RenderScene(uint8_t sceneID)
-	{
+        int actualWidth, actualHeight;
+        glfwGetWindowSize(vulkanSurface.p_GLFWWindow, &actualWidth, &actualHeight);
+
+        // Calculate grid size (rows and columns)
+        size_t cols = static_cast<size_t>(ceil(sqrt(sceneCount)));
+        size_t rows = static_cast<size_t>(ceil(double(sceneCount) / cols));
+
+        uint32_t sceneWidth = actualWidth / cols;
+        uint32_t sceneHeight = actualHeight / rows;
+
+        for (size_t i = 0; i < sceneCount; ++i)
+        {
+            auto& scene = vulkanScenes[i];
+            scene->width = sceneWidth;
+            scene->height = sceneHeight;
+            // Optionally, you can also set position if needed
+            scene->xoffset = (i % cols) * sceneWidth;
+            scene->yoffset = (i / cols) * sceneHeight;
+            scene->ResizeScene(vulkanCore, &vulkanSurface, sceneWidth, sceneHeight, scene->xoffset, scene->yoffset);
+        }
+    }
+
+    uint8_t RenderSurface::CreateNewScene(uint32_t width, uint32_t height, uint32_t posx, uint32_t posy)
+    {
+        width = (width == 0) ? vulkanSurface.windowSize.x : width;
+		height = (height == 0) ? vulkanSurface.windowSize.y : height;
+		posx = (posx == 0) ? 0 : posx;
+		posy = (posy == 0) ? 0 : posy;
+
+        // --- 1. Create a shared_ptr directly ---
+        auto scenePtr = std::make_shared<VulkanScene>();
+
+        // --- 2. Assign ID and offsets/size ---
+        scenePtr->sceneID = GetNextSceneID();
+        scenePtr->width = width;
+        scenePtr->height = height;
+        scenePtr->xoffset = posx;
+        scenePtr->yoffset = posy;
+
+        // --- 3. Create Vulkan resources ---
+        scenePtr->CreateSceneResources(vulkanCore, &vulkanSurface);
+
+        // --- 4. Add to scene list ---
+        vulkanScenes.push_back(scenePtr);
+
+        // --- 5. Return the scene ID ---
+        return scenePtr->sceneID;
+    }
+
+    void RenderSurface::Render()
+    {
+        // --- 0. Update window size ---
         int width, height;
         glfwGetWindowSize(vulkanSurface.p_GLFWWindow, &width, &height);
-
         vulkanSurface.windowSize = { width, height };
 
-        uint32_t imageIndex;
-        vkAcquireNextImageKHR(
-            vulkanCore->vkDevice,
-            vulkanSurface.vkSwapChain,
+        VkDevice device = vulkanCore->vkDevice;
+
+        // --- 1. Recreate swapchain if needed ---
+        if (needsToBeRecreated)
+        {
+            vulkanSurface.RecreateSwapchain(vulkanCore);
+            needsToBeRecreated = false;
+        }
+
+        // --- 2. Wait for fence for this frame ---
+        VkFence frameFence = vulkanSurface.surfaceFences[vulkanSurface.imageFrameCounter];
+        vkWaitForFences(device, 1, &frameFence, VK_TRUE, UINT64_MAX);
+        vkResetFences(device, 1, &frameFence);
+
+        // --- 3. Acquire next swapchain image ---
+        uint32_t swapchainImageIndex;
+        VkResult acquireResult = vkAcquireNextImageKHR(
+            device,
+            vulkanSurface.surfaceSwapChain,
             UINT64_MAX,
-            vulkanSurface.imageAvailableSemaphores[vulkanSurface.imageFrameCounter],
+            vulkanSurface.surfaceImageAvailableSemaphores[vulkanSurface.imageFrameCounter],
             VK_NULL_HANDLE,
-            &imageIndex
+            &swapchainImageIndex
         );
 
-        VkCommandBuffer cmdBuffer = vulkanSurface.surfaceVkCommandBuffers[vulkanSurface.imageFrameCounter];
+        if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR || acquireResult == VK_SUBOPTIMAL_KHR)
+        {
+            needsToBeRecreated = true;
+            return;
+        }
+        else if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
+        {
+            throw std::runtime_error("Failed to acquire swapchain image!");
+        }
 
-        VkFence fence = vulkanSurface.surfaceVkFences[vulkanSurface.imageFrameCounter];
+        // --- 4. Render each scene to offscreen framebuffer ---
+        std::vector<VkSemaphore> sceneFinishedSemaphores;
+        for (auto& scene : vulkanScenes)
+        {
+            if (!scene) continue;
+            VkCommandBuffer sceneCmd = scene->sceneCommandBuffers[*scene->imageFrameCounter];
+            VkFence sceneFence = scene->sceneFences[*scene->imageFrameCounter];
 
-        vkWaitForFences(vulkanCore->vkDevice, 1, &fence, VK_TRUE, UINT64_MAX);
-        vkResetFences(vulkanCore->vkDevice, 1, &fence);
+            vkWaitForFences(device, 1, &sceneFence, VK_TRUE, UINT64_MAX);
+            vkResetFences(device, 1, &sceneFence);
+            vkResetCommandBuffer(sceneCmd, 0);
+
+            // Begin offscreen command buffer
+            VkCommandBufferBeginInfo beginInfo{};
+            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+            vkBeginCommandBuffer(sceneCmd, &beginInfo);
+
+            // Offscreen render pass
+            VkRenderPassBeginInfo offscreenPassInfo{};
+            offscreenPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            offscreenPassInfo.renderPass = scene->sceneRenderPass;
+            offscreenPassInfo.framebuffer = scene->sceneOffscreenFrameBuffers[*scene->imageFrameCounter];
+            offscreenPassInfo.renderArea.offset = { 0, 0 };
+            offscreenPassInfo.renderArea.extent = { scene->width, scene->height };
+
+            VkClearValue clearValues[2];
+            clearValues[0].color = { 0.0f, 0.0f, 0.4f, 1.0f };
+            clearValues[1].depthStencil = { 1.0f, 0 };
+            offscreenPassInfo.clearValueCount = 2;
+            offscreenPassInfo.pClearValues = clearValues;
+
+            vkCmdBeginRenderPass(sceneCmd, &offscreenPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+            VkViewport viewport{ 0.0f, 0.0f, static_cast<float>(scene->width), static_cast<float>(scene->height), 0.0f, 1.0f };
+            vkCmdSetViewport(sceneCmd, 0, 1, &viewport);
+
+            VkRect2D scissor{ {0,0}, {scene->width, scene->height} };
+            vkCmdSetScissor(sceneCmd, 0, 1, &scissor);
+
+            vkCmdBindPipeline(sceneCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, scene->scenePipelines[0]);
+            if (scene->SceneDescriptorResult.layout != VK_NULL_HANDLE)
+            {
+                vkCmdBindDescriptorSets(
+                    sceneCmd,
+                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    scene->scenePipelineLayouts[0],
+                    0, 1,
+                    &scene->SceneDescriptorResult.sets[*scene->imageFrameCounter],
+                    0, nullptr
+                );
+            }
+
+            if (!scene->vertexData.empty())
+            {
+                VkBuffer vertexBuffers[] = { scene->sceneBuffers[0].buffer };
+                VkDeviceSize offsets[] = { 0 };
+                vkCmdBindVertexBuffers(sceneCmd, 0, 1, vertexBuffers, offsets);
+                vkCmdDraw(sceneCmd, static_cast<uint32_t>(scene->vertexData.size()), 1, 0, 0);
+            }
+
+            vkCmdEndRenderPass(sceneCmd);
+
+            vkEndCommandBuffer(sceneCmd);
+
+            // Submit offscreen command buffer
+            VkSubmitInfo sceneSubmitInfo{};
+            sceneSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            sceneSubmitInfo.commandBufferCount = 1;
+            sceneSubmitInfo.pCommandBuffers = &sceneCmd;
+            sceneSubmitInfo.signalSemaphoreCount = 1;
+            sceneSubmitInfo.pSignalSemaphores = &scene->sceneRenderFinishedSemaphores[*scene->imageFrameCounter];
+
+            vkQueueSubmit(vulkanCore->graphicsQueue, 1, &sceneSubmitInfo, sceneFence);
+            sceneFinishedSemaphores.push_back(scene->sceneRenderFinishedSemaphores[*scene->imageFrameCounter]);
+        }
+
+        // --- 5. Record surface command buffer ---
+        VkCommandBuffer cmdBuffer = vulkanSurface.surfacePresentCommandBuffers[vulkanSurface.imageFrameCounter];
         vkResetCommandBuffer(cmdBuffer, 0);
 
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        vkBeginCommandBuffer(cmdBuffer, &beginInfo);
+        VkCommandBufferBeginInfo beginInfoSurface{};
+        beginInfoSurface.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfoSurface.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        vkBeginCommandBuffer(cmdBuffer, &beginInfoSurface);
 
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = vulkanSurface.vkRenderPass;
-        renderPassInfo.framebuffer = vulkanSurface.surfaceVkFrameBuffers[imageIndex];
-        renderPassInfo.renderArea.offset = { 0, 0 };
+        renderPassInfo.renderPass = vulkanSurface.surfaceRenderPass;
+        renderPassInfo.framebuffer = vulkanSurface.surfaceFrameBuffers[swapchainImageIndex];
+        renderPassInfo.renderArea.offset = { 0,0 };
         renderPassInfo.renderArea.extent = { vulkanSurface.windowSize.x, vulkanSurface.windowSize.y };
 
         VkClearValue clearValue{};
-        clearValue.color = { {0.0f, 0.0f, 0.0f, 1.0f} }; // black
+        clearValue.color = { 0.1f, 0.2f, 0.0f, 1.0f };
         renderPassInfo.clearValueCount = 1;
         renderPassInfo.pClearValues = &clearValue;
 
         vkCmdBeginRenderPass(cmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = static_cast<float>(vulkanSurface.windowSize.x);
-        viewport.height = static_cast<float>(vulkanSurface.windowSize.y);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
+        VkViewport viewportSurface{ 0.0f, 0.0f, static_cast<float>(vulkanSurface.windowSize.x), static_cast<float>(vulkanSurface.windowSize.y), 0.0f, 1.0f };
+        vkCmdSetViewport(cmdBuffer, 0, 1, &viewportSurface);
 
-        VkRect2D scissor{};
-        scissor.offset = { 0, 0 };
-        scissor.extent = { vulkanSurface.windowSize.x, vulkanSurface.windowSize.y };
-        vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
+        VkRect2D scissorSurface{ {0,0}, {vulkanSurface.windowSize.x, vulkanSurface.windowSize.y} };
+        vkCmdSetScissor(cmdBuffer, 0, 1, &scissorSurface);
 
-        vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanScenes[sceneID]->sceneVkPipelines[0]);
+        vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanSurface.surfacePipeline);
+        vkCmdBindDescriptorSets(
+            cmdBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            vulkanSurface.surfacePipelineLayout,
+            0, 1,
+            &vulkanSurface.SurfaceDescriptorResult.sets[vulkanSurface.imageFrameCounter],
+            0, nullptr
+        );
 
-        if (vulkanScenes[sceneID]->vertexData.size() > 0)
+        // Draw each scene texture
+        for (auto& scene : vulkanScenes)
         {
-            VkBuffer vertexBuffers[] = { vulkanScenes[sceneID]->sceneVkBuffers[0].buffer }; // assuming first buffer is vertex
-            VkDeviceSize offsets[] = { 0 };
-            vkCmdBindVertexBuffers(cmdBuffer, 0, 1, vertexBuffers, offsets);
+            VkViewport sceneViewport{
+                static_cast<float>(scene->xoffset),
+                static_cast<float>(scene->yoffset),
+                static_cast<float>(scene->width),
+                static_cast<float>(scene->height),
+                0.0f,
+                1.0f
+            };
+            vkCmdSetViewport(cmdBuffer, 0, 1, &sceneViewport);
 
-            vkCmdDraw(cmdBuffer, static_cast<uint32_t>(vulkanScenes[sceneID]->vertexData.size()), 1, 0, 0); // example: draw 3 vertices (triangle)
+            VkRect2D sceneScissor{ {scene->xoffset, scene->yoffset}, {scene->width, scene->height} };
+            vkCmdSetScissor(cmdBuffer, 0, 1, &sceneScissor);
+
+            vkCmdPushConstants(
+                cmdBuffer,
+                vulkanSurface.surfacePipelineLayout,
+                VK_SHADER_STAGE_FRAGMENT_BIT,
+                0,
+                sizeof(SurfacePushConstants),
+                &scene->sceneID
+            );
+
+            vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
         }
 
         vkCmdEndRenderPass(cmdBuffer);
+        vkEndCommandBuffer(cmdBuffer);
 
-        if (vkEndCommandBuffer(cmdBuffer) != VK_SUCCESS) {
-            throw std::runtime_error("Failed to record command buffer!");
+        // --- 6. Submit surface command buffer ---
+        std::vector<VkSemaphore> waitSemaphores;
+        std::vector<VkPipelineStageFlags> waitStages;
+
+        // Wait for swapchain image
+        waitSemaphores.push_back(vulkanSurface.surfaceImageAvailableSemaphores[vulkanSurface.imageFrameCounter]);
+        waitStages.push_back(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+
+        // Wait for all scene offscreen passes
+        for (auto& sem : sceneFinishedSemaphores)
+        {
+            waitSemaphores.push_back(sem);
+            waitStages.push_back(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
         }
-
-        VkSemaphore waitSemaphores[] = { vulkanSurface.imageAvailableSemaphores[vulkanSurface.imageFrameCounter] };
-        VkSemaphore signalSemaphores[] = { vulkanSurface.renderFinishedSemaphores[vulkanSurface.imageFrameCounter] };
-        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-
-        vkResetFences(vulkanCore->vkDevice, 1, &fence);
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = waitSemaphores;
-        submitInfo.pWaitDstStageMask = waitStages;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &cmdBuffer;
+        submitInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
+        submitInfo.pWaitSemaphores = waitSemaphores.data();
+        submitInfo.pWaitDstStageMask = waitStages.data();
         submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = signalSemaphores;
+        submitInfo.pSignalSemaphores = &vulkanSurface.surfaceRenderFinishedSemaphores[vulkanSurface.imageFrameCounter];
 
+        vkQueueSubmit(vulkanCore->graphicsQueue, 1, &submitInfo, frameFence);
 
-        vkQueueSubmit(vulkanCore->graphicsQueue, 1, &submitInfo, vulkanSurface.surfaceVkFences[vulkanSurface.imageFrameCounter]);
-
+        // --- 7. Present ---
         VkPresentInfoKHR presentInfo{};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = signalSemaphores;
+        presentInfo.pWaitSemaphores = &vulkanSurface.surfaceRenderFinishedSemaphores[vulkanSurface.imageFrameCounter];
         presentInfo.swapchainCount = 1;
-        presentInfo.pSwapchains = &vulkanSurface.vkSwapChain;
-        presentInfo.pImageIndices = &imageIndex;
-
+        presentInfo.pSwapchains = &vulkanSurface.surfaceSwapChain;
+        presentInfo.pImageIndices = &swapchainImageIndex;
         vkQueuePresentKHR(vulkanCore->presentQueue, &presentInfo);
 
-        // Advance frame counter
-        vulkanSurface.imageFrameCounter = (vulkanSurface.imageFrameCounter + 1) % vulkanCore->MAX_FRAMES_IN_FLIGHT;
-
-	}
+        vulkanSurface.imageFrameCounter = (vulkanSurface.imageFrameCounter + 1) % vulkanSurface.MAX_FRAMES_IN_FLIGHT;
+    }
 }

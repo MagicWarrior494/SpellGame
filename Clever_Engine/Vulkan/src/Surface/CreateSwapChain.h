@@ -1,6 +1,8 @@
 #pragma once
 #include <algorithm>
 #include <stdexcept>
+#include <vulkan/vulkan.h>
+#include "SurfaceFlags.h"
 
 namespace Vulkan {
 	struct SwapChainSupportDetails {
@@ -22,28 +24,35 @@ namespace Vulkan {
 		framebufferSize.y = static_cast<uint32_t>(height);
 	}
 
-    inline void CreateSwapchain(std::shared_ptr<VulkanCore> VC, VulkanSurface& vulkanSurface, SurfaceFlags flags) {
+    struct SwapChainCreateInfo {
+        GLFWwindow* p_GLFWWindow = nullptr;
+        VkSurfaceKHR surface = VK_NULL_HANDLE;
+        glm::uvec2 windowSize;
+		VkFormat swapChainImageFormat = VK_FORMAT_UNDEFINED;
+        SurfaceFlags flags = SurfaceFlags::None;
+	};
+
+    inline void CreateSwapchain(std::shared_ptr<VulkanCore> VC, SwapChainCreateInfo info, VkSwapchainKHR& swapChain) {
         VulkanCore& vulkanCore = *VC;
-        WaitForValidFramebufferSize(vulkanSurface.p_GLFWWindow, vulkanSurface.windowSize);
+        WaitForValidFramebufferSize(info.p_GLFWWindow, info.windowSize);
 
         SwapChainSupportDetails swapChainSupport;
         VkPhysicalDevice physicalDevice = vulkanCore.vkPhysicalDevice;
-        VkSurfaceKHR surface = vulkanSurface.vkSurface;
 
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &swapChainSupport.capabilities);
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, info.surface, &swapChainSupport.capabilities);
 
         uint32_t formatCount;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, info.surface, &formatCount, nullptr);
         if (formatCount != 0) {
             swapChainSupport.formats.resize(formatCount);
-            vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, swapChainSupport.formats.data());
+            vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, info.surface, &formatCount, swapChainSupport.formats.data());
         }
 
         uint32_t presentModeCount;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, info.surface, &presentModeCount, nullptr);
         if (presentModeCount != 0) {
             swapChainSupport.presentModes.resize(presentModeCount);
-            vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, swapChainSupport.presentModes.data());
+            vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, info.surface, &presentModeCount, swapChainSupport.presentModes.data());
         }
 
         // Choose surface format
@@ -57,18 +66,18 @@ namespace Vulkan {
         }
 
         // Clamp window size extent
-        vulkanSurface.windowSize.x = std::clamp(vulkanSurface.windowSize.x,
+        info.windowSize.x = std::clamp(info.windowSize.x,
             swapChainSupport.capabilities.minImageExtent.width,
             swapChainSupport.capabilities.maxImageExtent.width);
-        vulkanSurface.windowSize.y = std::clamp(vulkanSurface.windowSize.y,
+        info.windowSize.y = std::clamp(info.windowSize.y,
             swapChainSupport.capabilities.minImageExtent.height,
             swapChainSupport.capabilities.maxImageExtent.height);
 
-        VkExtent2D extent = { vulkanSurface.windowSize.x, vulkanSurface.windowSize.y };
+        VkExtent2D extent = { info.windowSize.x, info.windowSize.y };
 
         // Choose present mode
         VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
-        if ((flags & SurfaceFlags::EnableVSync) == SurfaceFlags::None) {
+        if ((info.flags & SurfaceFlags::EnableVSync) == SurfaceFlags::None) {
             for (const auto& mode : swapChainSupport.presentModes) {
                 if (mode == VK_PRESENT_MODE_MAILBOX_KHR) {
                     presentMode = mode;
@@ -85,7 +94,7 @@ namespace Vulkan {
 
         VkSwapchainCreateInfoKHR swapchainCreateInfo{};
         swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        swapchainCreateInfo.surface = surface;
+        swapchainCreateInfo.surface = info.surface;
         swapchainCreateInfo.minImageCount = imageCount;
         swapchainCreateInfo.imageFormat = surfaceFormat.format;
         swapchainCreateInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -113,24 +122,9 @@ namespace Vulkan {
         swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         swapchainCreateInfo.presentMode = presentMode;
         swapchainCreateInfo.clipped = VK_TRUE;
-        swapchainCreateInfo.oldSwapchain = vulkanSurface.vkSwapChain; // Use old swapchain if recreating
 
-        if (vkCreateSwapchainKHR(vulkanCore.vkDevice, &swapchainCreateInfo, nullptr, &vulkanSurface.vkSwapChain) != VK_SUCCESS) {
+        if (vkCreateSwapchainKHR(vulkanCore.vkDevice, &swapchainCreateInfo, nullptr, &swapChain) != VK_SUCCESS) {
             throw std::runtime_error("failed to create Swap Chain!");
-        }
-
-        // After successful creation, destroy old swapchain if needed:
-        if (swapchainCreateInfo.oldSwapchain != VK_NULL_HANDLE) {
-            vkDestroySwapchainKHR(vulkanCore.vkDevice, swapchainCreateInfo.oldSwapchain, nullptr);
-        }
-    }
-
-    inline void CleanupSwapchain(std::shared_ptr<VulkanCore> VC, VulkanSurface& vulkanSurface)
-    {
-        VulkanCore& vulkanCore = *VC;
-        if (vulkanSurface.vkSwapChain != VK_NULL_HANDLE) {
-            vkDestroySwapchainKHR(vulkanCore.vkDevice, vulkanSurface.vkSwapChain, nullptr);
-            vulkanSurface.vkSwapChain = VK_NULL_HANDLE;
         }
     }
 }

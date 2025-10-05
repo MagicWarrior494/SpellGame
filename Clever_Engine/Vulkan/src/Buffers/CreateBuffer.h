@@ -28,7 +28,7 @@ namespace Vulkan {
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandPool = VC->VkCommandPools[0];
+		allocInfo.commandPool = VC->coreCommandPool;
 		allocInfo.commandBufferCount = 1;
 
 		VkCommandBuffer commandBuffer;
@@ -54,7 +54,7 @@ namespace Vulkan {
 		vkQueueSubmit(VC->graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
 		vkQueueWaitIdle(VC->graphicsQueue);
 
-		vkFreeCommandBuffers(VC->vkDevice, VC->VkCommandPools[0], 1, &commandBuffer);
+		vkFreeCommandBuffers(VC->vkDevice, VC->coreCommandPool, 1, &commandBuffer);
 	}
 
 	inline void CreateBuffer(std::shared_ptr<VulkanCore> VC, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)

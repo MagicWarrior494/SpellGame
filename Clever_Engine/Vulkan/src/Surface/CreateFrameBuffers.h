@@ -3,42 +3,44 @@
 #include "SurfaceFlags.h"
 
 namespace Vulkan {
-	inline void CreateFrameBuffers(std::shared_ptr<VulkanCore> VC, VulkanSurface& vulkanSurface, SurfaceFlags flags)
-	{
-		VulkanCore& vulkanCore = *VC;
-		vulkanSurface.surfaceVkFrameBuffers.resize(vulkanSurface.surfaceSwapchainImages.size());
-		for (int i = 0; i < vulkanSurface.surfaceSwapchainImages.size(); i++)
-		{
-			VkImageView& imageView = vulkanSurface.surfaceSwapchainImages[i].view;
-			std::vector<VkImageView> attachments;
+    inline void CreateFrameBuffers(
+        std::shared_ptr<VulkanCore> vulkanCore,
+        VkRenderPass renderPass,
+        const std::vector<VulkanImage>& colorImages,
+        const std::vector<VulkanImage>& depthImages,
+        std::vector<VkFramebuffer>& outFramebuffers,
+        uint32_t width,
+        uint32_t height)
+    {
+        outFramebuffers.clear();
+        size_t count = std::max(colorImages.size(), size_t(1));
 
-			attachments.push_back(imageView);
-			if ((flags & SurfaceFlags::EnableDepth) != SurfaceFlags::None)
-			{
-				attachments.push_back(vulkanSurface.surfaceDepthImages[i].view);
-			}
+        for (size_t i = 0; i < count; ++i)
+        {
+            std::vector<VkImageView> attachments;
 
-			VkFramebufferCreateInfo framebufferInfo{};
-			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			framebufferInfo.renderPass = vulkanSurface.vkRenderPass;
-			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-			framebufferInfo.pAttachments = attachments.data();
-			framebufferInfo.width = vulkanSurface.windowSize.x;
-			framebufferInfo.height = vulkanSurface.windowSize.y;
-			framebufferInfo.layers = 1;
+            // Color attachment
+            if (!colorImages.empty())
+                attachments.push_back(colorImages[i].view);
 
-			if (vkCreateFramebuffer(vulkanCore.vkDevice, &framebufferInfo, nullptr, &vulkanSurface.surfaceVkFrameBuffers[i]) != VK_SUCCESS)
-			{
-				throw std::runtime_error("Could not create Framebuffer!");
-			}
-		}
-	}
-	inline void CleanUpFrameBuffers(std::shared_ptr<VulkanCore> VC, VulkanSurface& vulkanSurface)
-	{
-		VulkanCore& vulkanCore = *VC;
-		for (auto framebuffer : vulkanSurface.surfaceVkFrameBuffers) {
-			vkDestroyFramebuffer(vulkanCore.vkDevice, framebuffer, nullptr);
-		}
-		vulkanSurface.surfaceVkFrameBuffers.clear();
-	}
+            // Depth attachment
+            if (!depthImages.empty())
+                attachments.push_back(depthImages[i].view);
+
+            VkFramebufferCreateInfo framebufferInfo{};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = renderPass;
+            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+            framebufferInfo.pAttachments = attachments.data();
+            framebufferInfo.width = width;
+            framebufferInfo.height = height;
+            framebufferInfo.layers = 1;
+
+            VkFramebuffer framebuffer;
+            if (vkCreateFramebuffer(vulkanCore->vkDevice, &framebufferInfo, nullptr, &framebuffer) != VK_SUCCESS)
+                throw std::runtime_error("Failed to create framebuffer!");
+
+            outFramebuffers.push_back(framebuffer);
+        }
+    }
 }

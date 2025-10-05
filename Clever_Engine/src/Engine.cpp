@@ -37,13 +37,35 @@ namespace Engine {
 		int windowID1 = windowManager.CreateNewWindow("Window1", 800, 600);
 		windowManager.getWindow(windowID1).addTriangle();
 
-		eventController.RegisterFunction(KeySet{ Keyboard::KEY_N }, [this] (Window& window) {
-			int id = this->windowManager.CreateNewWindow("NewWindow", 800, 600);
-		});
+		eventController.RegisterFunction(KeySet{ Keyboard::KEY_N },
+			EventAction(
+				[this](Window& window) {
+					int id = this->windowManager.CreateNewWindow("NewWindow", 800, 600);
+					this->windowManager.getWindow(id).addTriangle();
+					},
+				1000
+			)
+		);
 
-		eventController.RegisterFunction(KeySet{ Keyboard::KEY_T }, [this] (Window& window) {
-			window.addTriangle();
-		});
+		eventController.RegisterFunction(KeySet{ Keyboard::KEY_T },
+			EventAction(
+				[this](Window& window) {
+					window.addTriangle();
+				},
+				200
+			)
+		);
+
+		eventController.RegisterFunction(KeySet{ Keyboard::KEY_S },
+			EventAction(
+				[this](Window& window) {
+					window.CreateScene();
+					window.addTriangle();
+					window.resizeScenes();
+				},
+				500
+			)
+		);
 
 		while (true)
 		{

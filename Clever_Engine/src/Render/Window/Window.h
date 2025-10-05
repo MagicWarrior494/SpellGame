@@ -35,6 +35,7 @@ public:
 	void CloseWindow();                                         // Close window and unload OpenGL context
 	void Update();
 	void CreateScene();
+	void resizeScenes();
 	void addTriangle();
 
 	bool WindowShouldClose();                                   // Check if application should close (KEY_ESCAPE pressed or windows close icon clicked)

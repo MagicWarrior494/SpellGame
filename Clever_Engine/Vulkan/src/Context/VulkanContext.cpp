@@ -3,12 +3,11 @@
 #include "Core/LogicalDevice.h"
 
 #include "Core/PhysicalDevice.h"
-#include "Core/CommandPool.h"
 
-
+#include "Surface/CreateCommandPool.h"
+#include "Surface/CreateCommandBuffers.h"
 #include "Surface/CreateVulkanSurface.h"
 #include "Surface/CreateSwapChain.h"
-#include "Surface/CreateImageViews.h"
 #include "Surface/CreateFrameBuffers.h"
 #include "Surface/CreateRenderpass.h"
 #include "Surface/CreateCommandBuffers.h"
@@ -25,7 +24,10 @@ namespace Vulkan {
 		CreateVulkanInstance(vulkanCore);
 		CreatePhysicalDevice(vulkanCore);
 		CreateLogicalDevice(vulkanCore);//This also makes the DebugUtilsMessengerEXT object and the graphics and present Queue
-		CreateCommandPool(vulkanCore);
+		vulkanCore->coreCommandPool = CreateCommandPool(vulkanCore);
+		std::vector<VkCommandBuffer> dummy;
+		dummy.push_back(vulkanCore->coreCommandBuffer);
+		CreateCommandBuffers(vulkanCore, vulkanCore->coreCommandPool, 1, dummy);
 	}
 
 	void VulkanContext::Update()
@@ -48,9 +50,10 @@ namespace Vulkan {
 
 	uint8_t VulkanContext::CreateNewWindow(SurfaceFlags flags)
 	{
-		std::shared_ptr<RenderSurface> renderSurface = std::make_shared<RenderSurface>(vulkanCore, flags, nextWindowID);
-		renderSurfaces.insert({ nextWindowID, std::move(renderSurface) });
-		nextWindowID++;
-		return nextWindowID - 1;
+		std::shared_ptr<RenderSurface> renderSurface = std::make_shared<RenderSurface>(vulkanCore, flags, GetNextSurfaceID());
+		uint8_t id = renderSurface->surfaceId;
+		renderSurfaces.insert({ renderSurface->surfaceId, std::move(renderSurface) });
+		
+		return id;
 	}
 }

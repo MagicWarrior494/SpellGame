@@ -1,5 +1,5 @@
 #include "Window.h"
-
+#include <iostream>
 
 
 
@@ -99,17 +99,22 @@ void Window::CloseWindow()
 
 void Window::Update()
 {
-	renderSurface->RenderScene(sceneID);
+	renderSurface->Render();
 }
 
 void Window::CreateScene()
 {
 	sceneID = renderSurface->CreateNewScene();
+} 
+
+void Window::resizeScenes()
+{
+	renderSurface->resizeScenes();
 }
 
 void Window::addTriangle()
 {
-	renderSurface->AddRandomTriangle(sceneID);
+	renderSurface->AddRandomTriangle();
 }
 
 bool Window::WindowShouldClose()
