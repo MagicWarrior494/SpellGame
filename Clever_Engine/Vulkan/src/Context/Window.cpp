@@ -1,15 +1,15 @@
-#include "RenderSurface.h"
+#include "Window.h"
 #include "Buffers/CreateBuffer.h"
 #include <iostream>
 
 namespace Vulkan {
-	RenderSurface::RenderSurface(std::shared_ptr<VulkanCore> core, SurfaceFlags flags, uint8_t id) : 
+	Window::Window(std::shared_ptr<VulkanCore> core, SurfaceFlags flags, uint8_t id) : 
 		vulkanCore(std::move(core)), flags(flags), surfaceId(id)
 	{
 		//vulkanSurface = VulkanSurface{};
 	}
 
-	void RenderSurface::InitRenderSurface(GLFWwindow* glfwWindowptr)
+	void Window::InitWindow(GLFWwindow* glfwWindowptr)
 	{
 		vulkanSurface.p_GLFWWindow = glfwWindowptr;
 
@@ -19,19 +19,19 @@ namespace Vulkan {
 
         vulkanSurface.CreateSurfaceResources(vulkanCore, glfwWindowptr);
 		if (vulkanScenes.size() > 0) return;
-		//CREATING FIRST SCENE OF RENDERSURFACE, might want to make a way to create a new rendersurface without making a new scene
+		//CREATING FIRST SCENE OF Window, might want to make a way to create a new Window without making a new scene
 
 	}
-	void RenderSurface::CloseRenderSurface()
+	void Window::CloseWindow()
 	{
         vulkanSurface.Destroy(vulkanCore);
 	}
 
-    void RenderSurface::AddRandomTriangle()
+    void Window::AddRandomTriangle()
     {
-        for (int sceneId = 0; sceneId < sceneIDCounter; sceneId++)
+        for (auto& [sceneID, scene_ptr] : vulkanScenes)
         {
-            VulkanScene& scene = *vulkanScenes[sceneId];
+			auto& scene = *scene_ptr;
             // Random generator
             std::random_device rd;
             std::mt19937 gen(rd());
@@ -58,7 +58,7 @@ namespace Vulkan {
         }
     }
 	
-    void RenderSurface::resizeScenes()
+    void Window::resizeScenes()
     {
         for (VkFence fence : vulkanSurface.surfaceFences)
         {
@@ -90,7 +90,7 @@ namespace Vulkan {
         }
     }
 
-    uint8_t RenderSurface::CreateNewScene(uint32_t width, uint32_t height, uint32_t posx, uint32_t posy)
+    uint8_t Window::CreateNewScene(uint32_t width, uint32_t height, uint32_t posx, uint32_t posy)
     {
         width = (width == 0) ? vulkanSurface.windowSize.x : width;
 		height = (height == 0) ? vulkanSurface.windowSize.y : height;
@@ -111,13 +111,13 @@ namespace Vulkan {
         scenePtr->CreateSceneResources(vulkanCore, &vulkanSurface);
 
         // --- 4. Add to scene list ---
-        vulkanScenes.push_back(scenePtr);
+        vulkanScenes.insert({ scenePtr->sceneID, scenePtr });
 
         // --- 5. Return the scene ID ---
         return scenePtr->sceneID;
     }
 
-    void RenderSurface::Render()
+    void Window::Render()
     {
         // --- 0. Update window size ---
         int width, height;
@@ -161,7 +161,7 @@ namespace Vulkan {
 
         // --- 4. Render each scene to offscreen framebuffer ---
         std::vector<VkSemaphore> sceneFinishedSemaphores;
-        for (auto& scene : vulkanScenes)
+        for (auto& [sceneID, scene] : vulkanScenes)
         {
             if (!scene) continue;
             VkCommandBuffer sceneCmd = scene->sceneCommandBuffers[*scene->imageFrameCounter];
@@ -276,7 +276,7 @@ namespace Vulkan {
         );
 
         // Draw each scene texture
-        for (auto& scene : vulkanScenes)
+        for (auto& [sceneID, scene] : vulkanScenes)
         {
             VkViewport sceneViewport{
                 static_cast<float>(scene->xoffset),

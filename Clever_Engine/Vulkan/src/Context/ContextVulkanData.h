@@ -12,7 +12,7 @@
 
 namespace Vulkan {
 	inline uint32_t GetNextSurfaceID() {
-		static uint32_t surfaceIDCounter = 0;
+		static uint32_t surfaceIDCounter = 1;
 		return surfaceIDCounter++;
 	}
 

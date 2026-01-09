@@ -8,7 +8,7 @@
 namespace Engine {
 
 	Engine::Engine() :
-		vulkanContext(std::make_shared<Vulkan::VulkanContext>()), windowManager(vulkanContext), eventController(windowManager.GetWindows())
+		vulkanContext(std::make_shared<Vulkan::VulkanContext>()), renderingController(vulkanContext), eventController(windowManager.GetWindows())
 	{
 		vulkanContext->Init();
 	}

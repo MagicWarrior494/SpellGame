@@ -66,21 +66,20 @@
     <ClInclude Include="src\Render\RenderingController.h">
       <Filter>src\Render</Filter>
     </ClInclude>
+    <ClInclude Include="src\Render\Window\RenderSurface.h">
+      <Filter>src\Render\Window</Filter>
+    </ClInclude>
     <ClInclude Include="src\Render\Window\Window.h">
       <Filter>src\Render\Window</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Render\Window\WindowManager.h">
-      <Filter>src\Render\Window</Filter>
-    </ClInclude>
-    <ClInclude Include="src\World\Object\Element.h">
-      <Filter>src\World\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="src\World\Object\UIElement.h">
-      <Filter>src\World\Object</Filter>
     </ClInclude>
     <ClInclude Include="src\World\WorldController.h">
       <Filter>src\World</Filter>
     </ClInclude>
+    <ClInclude Include="src\Scene\SceneController.h" />
+    <ClInclude Include="src\Scene\Object\Element.h" />
+    <ClInclude Include="src\Scene\Object\UIElement.h" />
+    <ClInclude Include="src\World\ECS\Registry.h" />
+    <ClInclude Include="src\World\ECS\Components.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dependencies\ImGui\imgui.cpp">
@@ -107,17 +106,16 @@
     <ClCompile Include="src\Render\RenderingController.cpp">
       <Filter>src\Render</Filter>
     </ClCompile>
+    <ClCompile Include="src\Render\Window\RenderSurface.cpp">
+      <Filter>src\Render\Window</Filter>
+    </ClCompile>
     <ClCompile Include="src\Render\Window\Window.cpp">
       <Filter>src\Render\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Render\Window\WindowManager.cpp">
-      <Filter>src\Render\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="src\World\Object\Element.cpp">
-      <Filter>src\World\Object</Filter>
     </ClCompile>
     <ClCompile Include="src\World\WorldController.cpp">
       <Filter>src\World</Filter>
     </ClCompile>
+    <ClCompile Include="src\Scene\SceneController.cpp" />
+    <ClCompile Include="src\Scene\Object\Element.cpp" />
   </ItemGroup>
 </Project>

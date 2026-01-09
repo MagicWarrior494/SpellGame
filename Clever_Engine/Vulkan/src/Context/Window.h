@@ -4,17 +4,16 @@
 #include "Surface/SurfaceFlags.h"
 
 #include <vector>
+#include <map>
 #include <memory>
 #include <string>
 #include <random>
 
 namespace Vulkan {
-	class RenderSurface {
+	class Window {
 	public:
-		uint32_t sceneIDCounter = 0;
-
 		VulkanSurface vulkanSurface;
-		std::vector<std::shared_ptr<VulkanScene>> vulkanScenes;
+		std::map<uint8_t, std::shared_ptr<VulkanScene>> vulkanScenes;
 		SurfaceFlags flags;
 		std::shared_ptr<VulkanCore> vulkanCore;
 
@@ -22,10 +21,10 @@ namespace Vulkan {
 
 		bool needsToBeRecreated = false;
 
-		RenderSurface(std::shared_ptr<VulkanCore> core, SurfaceFlags flags, uint8_t id);
+		Window(std::shared_ptr<VulkanCore> core, SurfaceFlags flags, uint8_t id);
 
-		void InitRenderSurface(GLFWwindow* glfwWindowptr);  // Initialize window and OpenGL context
-		void CloseRenderSurface();                          // Close window and unload OpenGL context
+		void InitWindow(GLFWwindow* glfwWindowptr);  // Initialize window and OpenGL context
+		void CloseWindow();                          // Close window and unload OpenGL context
 
 		void AddRandomTriangle();
 		void Render();
@@ -33,11 +32,13 @@ namespace Vulkan {
 		void resizeScenes();
 		uint8_t CreateNewScene(uint32_t width = 0, uint32_t height = 0, uint32_t posx = 0, uint32_t posy = 0);
 		inline uint32_t GetNextSceneID() {
-			return sceneIDCounter++;
+			return nextSceneID++;
 		}
 
 	public:
-		RenderSurface(const RenderSurface&) = delete;
-		RenderSurface& operator=(const RenderSurface&) = delete;
+		Window(const Window&) = delete;
+		Window& operator=(const Window&) = delete;
+	private:
+		uint8_t nextSceneID = 1;
 	};
 }
