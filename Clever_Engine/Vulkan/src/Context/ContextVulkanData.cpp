@@ -1,5 +1,8 @@
 #include "ContextVulkanData.h"
 
+#include <filesystem>
+#include <iostream>
+
 #include "Surface/CreateVulkanSurface.h"
 #include "Surface/CreateSwapChain.h"
 #include "Surface/CreateSwapChainImages.h"
@@ -129,8 +132,8 @@ namespace Vulkan {
 		surfacePipelineLayout = CreatePipelineLayout(vulkanCore, pipelineLayoutInfo);
 
 		PipelineInfo pipelineInfo{};
-		pipelineInfo.vertShaderPath = "D:/Projects/SpellGame_Solution/Clever_Engine/Vulkan/res/surfaceVert.spv";
-		pipelineInfo.fragShaderPath = "D:/Projects/SpellGame_Solution/Clever_Engine/Vulkan/res/surfaceFrag.spv";
+		pipelineInfo.vertShaderPath = std::filesystem::current_path().string() + "/.." + "/Clever_Engine/Vulkan/res/surfaceVert.spv";
+		pipelineInfo.fragShaderPath = std::filesystem::current_path().string() + "/.." + "/Clever_Engine/Vulkan/res/surfaceFrag.spv";
 		pipelineInfo.pipelineLayout = surfacePipelineLayout;
 		pipelineInfo.renderPass = surfaceRenderPass;
 		surfacePipeline = CreateGraphicsPipeline(vulkanCore, pipelineInfo);
@@ -348,8 +351,8 @@ namespace Vulkan {
 		scenePipelineLayouts.push_back(CreatePipelineLayout(vulkanCore, pipelineLayoutInfo));
 
 		PipelineInfo pipelineInfo{};
-		pipelineInfo.vertShaderPath = "D:/Projects/SpellGame_Solution/Clever_Engine/Vulkan/res/vert.spv";
-		pipelineInfo.fragShaderPath = "D:/Projects/SpellGame_Solution/Clever_Engine/Vulkan/res/frag.spv";
+		pipelineInfo.vertShaderPath = std::filesystem::current_path().string() + "/.." + "/Clever_Engine/Vulkan/res/vert.spv";
+		pipelineInfo.fragShaderPath = std::filesystem::current_path().string() + "/.." + "/Clever_Engine/Vulkan/res/frag.spv";
 		pipelineInfo.pipelineLayout = scenePipelineLayouts[0];
 		pipelineInfo.renderPass = sceneRenderPass;
 		pipelineInfo.bindingDescription = Vertex::getBindingDescription();

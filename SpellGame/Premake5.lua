@@ -48,7 +48,9 @@ project "SpellGame"
     filter "configurations:Debug"
         runtime "Debug"
         symbols "on"
+        staticruntime "Off" -- /MDd
 
     filter "configurations:Release"
         runtime "Release"
         optimize "on"
+        staticruntime "Off" -- /MD

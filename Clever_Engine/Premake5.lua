@@ -44,17 +44,23 @@ project "Clever_Engine"
         "glfw3"
     }
 
+    -- filter "configurations:Debug"
+    --     runtime "Debug"
+    --     symbols "on"
+    --     prebuildcommands {
+    --         "{MKDIR} Docs"
+    --     }
+
+    --     postbuildcommands {
+    --         "doxygen Doxyfile"
+    --     }
+
     filter "configurations:Debug"
         runtime "Debug"
         symbols "on"
-        prebuildcommands {
-            "{MKDIR} Docs"
-        }
-
-        postbuildcommands {
-            "doxygen Doxyfile"
-        }
+        staticruntime "Off" -- /MDd
 
     filter "configurations:Release"
         runtime "Release"
         optimize "on"
+        staticruntime "Off" -- /MD
