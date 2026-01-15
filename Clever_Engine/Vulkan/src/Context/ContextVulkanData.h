@@ -81,13 +81,6 @@ namespace Vulkan {
 		}
 	};
 
-	struct VulkanBuffer {
-		VkBuffer buffer = VK_NULL_HANDLE;
-		VkDeviceMemory memory = VK_NULL_HANDLE;
-		VkDeviceSize size{};
-		bool isDeviceLocal = false;
-	};
-
 	enum BufferTypes {
 		VertexBuffer,
 		IndexBuffer,
@@ -271,8 +264,8 @@ namespace Vulkan {
 
 			std::vector<Vertex> vertexData{};
 			std::vector<VulkanBuffer> sceneBuffers{};
-			
 
+			std::vector<VulkanBuffer> uniformBuffers{};
 
 			void CreateSceneResources(std::shared_ptr<VulkanCore> vulkanCore, VulkanSurface* vulkanSurface);
 			void UpdateSceneSurface(std::shared_ptr<VulkanCore> vulkanCore, VulkanSurface* vulkanSurface);

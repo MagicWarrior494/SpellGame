@@ -4,18 +4,13 @@
 #include <iostream>
 
 #include "Io/ConversionData.h"
-
-
-EventController::EventController(std::map<int, std::unique_ptr<Window>>& windows)
-	: windows(windows)
-{
-}
+#include "Render/Window/Window.h"
 
 void EventController::Init()
 {
 }
 
-void EventController::Update()
+void EventController::Update(std::map<uint8_t, std::unique_ptr<Window>>& windows)
 {
 	glfwPollEvents();
 	for (auto& [id, window] : windows)

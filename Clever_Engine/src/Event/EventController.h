@@ -32,19 +32,16 @@ public:
 class EventController
 {
 public:
-	EventController(std::map<int, std::unique_ptr<Window>>& windows);
+	EventController() = default;
 
 	void Init();
-	void Update();
+	void Update(std::map<uint8_t, std::unique_ptr<Window>>& windows);
 	void CleanUp();
 
 	void RegisterFunction(KeySet keyset, EventAction eventAction);
 
 	//void setKey(InputCodes::Keyboard key, bool state);
 	//void setMouseButton(InputCodes::Mouse button, bool state);
-
-public:
-	std::map<int, std::unique_ptr<Window>>& windows;
 
 private:
 	std::unordered_map<KeySet, EventAction, KeySetHash> eventSubscriberList;

@@ -1,13 +1,7 @@
 #pragma once
-#include <glm/glm.hpp>
+#include <glm.hpp>
 
-//Self explanatory
-struct Transform
-{
-	glm::vec3 position{0};
-	glm::vec4 rotation{ 1,0,0,0 };
-	glm::vec3 scale{ 0 };
-};
+#include "Objects/Vertex.h"
 
 //If an entity has this component it will be rendered
 struct Visable

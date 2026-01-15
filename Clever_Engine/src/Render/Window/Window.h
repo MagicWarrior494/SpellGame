@@ -3,11 +3,14 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <GLFW/glfw3.h>
+#include <unordered_map>
 
 #include "Context/VulkanContext.h"
 #include "Event/Io/KeySet.h"
 #include "Event/Io/ConversionData.h"
 
+#include "World/ECS/Components.h"
 class Window
 {
 public:
@@ -27,6 +30,12 @@ public:
 	void InitWindow();  // Initialize window and OpenGL context
 	void CloseWindow();                                         // Close window and unload OpenGL context
 
+	void AddChildRenderSurface(uint8_t renderSurfaceID);
+
+	void Render(std::unordered_map<uint32_t, Transform>&);
+
+	uint8_t CreateNewRenderSurface(uint32_t width, uint32_t height, int posx = 0, int posy = 0);
+
 	std::shared_ptr<Vulkan::Window> GetVulkanWindow()
 	{
 		return v_VulkanWindow;
@@ -39,9 +48,7 @@ public:
 	uint8_t GetWindowID() { return WindowID; }
 private:
 	uint8_t WindowID = 0;//Same ID as in VulkanContext because there is a 1:1 mapping between Window and RenderSurface in VulkanContext
-
-
-	std::vector<uint32_t> childrenRenderSurfaces{};
+	std::vector<uint8_t> childrenRenderSurfaces{};
 
 	GLFWwindow* p_GLFWWindow;
 	std::shared_ptr<Vulkan::Window> v_VulkanWindow;

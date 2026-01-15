@@ -1,5 +1,7 @@
 #include "Window.h"
 
+
+
 Window::Window(std::shared_ptr<Vulkan::VulkanContext> vulkanContext, std::string title, int width, int height, int posx, int posy)
 	: title(title), width(width), height(height), posx(posx), posy(posy)
 {
@@ -79,6 +81,11 @@ void Window::InitWindow()
 		GetVulkanWindow()->InitWindow(p_GLFWWindow);
 }
 
+void Window::Render(std::unordered_map<uint32_t, Transform>& transforms)
+{
+	if (IsWindowStillValid())
+		GetVulkanWindow()->RenderScenes(transforms, length);
+}
 
 void Window::CloseWindow()
 {
@@ -87,4 +94,16 @@ void Window::CloseWindow()
 		glfwDestroyWindow(p_GLFWWindow);
 		p_GLFWWindow = nullptr;
 	}
+}
+
+void Window::AddChildRenderSurface(uint8_t renderSurfaceID)
+{
+	childrenRenderSurfaces.push_back(renderSurfaceID);
+}
+
+uint8_t Window::CreateNewRenderSurface(uint32_t width, uint32_t height, int posx, int posy)
+{
+	uint8_t sceneID = GetVulkanWindow()->CreateNewScene(width, height, posx, posy);
+	childrenRenderSurfaces.push_back(sceneID);
+	return sceneID;
 }

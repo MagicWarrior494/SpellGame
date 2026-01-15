@@ -6,7 +6,7 @@ namespace Vulkan {
 	Window::Window(std::shared_ptr<VulkanCore> core, SurfaceFlags flags, uint8_t id) : 
 		vulkanCore(std::move(core)), flags(flags), surfaceId(id)
 	{
-		//vulkanSurface = VulkanSurface{};
+        
 	}
 
 	void Window::InitWindow(GLFWwindow* glfwWindowptr)
@@ -27,35 +27,10 @@ namespace Vulkan {
         vulkanSurface.Destroy(vulkanCore);
 	}
 
-    void Window::AddRandomTriangle()
+    void Window::SyncUniformObjectBuffer(std::unordered_map<uint32_t, Transform>& transforms)
     {
-        for (auto& [sceneID, scene_ptr] : vulkanScenes)
-        {
-			auto& scene = *scene_ptr;
-            // Random generator
-            std::random_device rd;
-            std::mt19937 gen(rd());
-
-            // X/Y in normalized device coordinates [-1, 1], Z in [0,1]
-            std::uniform_real_distribution<float> distXY(-1.0f, 1.0f);
-            //std::uniform_real_distribution<float> distZ(0.0f, 1.0f);
-
-            for (int i = 0; i < 3; ++i) {
-                Vertex vertex{};
-                vertex.pos = glm::vec3(distXY(gen), distXY(gen), 0.5f);
-                scene.vertexData.push_back(vertex);
-            }
-
-            if (scene.vertexData.size() == 3)
-            {
-                scene.sceneBuffers.push_back(CreateAndAllocateBuffer(vulkanCore, scene.vertexData, BufferTypes::VertexBuffer));
-            }
-            else
-            {
-                vkWaitForFences(vulkanCore->vkDevice, scene.sceneFences.size(), scene.sceneFences.data(), VK_TRUE, UINT64_MAX);
-                UpdateBuffer(vulkanCore, scene.sceneBuffers[0], scene.vertexData, BufferTypes::VertexBuffer);
-            }
-        }
+		//TODO update shader to have uniform buffer for model matrix
+		//Make this function loop over all models matrixe and check if dirty, if dirty update the buffer
     }
 	
     void Window::resizeScenes()
@@ -113,12 +88,24 @@ namespace Vulkan {
         // --- 4. Add to scene list ---
         vulkanScenes.insert({ scenePtr->sceneID, scenePtr });
 
+		// Add the object's vertices to the scene's vertex data
+        //Right now only can render a triangle
+        //When asset manager is made replace this
+        scenePtr->vertexData.push_back(Vertex{glm::vec3(1.0f, 1.0f, 0.0f)});
+        scenePtr->vertexData.push_back(Vertex{ glm::vec3(-1.0f, -1.0f, 0.0f) });
+        scenePtr->vertexData.push_back(Vertex{ glm::vec3(1.0f, -1.0f, 0.0f) });
+
+        //9 is the initial overestimation of vertices, grows by x2 when overflowed
+		scenePtr->sceneBuffers.push_back(CreateVertexBuffer(vulkanCore, sizeof(Vertex) * 9));
+        
+
         // --- 5. Return the scene ID ---
         return scenePtr->sceneID;
     }
 
-    void Window::Render()
+    void Window::RenderScenes(std::unordered_map<uint32_t, Transform>& transforms)
     {
+
         // --- 0. Update window size ---
         int width, height;
         glfwGetWindowSize(vulkanSurface.p_GLFWWindow, &width, &height);
@@ -193,7 +180,12 @@ namespace Vulkan {
 
             vkCmdBeginRenderPass(sceneCmd, &offscreenPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-            VkViewport viewport{ 0.0f, 0.0f, static_cast<float>(scene->width), static_cast<float>(scene->height), 0.0f, 1.0f };
+            VkViewport viewport{
+                0.0f,
+                0.0f,
+                static_cast<float>(scene->width),
+                static_cast<float>(scene->height),
+                0.0f, 1.0f };
             vkCmdSetViewport(sceneCmd, 0, 1, &viewport);
 
             VkRect2D scissor{ {0,0}, {scene->width, scene->height} };

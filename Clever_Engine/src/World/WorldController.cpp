@@ -1,11 +1,10 @@
 #include "WorldController.h"
 
 #include "ECS/Components.h"
-#include <glm/glm.hpp>
+#include <glm.hpp>
 
 void WorldController::Init()
 {
-	// Initialization logic here
 }
 void WorldController::Update()
 {

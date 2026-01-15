@@ -19,14 +19,23 @@
     <Filter Include="src\Render">
       <UniqueIdentifier>{FC94E62B-E84C-2879-5154-01D53D2BC369}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Render\Object">
+      <UniqueIdentifier>{028F678E-6EA5-6524-B71C-F145237236AC}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Render\Window">
       <UniqueIdentifier>{63AE91A1-CFC4-8F37-183C-1B59849160BF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Scene">
+      <UniqueIdentifier>{0A06D2B3-7670-862A-BFAE-37D02B58647F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Scene\Object">
+      <UniqueIdentifier>{5084839A-3C7D-A2EC-65AF-8771510782F8}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\World">
       <UniqueIdentifier>{A43321B4-109E-D52A-59DC-86D0C585B37F}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\World\Object">
-      <UniqueIdentifier>{AA20F8FD-9619-1750-BF4B-FCD4ABA3F65B}</UniqueIdentifier>
+    <Filter Include="src\World\ECS">
+      <UniqueIdentifier>{EE593583-5A1A-B1B9-2355-FA368FD4F595}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -63,6 +72,15 @@
     <ClInclude Include="src\Event\Io\KeySet.h">
       <Filter>src\Event\Io</Filter>
     </ClInclude>
+    <ClInclude Include="src\Render\Object\Element.h">
+      <Filter>src\Render\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Render\Object\ElementSetUps.h">
+      <Filter>src\Render\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Render\Object\UIElement.h">
+      <Filter>src\Render\Object</Filter>
+    </ClInclude>
     <ClInclude Include="src\Render\RenderingController.h">
       <Filter>src\Render</Filter>
     </ClInclude>
@@ -72,14 +90,27 @@
     <ClInclude Include="src\Render\Window\Window.h">
       <Filter>src\Render\Window</Filter>
     </ClInclude>
+    <ClInclude Include="src\Scene\Object\Element.h">
+      <Filter>src\Scene\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Scene\Object\UIElement.h">
+      <Filter>src\Scene\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Scene\Scene.h">
+      <Filter>src\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Scene\SceneController.h">
+      <Filter>src\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\ECS\Components.h">
+      <Filter>src\World\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\ECS\Registry.h">
+      <Filter>src\World\ECS</Filter>
+    </ClInclude>
     <ClInclude Include="src\World\WorldController.h">
       <Filter>src\World</Filter>
     </ClInclude>
-    <ClInclude Include="src\Scene\SceneController.h" />
-    <ClInclude Include="src\Scene\Object\Element.h" />
-    <ClInclude Include="src\Scene\Object\UIElement.h" />
-    <ClInclude Include="src\World\ECS\Registry.h" />
-    <ClInclude Include="src\World\ECS\Components.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dependencies\ImGui\imgui.cpp">
@@ -103,6 +134,9 @@
     <ClCompile Include="src\Event\EventController.cpp">
       <Filter>src\Event</Filter>
     </ClCompile>
+    <ClCompile Include="src\Render\Object\Element.cpp">
+      <Filter>src\Render\Object</Filter>
+    </ClCompile>
     <ClCompile Include="src\Render\RenderingController.cpp">
       <Filter>src\Render</Filter>
     </ClCompile>
@@ -112,10 +146,14 @@
     <ClCompile Include="src\Render\Window\Window.cpp">
       <Filter>src\Render\Window</Filter>
     </ClCompile>
+    <ClCompile Include="src\Scene\Object\Element.cpp">
+      <Filter>src\Scene\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Scene\SceneController.cpp">
+      <Filter>src\Scene</Filter>
+    </ClCompile>
     <ClCompile Include="src\World\WorldController.cpp">
       <Filter>src\World</Filter>
     </ClCompile>
-    <ClCompile Include="src\Scene\SceneController.cpp" />
-    <ClCompile Include="src\Scene\Object\Element.cpp" />
   </ItemGroup>
 </Project>
