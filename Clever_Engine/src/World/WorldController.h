@@ -1,31 +1,37 @@
-  #pragma once
-
+#pragma once
+#include "ECS/Registry.h"
+#include "ECS/Components.h"
+#include <random>
 
 class WorldController
 {
-//public:
-//	WorldController();
-//	~WorldController();
-//
-//	void Init(std::shared_ptr<VulkanData> vulkanData);
-//	void StepPhysics(std::shared_ptr<FrameTime> frameTime);
-//
-//	void CleanUp();
-//
-//	std::shared_ptr<RenderData> getRenderables();
-//
-//	void CreateNewGhost(GameObject& gameObject);
-//
-//	void AddObject();
-//	void RemoveObject();
-//	void ModifyObject();
-//
-//	float clip(float n, float lower, float upper);
-//	float distance(glm::vec3 v1, glm::vec3 v2);
-//	glm::vec3 normalize(glm::vec3 v1);
-//	glm::vec3 clip(glm::vec3 n, float lower, float upper);
-//private:
-//	GameObjectsData gameObjects{};
-//	std::vector<std::shared_ptr<Renderable>> renderables{};
-//	std::shared_ptr<RenderData> d_RenderData = std::make_shared<RenderData>();
+public:
+	WorldController() = default;
+	~WorldController() = default;
+
+	void Init();
+	void Update();
+
+	void AddTriangle()
+	{
+		auto entity = registry.CreateEntity();
+
+		std::random_device rd;
+		std::mt19937 gen(rd());
+
+		std::uniform_real_distribution<float> distXY(-1.0f, 1.0f);
+
+		Transform transform{};
+		transform.position = glm::vec3(distXY(gen), distXY(gen), 0.0f);
+		transform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+		transform.rotation = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+		registry.AddComponent<Transform>(entity);
+		registry.AddComponent<Visable>(entity);
+	}
+
+	Registry& GetRegistry() { return registry; }
+
+private:
+	Registry registry{};
 };

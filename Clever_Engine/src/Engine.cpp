@@ -3,14 +3,12 @@
 
 #include <iostream>
 
-
+#include "World/ECS/Components.h"
 
 namespace Engine {
 
-	Engine::Engine() :
-		vulkanContext(std::make_shared<Vulkan::VulkanContext>()), windowManager(vulkanContext), eventController(windowManager.GetWindows())
+	Engine::Engine()
 	{
-		vulkanContext->Init();
 	}
 
 	void Engine::SetUp(std::string setUpFilePath)
@@ -34,49 +32,59 @@ namespace Engine {
 		 
 		//Event::EventSystem ES{};
 
-		int windowID1 = windowManager.CreateNewWindow("Window1", 800, 600);
-		windowManager.getWindow(windowID1).addTriangle();
+		renderingController.SetUp();
 
-		eventController.RegisterFunction(KeySet{ Keyboard::KEY_N },
+		uint8_t windowId = renderingController.CreateNewWindow("Main Window", 960, 540);
+
+		SceneCreationInfo info{ windowId, 960, 540, 0, 0 };
+
+		CameraScene sceneId = sceneController.CreateNewScene<CameraScene>(renderingController, info, 0);
+
+		this->worldController.AddTriangle();
+
+		/*eventController.RegisterFunction(KeySet{ Keyboard::KEY_N },
 			EventAction(
 				[this](Window& window) {
-					int id = this->windowManager.CreateNewWindow("NewWindow", 800, 600);
-					this->windowManager.getWindow(id).addTriangle();
+					int id = this->renderingController.CreateNewWindow("NewWindow", 540, 960);
+					this->worldController.AddTriangle();
 					},
 				1000
 			)
-		);
+		);*/
 
 		eventController.RegisterFunction(KeySet{ Keyboard::KEY_T },
 			EventAction(
 				[this](Window& window) {
-					window.addTriangle();
+					this->worldController.AddTriangle();
 				},
 				200
 			)
 		);
 
-		eventController.RegisterFunction(KeySet{ Keyboard::KEY_S },
+		/*eventController.RegisterFunction(KeySet{ Keyboard::KEY_S },
 			EventAction(
 				[this](Window& window) {
+					SceneCreationInfo info{ windowId, 540, 960, 0, 0 };
+					sceneController.CreateNewScene<CameraScene>(renderingController, info);
 					window.CreateScene();
 					window.addTriangle();
 					window.resizeScenes();
 				},
 				500
 			)
-		);
+		);*/
 
 		while (true)
 		{
-			windowManager.Update();
-			eventController.Update();
+			eventController.Update(renderingController.GetAllWindows());
+			worldController.Update();
+			sceneController.Update();
+			renderingController.Update();
 
-			windowManager.RenderAllWindows();
-			
-
-			if (windowManager.WindowCount() == 0)
+			if (renderingController.GetWindowCount() == 0)
 				break;
+
+			renderingController.Render(worldController.GetRegistry());
 		}
 	}
 

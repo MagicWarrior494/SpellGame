@@ -1,5 +1,69 @@
 #pragma once
+#include <stdexcept>
+#include <memory>
+#include <vector>
+#include <string>
+#include <map>
+#include <iostream>
 
-class RenderingController {
+#include "Window/RenderSurface.h"
+#include "Window/Window.h"
+#include "Context/VulkanContext.h"
 
+#include "World/ECS/Registry.h"
+
+class RenderingController
+{
+public:
+	RenderingController() = default;
+	~RenderingController() = default;
+
+public:
+	void Update();
+	void SetUp();
+	void Render(Registry& reg);
+
+	//This is a scene and shouldnt be called on its own, only when creating a new scene will a new render surface be created
+	uint8_t CreateNewRenderSurface(uint8_t windowID, uint32_t width, uint32_t height, int posx = 0, int posy = 0);
+	
+	//Creates a new window, does NOT create a render surface, that is done separately when creating a scene
+	uint8_t CreateNewWindow(std::string title, uint32_t width, uint32_t height, int posx = 0, int posy = 0);
+
+	//Deletes render Surface, this should NOT be called directly, only when deleting a scene will a render surface be deleted
+	void DeleteRenderSurface(int renderSurfaceID);
+
+	uint8_t GetNextRenderSurfaceID() { return nextRenderSurfaceID++; }
+
+	RenderSurface& GetRenderSurface(uint8_t renderSurfaceID)
+	{
+		if (renderSurfaces.find(renderSurfaceID) != renderSurfaces.end()) {
+			return *renderSurfaces.at(renderSurfaceID);
+		}
+		throw std::runtime_error("Render Surface ID not found in RenderingController");
+	}
+
+	Window& GetWindow(uint8_t windowID)
+	{
+		if (windows.find(windowID) != windows.end()) {
+			return *windows.at(windowID);
+		}
+		throw std::runtime_error("Window ID not found in RenderingController");
+	}
+
+	std::map<uint8_t, std::unique_ptr<Window>>& GetAllWindows()
+	{
+		return windows;
+	}
+
+	int GetWindowCount()
+	{
+		return static_cast<int>(windows.size());
+	}
+
+private:
+	uint8_t nextRenderSurfaceID = 1;
+
+	std::map<uint8_t, std::unique_ptr<RenderSurface>> renderSurfaces;
+	std::map<uint8_t, std::unique_ptr<Window>> windows;
+	std::shared_ptr<Vulkan::VulkanContext> vulkanContext;
 };

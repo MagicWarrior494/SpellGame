@@ -5,6 +5,13 @@
 #include "Context/ContextVulkanData.h"
 
 namespace Vulkan {
+	struct VulkanBuffer {
+		VkBuffer buffer = VK_NULL_HANDLE;
+		VkDeviceMemory memory = VK_NULL_HANDLE;
+		VkDeviceSize size = 0;
+		VkDeviceSize capacity = 0;
+	};
+
 	inline uint32_t FindMemoryType(
 		VkPhysicalDevice physicalDevice,
 		uint32_t typeFilter,
@@ -57,6 +64,106 @@ namespace Vulkan {
 		vkFreeCommandBuffers(VC->vkDevice, VC->coreCommandPool, 1, &commandBuffer);
 	}
 
+
+	static void CreateBufferInternal(std::shared_ptr<VulkanCore> vc, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryFlags, VulkanBuffer& outBuffer
+	)
+	{
+		CreateBuffer(
+			vc,
+			size,
+			usage,
+			memoryFlags,
+			outBuffer.buffer,
+			outBuffer.memory
+		);
+	}
+
+	static void UploadViaStaging(
+		std::shared_ptr<VulkanCore> vc,
+		VulkanBuffer& dst,
+		const void* data,
+		VkDeviceSize dataSize
+	)
+	{
+		assert(dataSize <= dst.capacity && "GPU buffer overflow");
+
+		VkBuffer staging;
+		VkDeviceMemory stagingMem;
+
+		CreateBuffer(
+			vc,
+			dataSize,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			staging,
+			stagingMem
+		);
+
+		void* mapped;
+		vkMapMemory(vc->vkDevice, stagingMem, 0, dataSize, 0, &mapped);
+		memcpy(mapped, data, static_cast<size_t>(dataSize));
+		vkUnmapMemory(vc->vkDevice, stagingMem);
+
+		CopyBuffer(vc, staging, dst.buffer, dataSize);
+
+		vkDestroyBuffer(vc->vkDevice, staging, nullptr);
+		vkFreeMemory(vc->vkDevice, stagingMem, nullptr);
+
+		dst.size = dataSize;
+	}
+
+	void EnsureCapacity(
+		std::shared_ptr<VulkanCore> vc,
+		VulkanBuffer& buffer,
+		VkDeviceSize requiredSize,
+		VkBufferUsageFlags usage,
+		VkMemoryPropertyFlags memoryFlags
+	)
+	{
+		if (requiredSize <= buffer.capacity)
+			return;
+
+		VkDeviceSize newCapacity =
+			std::max(requiredSize, buffer.capacity * 2);
+
+		VulkanBuffer newBuffer{};
+		newBuffer.capacity = newCapacity;
+
+		CreateBufferInternal(vc, newCapacity, usage, memoryFlags, newBuffer);
+
+		// Copy old data
+		if (buffer.size > 0)
+		{
+			CopyBuffer(vc, buffer.buffer, newBuffer.buffer, buffer.size);
+		}
+
+		// Destroy old buffer
+		vkDestroyBuffer(vc->vkDevice, buffer.buffer, nullptr);
+		vkFreeMemory(vc->vkDevice, buffer.memory, nullptr);
+
+		buffer = newBuffer;
+	}
+
+	static VulkanBuffer Uniform(std::shared_ptr<VulkanCore> vc, VkDeviceSize sizeBytes
+	)
+	{
+		VulkanBuffer buffer{};
+		buffer.capacity = sizeBytes;
+		buffer.size = sizeBytes;
+
+		CreateBufferInternal(
+			vc,
+			sizeBytes,
+			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			buffer
+		);
+
+		return buffer;
+	}
+
 	inline void CreateBuffer(std::shared_ptr<VulkanCore> VC, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
 	{
 		VkBufferCreateInfo bufferInfo{};
@@ -98,60 +205,187 @@ namespace Vulkan {
 		EndSingleTimeCommands(VC, commandBuffer);
 	}
 
-	//Creates a Physical Device side buffer that can be read from the vertex
-	template<typename T>
-	inline VulkanBuffer CreateAndAllocateBuffer(std::shared_ptr<VulkanCore> VC, std::vector<T>& content, BufferTypes buffertype) {
-		VulkanBuffer vulkanBuffer{};
+	// ---------- UNIFORM BUFFER ----------
+	static VulkanBuffer CreateUniformBuffer(std::shared_ptr<VulkanCore> vc, VkDeviceSize sizeBytes)
+	{
+		VulkanBuffer buffer{};
+		buffer.capacity = sizeBytes;
+		buffer.size = sizeBytes;
 
-		VkDeviceSize bufferSize = sizeof(content[0]) * content.size() * 10;
-		vulkanBuffer.size = bufferSize;
+		CreateBufferInternal(
+			vc,
+			sizeBytes,
+			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			buffer
+		);
 
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
-		CreateBuffer(VC, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-		void* data;
-		vkMapMemory(VC->vkDevice, stagingBufferMemory, 0, VK_WHOLE_SIZE, 0, &data);
-		memcpy(data, content.data(), static_cast<size_t>(bufferSize/10));
-		vkUnmapMemory(VC->vkDevice, stagingBufferMemory);
-
-		if (buffertype == BufferTypes::VertexBuffer)
-		{
-			CreateBuffer(VC, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vulkanBuffer.buffer, vulkanBuffer.memory);
-		}
-
-		CopyBuffer(VC, stagingBuffer, vulkanBuffer.buffer, bufferSize);
-
-		vkDestroyBuffer(VC->vkDevice, stagingBuffer, nullptr);
-		vkFreeMemory(VC->vkDevice, stagingBufferMemory, nullptr);
-
-		return vulkanBuffer;
+		return buffer;
 	}
 
-	template<typename T>
-	inline void UpdateBuffer(std::shared_ptr<VulkanCore> VC, VulkanBuffer& vulkanBuffer, std::vector<T>& content, BufferTypes bufferType) {
-		VkDeviceSize bufferSize = sizeof(content[0]) * content.size();
+	static void UpdateUniform(
+		std::shared_ptr<VulkanCore> vc,
+		VulkanBuffer& buffer,
+		const void* data,
+		VkDeviceSize dataSize
+	)
+	{
+		assert(dataSize <= buffer.capacity);
 
-		if (bufferSize > vulkanBuffer.size)
-		{
-			vkDestroyBuffer(VC->vkDevice, vulkanBuffer.buffer, nullptr);
-			vkFreeMemory(VC->vkDevice, vulkanBuffer.memory, nullptr);
-			vulkanBuffer = CreateAndAllocateBuffer(VC, content, bufferType);
-			return;
-		}
+		void* mapped;
+		vkMapMemory(vc->vkDevice, buffer.memory, 0, dataSize, 0, &mapped);
+		memcpy(mapped, data, static_cast<size_t>(dataSize));
+		vkUnmapMemory(vc->vkDevice, buffer.memory);
 
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
-		CreateBuffer(VC, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+		buffer.size = dataSize;
+	}
 
-		void* data;
-		vkMapMemory(VC->vkDevice, stagingBufferMemory, 0, bufferSize, 0, &data);
-		memcpy(data, content.data(), (size_t)bufferSize);
-		vkUnmapMemory(VC->vkDevice, stagingBufferMemory);
+	// ---------- VERTEX BUFFER ----------
+	static VulkanBuffer CreateVertexBuffer(
+		std::shared_ptr<VulkanCore> vc,
+		VkDeviceSize capacityBytes
+	)
+	{
+		VulkanBuffer buffer{};
+		buffer.capacity = capacityBytes;
 
-		CopyBuffer(VC, stagingBuffer, vulkanBuffer.buffer, bufferSize);
+		CreateBufferInternal(
+			vc,
+			capacityBytes,
+			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			buffer
+		);
 
-		vkDestroyBuffer(VC->vkDevice, stagingBuffer, nullptr);
-		vkFreeMemory(VC->vkDevice, stagingBufferMemory, nullptr);
+		return buffer;
+	}
+
+	static void UpdateVertexBuffer(
+		std::shared_ptr<VulkanCore> vc,
+		VulkanBuffer& buffer,
+		const void* data,
+		VkDeviceSize dataSize
+	)
+	{
+		EnsureCapacity(
+			vc,
+			buffer,
+			dataSize, 
+			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		);
+		UploadViaStaging(vc, buffer, data, dataSize);
+	}
+
+	// ---------- INDEX BUFFER ----------
+	static VulkanBuffer CreateIndexBuffer(
+		std::shared_ptr<VulkanCore> vc,
+		VkDeviceSize capacityBytes
+	)
+	{
+		VulkanBuffer buffer{};
+		buffer.capacity = capacityBytes;
+
+		CreateBufferInternal(
+			vc,
+			capacityBytes,
+			VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			buffer
+		);
+
+		return buffer;
+	}
+
+	static void UpdateIndex(
+		std::shared_ptr<VulkanCore> vc,
+		VulkanBuffer& buffer,
+		const void* data,
+		VkDeviceSize dataSize
+	)
+	{
+		EnsureCapacity(
+			vc,
+			buffer, 
+			dataSize, 
+			VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		);
+		UploadViaStaging(vc, buffer, data, dataSize);
+	}
+
+	// ---------- INSTANCE BUFFER ----------
+	static VulkanBuffer CreateInstanceBuffer(
+		std::shared_ptr<VulkanCore> vc,
+		VkDeviceSize capacityBytes
+	)
+	{
+		VulkanBuffer buffer{};
+		buffer.capacity = capacityBytes;
+
+		CreateBufferInternal(
+			vc,
+			capacityBytes,
+			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			buffer
+		);
+
+		return buffer;
+	}
+
+	static void UpdateInstance(
+		std::shared_ptr<VulkanCore> vc,
+		VulkanBuffer& buffer,
+		const void* data,
+		VkDeviceSize dataSize
+	)
+	{
+		EnsureCapacity(
+			vc, 
+			buffer, 
+			dataSize, 
+			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		);
+		UploadViaStaging(vc, buffer, data, dataSize);
+	}
+
+	// ---------- STORAGE BUFFER (SSBO) ----------
+	static VulkanBuffer CreateStorageBuffer(
+		std::shared_ptr<VulkanCore> vc,
+		VkDeviceSize capacityBytes
+	)
+	{
+		VulkanBuffer buffer{};
+		buffer.capacity = capacityBytes;
+
+		CreateBufferInternal(
+			vc,
+			capacityBytes,
+			VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			buffer
+		);
+
+		return buffer;
+	}
+
+	static void UpdateStorage(
+		std::shared_ptr<VulkanCore> vc,
+		VulkanBuffer& buffer,
+		const void* data,
+		VkDeviceSize dataSize
+	)
+	{
+		UploadViaStaging(vc, buffer, data, dataSize);
 	}
 }

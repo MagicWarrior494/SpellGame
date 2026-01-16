@@ -1,10 +1,9 @@
 #include "Window.h"
-#include <iostream>
 
 
 
 Window::Window(std::shared_ptr<Vulkan::VulkanContext> vulkanContext, std::string title, int width, int height, int posx, int posy)
-	: vulkanContext(vulkanContext), title(title), width(width), posx(posx), posy(posy)
+	: title(title), width(width), height(height), posx(posx), posy(posy)
 {
 	Vulkan::SurfaceFlags flags = defaultVulkanWindowFlags;
 
@@ -42,14 +41,14 @@ Window::Window(std::shared_ptr<Vulkan::VulkanContext> vulkanContext, std::string
 
 	glfwShowWindow(p_GLFWWindow);
 
-	vulkanWindowId = vulkanContext->CreateNewWindow(defaultVulkanWindowFlags);
-
+	WindowID = vulkanContext->CreateNewWindow(defaultVulkanWindowFlags);
 
 	glfwSetWindowUserPointer(p_GLFWWindow, this);
 
 	glfwSetFramebufferSizeCallback(p_GLFWWindow,
 		[](GLFWwindow* window, int width, int height) {
 			// Retrieve the SurfaceData pointer from the user pointer
+			
 			Window* sd = static_cast<Window*>(glfwGetWindowUserPointer(window));
 			if (sd) {
 				sd->GetVulkanWindow()->needsToBeRecreated = true;
@@ -64,70 +63,47 @@ Window::Window(std::shared_ptr<Vulkan::VulkanContext> vulkanContext, std::string
 	glfwSetKeyCallback(p_GLFWWindow, key_callback);
 	glfwSetMouseButtonCallback(p_GLFWWindow, mouseButton_callback);
 
-	renderSurface = vulkanContext->GetRenderSurface(vulkanWindowId);
+	v_VulkanWindow = vulkanContext->GetWindow(WindowID);
 }
 
 bool Window::IsWindowStillValid()
 {
-	if (renderSurface == nullptr)
+	if (GetVulkanWindow() == nullptr)
 	{
 		return false;
 	}
 	return true;
 }
 
-int Window::GetVulkanContextWindowId()
-{
-	return vulkanWindowId;
-}
-
 void Window::InitWindow()
 {
-	if(IsWindowStillValid())
-		GetVulkanWindow()->InitRenderSurface(p_GLFWWindow);
+	if (IsWindowStillValid())
+		GetVulkanWindow()->InitWindow(p_GLFWWindow);
+}
+
+void Window::Render(std::unordered_map<uint32_t, Transform>& transforms)
+{
+	if (IsWindowStillValid())
+		GetVulkanWindow()->RenderScenes(transforms, length);
 }
 
 void Window::CloseWindow()
 {
-	renderSurface->CloseRenderSurface();
+	GetVulkanWindow()->CloseWindow();
 	if (p_GLFWWindow) {
 		glfwDestroyWindow(p_GLFWWindow);
 		p_GLFWWindow = nullptr;
-		renderSurface = nullptr;
 	}
 }
 
-void Window::Update()
+void Window::AddChildRenderSurface(uint8_t renderSurfaceID)
 {
-	renderSurface->Render();
+	childrenRenderSurfaces.push_back(renderSurfaceID);
 }
 
-void Window::CreateScene()
+uint8_t Window::CreateNewRenderSurface(uint32_t width, uint32_t height, int posx, int posy)
 {
-	sceneID = renderSurface->CreateNewScene();
-} 
-
-void Window::resizeScenes()
-{
-	renderSurface->resizeScenes();
-}
-
-void Window::addTriangle()
-{
-	renderSurface->AddRandomTriangle();
-}
-
-bool Window::WindowShouldClose()
-{
-	return glfwWindowShouldClose(p_GLFWWindow);
-}
-
-std::shared_ptr<Vulkan::RenderSurface> Window::GetVulkanWindow()
-{
-	return renderSurface;
-}
-
-std::string Window::GetWindowTitle()
-{
-	return title;
+	uint8_t sceneID = GetVulkanWindow()->CreateNewScene(width, height, posx, posy);
+	childrenRenderSurfaces.push_back(sceneID);
+	return sceneID;
 }

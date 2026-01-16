@@ -2,8 +2,10 @@
 
 #include "Context/VulkanContext.h"
 
-#include "Render/Window/WindowManager.h"
+#include "Render/RenderingController.h"
+#include "Scene/SceneController.h"
 #include "Event/EventController.h"
+#include "World/WorldController.h"
 
 #include <stdexcept>
 #include <string>
@@ -29,9 +31,10 @@ namespace Engine {
 
 		void Terminate();
 	private:
-		std::shared_ptr<Vulkan::VulkanContext> vulkanContext;
-		WindowManager windowManager;
+		RenderingController renderingController;
+		SceneController sceneController{};
 		EventController eventController;
+		WorldController worldController;
 		std::string m_SetUpFilePath;
 	};
 }

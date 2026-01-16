@@ -32,15 +32,15 @@ namespace Vulkan {
 
 	void VulkanContext::Update()
 	{
-		if (renderSurfaces.empty())
+		if (windows.empty())
 			return;
 
 		//glfwPollEvents();
 		//Remove renderSurface from list when the VulkanSurface OBJ within has been cleared.
-		for (auto it = renderSurfaces.begin(); it != renderSurfaces.end();) {
-			std::shared_ptr<RenderSurface> renderSurface = it->second;
+		for (auto it = windows.begin(); it != windows.end();) {
+			std::shared_ptr<Window> renderSurface = it->second;
 			if (renderSurface->vulkanSurface.p_GLFWWindow == nullptr) {
-				it = renderSurfaces.erase(it);
+				it = windows.erase(it);
 			}
 			else {
 				it++;
@@ -50,9 +50,9 @@ namespace Vulkan {
 
 	uint8_t VulkanContext::CreateNewWindow(SurfaceFlags flags)
 	{
-		std::shared_ptr<RenderSurface> renderSurface = std::make_shared<RenderSurface>(vulkanCore, flags, GetNextSurfaceID());
+		std::shared_ptr<Window> renderSurface = std::make_shared<Window>(vulkanCore, flags, GetNextSurfaceID());
 		uint8_t id = renderSurface->surfaceId;
-		renderSurfaces.insert({ renderSurface->surfaceId, std::move(renderSurface) });
+		windows.insert({ renderSurface->surfaceId, std::move(renderSurface) });
 		
 		return id;
 	}

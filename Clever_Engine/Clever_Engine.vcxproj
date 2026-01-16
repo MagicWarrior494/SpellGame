@@ -107,11 +107,18 @@
     <ClInclude Include="src\Event\Io\ConversionData.h" />
     <ClInclude Include="src\Event\Io\KeyCodes.h" />
     <ClInclude Include="src\Event\Io\KeySet.h" />
+    <ClInclude Include="src\Render\Object\Element.h" />
+    <ClInclude Include="src\Render\Object\ElementSetUps.h" />
+    <ClInclude Include="src\Render\Object\UIElement.h" />
     <ClInclude Include="src\Render\RenderingController.h" />
+    <ClInclude Include="src\Render\Window\RenderSurface.h" />
     <ClInclude Include="src\Render\Window\Window.h" />
-    <ClInclude Include="src\Render\Window\WindowManager.h" />
-    <ClInclude Include="src\World\Object\Element.h" />
-    <ClInclude Include="src\World\Object\UIElement.h" />
+    <ClInclude Include="src\Scene\Object\Element.h" />
+    <ClInclude Include="src\Scene\Object\UIElement.h" />
+    <ClInclude Include="src\Scene\Scene.h" />
+    <ClInclude Include="src\Scene\SceneController.h" />
+    <ClInclude Include="src\World\ECS\Components.h" />
+    <ClInclude Include="src\World\ECS\Registry.h" />
     <ClInclude Include="src\World\WorldController.h" />
   </ItemGroup>
   <ItemGroup>
@@ -122,10 +129,14 @@
     <ClCompile Include="Dependencies\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="src\Engine.cpp" />
     <ClCompile Include="src\Event\EventController.cpp" />
+    <ClCompile Include="src\Render\Object\Element.cpp" />
     <ClCompile Include="src\Render\RenderingController.cpp" />
+    <ClCompile Include="src\Render\Window\RenderSurface.cpp" />
     <ClCompile Include="src\Render\Window\Window.cpp" />
-    <ClCompile Include="src\Render\Window\WindowManager.cpp" />
-    <ClCompile Include="src\World\Object\Element.cpp" />
+    <ClCompile Include="src\Scene\Object\Element.cpp">
+      <ObjectFileName>$(IntDir)\Element1.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="src\Scene\SceneController.cpp" />
     <ClCompile Include="src\World\WorldController.cpp" />
   </ItemGroup>
   <ItemGroup>
