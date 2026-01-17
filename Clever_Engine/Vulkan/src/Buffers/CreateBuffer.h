@@ -5,12 +5,6 @@
 #include "Context/ContextVulkanData.h"
 
 namespace Vulkan {
-	struct VulkanBuffer {
-		VkBuffer buffer = VK_NULL_HANDLE;
-		VkDeviceMemory memory = VK_NULL_HANDLE;
-		VkDeviceSize size = 0;
-		VkDeviceSize capacity = 0;
-	};
 
 	inline uint32_t FindMemoryType(
 		VkPhysicalDevice physicalDevice,
@@ -28,6 +22,34 @@ namespace Vulkan {
 		}
 
 		throw std::runtime_error("Failed to find suitable memory type!");
+	}
+
+	inline void CreateBuffer(std::shared_ptr<VulkanCore> VC, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+	{
+		VkBufferCreateInfo bufferInfo{};
+		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferInfo.size = size;
+		bufferInfo.usage = usage;
+		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		if (vkCreateBuffer(VC->vkDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create vertex buffer!");
+		}
+
+		VkMemoryRequirements memRequirements;
+		vkGetBufferMemoryRequirements(VC->vkDevice, buffer, &memRequirements);
+
+		VkMemoryAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.allocationSize = memRequirements.size;
+		allocInfo.memoryTypeIndex = FindMemoryType(VC->vkPhysicalDevice, memRequirements.memoryTypeBits, properties);
+
+		if (vkAllocateMemory(VC->vkDevice, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to allocate vertex buffer memory!");
+		}
+
+		vkBindBufferMemory(VC->vkDevice, buffer, bufferMemory, 0);
 	}
 
 	inline VkCommandBuffer BeginSingleTimeCommands(std::shared_ptr<VulkanCore> VC)
@@ -64,9 +86,20 @@ namespace Vulkan {
 		vkFreeCommandBuffers(VC->vkDevice, VC->coreCommandPool, 1, &commandBuffer);
 	}
 
+	inline void CopyBuffer(std::shared_ptr<VulkanCore> VC, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+	{
+		VkCommandBuffer commandBuffer = BeginSingleTimeCommands(VC);
 
-	static void CreateBufferInternal(std::shared_ptr<VulkanCore> vc, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryFlags, VulkanBuffer& outBuffer
-	)
+		VkBufferCopy copyRegion{};
+		copyRegion.srcOffset = 0;
+		copyRegion.dstOffset = 0;
+		copyRegion.size = size;
+		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+		EndSingleTimeCommands(VC, commandBuffer);
+	}
+
+	static void CreateBufferInternal(std::shared_ptr<VulkanCore> vc, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryFlags, VulkanBuffer& outBuffer)
 	{
 		CreateBuffer(
 			vc,
@@ -113,7 +146,7 @@ namespace Vulkan {
 		dst.size = dataSize;
 	}
 
-	void EnsureCapacity(
+	static void EnsureCapacity(
 		std::shared_ptr<VulkanCore> vc,
 		VulkanBuffer& buffer,
 		VkDeviceSize requiredSize,
@@ -143,66 +176,6 @@ namespace Vulkan {
 		vkFreeMemory(vc->vkDevice, buffer.memory, nullptr);
 
 		buffer = newBuffer;
-	}
-
-	static VulkanBuffer Uniform(std::shared_ptr<VulkanCore> vc, VkDeviceSize sizeBytes
-	)
-	{
-		VulkanBuffer buffer{};
-		buffer.capacity = sizeBytes;
-		buffer.size = sizeBytes;
-
-		CreateBufferInternal(
-			vc,
-			sizeBytes,
-			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			buffer
-		);
-
-		return buffer;
-	}
-
-	inline void CreateBuffer(std::shared_ptr<VulkanCore> VC, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
-	{
-		VkBufferCreateInfo bufferInfo{};
-		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		bufferInfo.size = size;
-		bufferInfo.usage = usage;
-		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-		if (vkCreateBuffer(VC->vkDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create vertex buffer!");
-		}
-
-		VkMemoryRequirements memRequirements;
-		vkGetBufferMemoryRequirements(VC->vkDevice, buffer, &memRequirements);
-
-		VkMemoryAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		allocInfo.allocationSize = memRequirements.size;
-		allocInfo.memoryTypeIndex = FindMemoryType(VC->vkPhysicalDevice, memRequirements.memoryTypeBits, properties);
-
-		if (vkAllocateMemory(VC->vkDevice, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to allocate vertex buffer memory!");
-		}
-
-		vkBindBufferMemory(VC->vkDevice, buffer, bufferMemory, 0);
-	}
-
-	inline void CopyBuffer(std::shared_ptr<VulkanCore> VC, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
-	{
-		VkCommandBuffer commandBuffer = BeginSingleTimeCommands(VC);
-
-		VkBufferCopy copyRegion{};
-		copyRegion.srcOffset = 0;
-		copyRegion.dstOffset = 0;
-		copyRegion.size = size;
-		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-
-		EndSingleTimeCommands(VC, commandBuffer);
 	}
 
 	// ---------- UNIFORM BUFFER ----------
@@ -370,12 +343,11 @@ namespace Vulkan {
 		CreateBufferInternal(
 			vc,
 			capacityBytes,
-			VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
-			VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 			buffer
 		);
-
+		vkMapMemory(vc->vkDevice, buffer.memory, 0, capacityBytes, 0, &buffer.mappedPtr);
 		return buffer;
 	}
 

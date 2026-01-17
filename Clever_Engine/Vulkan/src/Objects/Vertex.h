@@ -5,6 +5,7 @@
 
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <gtx/quaternion.hpp>
 
 struct Vertex
@@ -39,17 +40,19 @@ struct Transform
 	glm::vec4 rotation{ 0.0f, 0.0f, 0.0f, 1.0f }; // Quaternion (x, y, z, w)
 	glm::vec3 scale{ 1.0f, 1.0f, 1.0f };
 
-	glm::mat4 modelMatrix{ 0.0f };
+	glm::mat4 modelMatrix{ 1.0f };
 
 	void UpdateModelMatrix() {
 		// Translation matrix
 		glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), position);
 		// Rotation matrix from quaternion
-		glm::mat4 rotationMatrix = glm::mat4_cast(glm::quat(rotation.w, rotation.x, rotation.y, rotation.z));
+		glm::mat4 rotationMatrix = glm::mat4_cast(glm::quat(rotation[3], rotation[0], rotation[1], rotation[2]));
 		// Scale matrix
 		glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), scale);
 		// Combine transformations: ModelMatrix = Translation * Rotation * Scale
 		modelMatrix = translationMatrix * rotationMatrix * scaleMatrix;
+
+		isDirty = false;
 	}
 
 	bool isDirty = true;

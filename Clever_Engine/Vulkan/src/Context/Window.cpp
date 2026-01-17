@@ -26,12 +26,6 @@ namespace Vulkan {
 	{
         vulkanSurface.Destroy(vulkanCore);
 	}
-
-    void Window::SyncUniformObjectBuffer(std::unordered_map<uint32_t, Transform>& transforms)
-    {
-		//TODO update shader to have uniform buffer for model matrix
-		//Make this function loop over all models matrixe and check if dirty, if dirty update the buffer
-    }
 	
     void Window::resizeScenes()
     {
@@ -95,17 +89,22 @@ namespace Vulkan {
         scenePtr->vertexData.push_back(Vertex{ glm::vec3(-1.0f, -1.0f, 0.0f) });
         scenePtr->vertexData.push_back(Vertex{ glm::vec3(1.0f, -1.0f, 0.0f) });
 
-        //9 is the initial overestimation of vertices, grows by x2 when overflowed
-		scenePtr->sceneBuffers.push_back(CreateVertexBuffer(vulkanCore, sizeof(Vertex) * 9));
-        
+        //3 is the initial overestimation of vertices, grows by x2 when overflowed
+
+		scenePtr->sceneBuffers.push_back(CreateVertexBuffer(vulkanCore, sizeof(Vertex) * 3));
+        UpdateVertexBuffer(
+            vulkanCore,
+            scenePtr->sceneBuffers.at(scenePtr->sceneBuffers.size() - 1),
+            scenePtr->vertexData.data(),
+			sizeof(Vertex) * scenePtr->vertexData.size()
+		);
 
         // --- 5. Return the scene ID ---
         return scenePtr->sceneID;
     }
 
-    void Window::RenderScenes(std::unordered_map<uint32_t, Transform>& transforms)
+    void Window::RenderScenes()
     {
-
         // --- 0. Update window size ---
         int width, height;
         glfwGetWindowSize(vulkanSurface.p_GLFWWindow, &width, &height);
@@ -192,14 +191,14 @@ namespace Vulkan {
             vkCmdSetScissor(sceneCmd, 0, 1, &scissor);
 
             vkCmdBindPipeline(sceneCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, scene->scenePipelines[0]);
-            if (scene->SceneDescriptorResult.layout != VK_NULL_HANDLE)
+            if (scene->sceneDescriptorResult.layout != VK_NULL_HANDLE)
             {
                 vkCmdBindDescriptorSets(
                     sceneCmd,
                     VK_PIPELINE_BIND_POINT_GRAPHICS,
                     scene->scenePipelineLayouts[0],
                     0, 1,
-                    &scene->SceneDescriptorResult.sets[*scene->imageFrameCounter],
+                    &scene->sceneDescriptorResult.sets[*scene->imageFrameCounter],
                     0, nullptr
                 );
             }
@@ -209,7 +208,9 @@ namespace Vulkan {
                 VkBuffer vertexBuffers[] = { scene->sceneBuffers[0].buffer };
                 VkDeviceSize offsets[] = { 0 };
                 vkCmdBindVertexBuffers(sceneCmd, 0, 1, vertexBuffers, offsets);
-                vkCmdDraw(sceneCmd, static_cast<uint32_t>(scene->vertexData.size()), 1, 0, 0);
+                uint32_t instanceCount = vulkanCore->persistentData.objectMatrixStorageBuffer.activeCount;
+
+                vkCmdDraw(sceneCmd, static_cast<uint32_t>(scene->vertexData.size()), instanceCount, 0, 0);
             }
 
             vkCmdEndRenderPass(sceneCmd);

@@ -39,7 +39,9 @@ project "Vulkan"
         postbuildcommands {
             "doxygen Doxyfile"
         }
-
+        staticruntime "Off"
+        
     filter "configurations:Release"
         runtime "Release"
         optimize "on"
+        staticruntime "Off"

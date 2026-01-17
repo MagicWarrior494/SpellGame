@@ -16,6 +16,7 @@
 #include "Scene/CreateDescriptors.h"
 #include "Scene/CreatePipelines.h"
 #include "Buffers/CreateBuffer.h"
+#include "Objects/Vertex.h"
 
 namespace Vulkan {
 	void VulkanContext::Init() {
@@ -28,6 +29,7 @@ namespace Vulkan {
 		std::vector<VkCommandBuffer> dummy;
 		dummy.push_back(vulkanCore->coreCommandBuffer);
 		CreateCommandBuffers(vulkanCore, vulkanCore->coreCommandPool, 1, dummy);
+		vulkanCore->persistentData.objectMatrixStorageBuffer = std::move(CreateStorageBuffer(vulkanCore, sizeof(Transform) * 1000));
 	}
 
 	void VulkanContext::Update()

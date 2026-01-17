@@ -10,6 +10,8 @@
 #include <GLFW/glfw3.h>
 #include "Surface/SurfaceFlags.h"
 
+#include "Objects/Vertex.h"
+
 namespace Vulkan {
 	inline uint32_t GetNextSurfaceID() {
 		static uint32_t surfaceIDCounter = 1;
@@ -29,29 +31,28 @@ namespace Vulkan {
 		}
 	};
 
-	struct Vertex
-	{
-		glm::vec3 pos;
+	struct VulkanBuffer {
+		VkBuffer buffer = VK_NULL_HANDLE;
+		VkDeviceMemory memory = VK_NULL_HANDLE;
+		VkDeviceSize size = 0;
+		VkDeviceSize capacity = 0;
 
-		static VkVertexInputBindingDescription getBindingDescription() {
-			VkVertexInputBindingDescription bindingDescription{};
-			bindingDescription.binding = 0;                         // binding index in the shader
-			bindingDescription.stride = sizeof(Vertex);             // size of each vertex
-			bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX; // move to next data entry per vertex
-			return bindingDescription;
-		}
+		void* mappedPtr = nullptr;
 
-		static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions() {
-			std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
-			attributeDescriptions.push_back(VkVertexInputAttributeDescription{});
+		uint32_t activeCount = 0;
 
-			// Position attribute
-			attributeDescriptions[0].binding = 0;                   // matches bindingDescription.binding
-			attributeDescriptions[0].location = 0;                  // location in the shader (layout(location = 0))
-			attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT; // vec3 = 3 floats
-			attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-			return attributeDescriptions;
+		void Destroy(VkDevice& device) {
+			if (buffer != VK_NULL_HANDLE) {
+				vkDestroyBuffer(device, buffer, nullptr);
+				buffer = VK_NULL_HANDLE;
+			}
+			if (memory != VK_NULL_HANDLE) {
+				vkFreeMemory(device, memory, nullptr);
+				memory = VK_NULL_HANDLE;
+			}
+			size = 0;
+			capacity = 0;
+			mappedPtr = nullptr;
 		}
 	};
 
@@ -79,12 +80,6 @@ namespace Vulkan {
 				memory = VK_NULL_HANDLE;
 			}
 		}
-	};
-
-	enum BufferTypes {
-		VertexBuffer,
-		IndexBuffer,
-		UniformBuffer
 	};
 
 	enum class SwapchainAttachmentType {
@@ -148,6 +143,11 @@ namespace Vulkan {
 		std::vector<VkPushConstantRange> pushConstants;
 	};
 
+	struct PersistentData
+	{
+		VulkanBuffer objectMatrixStorageBuffer{};
+	};
+
 	struct VulkanCore {
 		VkInstance vkInstance = VK_NULL_HANDLE;
 		VkDebugUtilsMessengerEXT vkDebugMesseneger = VK_NULL_HANDLE;
@@ -158,6 +158,8 @@ namespace Vulkan {
 		VkQueue presentQueue;
 		VkCommandPool coreCommandPool = VK_NULL_HANDLE;
 		VkCommandBuffer coreCommandBuffer = VK_NULL_HANDLE;
+
+		PersistentData persistentData{};
 	};
 
 	struct SurfacePushConstants
@@ -252,11 +254,10 @@ namespace Vulkan {
 			VkCommandPool sceneCommandPool = VK_NULL_HANDLE;
 			std::vector<VkCommandBuffer> sceneCommandBuffers{};
 
-
 			std::vector<VkPipelineLayout> scenePipelineLayouts{}; 
 			std::vector<VkPipeline> scenePipelines{};
 
-			DescriptorResult SceneDescriptorResult{};
+			DescriptorResult sceneDescriptorResult{};
 
 			std::vector<VkSemaphore> sceneImageAvailableSemaphores{};
 			std::vector<VkSemaphore> sceneRenderFinishedSemaphores{};

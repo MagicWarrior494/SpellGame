@@ -23,7 +23,6 @@ workspace "SpellGame_Solution"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
-
 include "Clever_Engine/Vulkan" 
 include "Clever_Engine"
 include "SpellGame"

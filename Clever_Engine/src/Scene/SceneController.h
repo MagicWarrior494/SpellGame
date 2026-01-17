@@ -21,7 +21,6 @@ public:
 
 		auto scene = std::make_unique<SceneType>(renderingController, info, std::forward<Args>(args)...);
 
-
 		SceneType& ref = *scene;
 		scenes.insert({ ref.GetRenderSurfaceID(), std::move(scene) });
 		return ref;

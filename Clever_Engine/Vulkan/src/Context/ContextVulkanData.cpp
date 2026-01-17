@@ -1,5 +1,8 @@
 #include "ContextVulkanData.h"
 
+#include <filesystem>
+#include <iostream>
+
 #include "Surface/CreateVulkanSurface.h"
 #include "Surface/CreateSwapChain.h"
 #include "Surface/CreateSwapChainImages.h"
@@ -12,6 +15,8 @@
 
 #include "Scene/CreateDescriptors.h"
 #include "Scene/CreatePipelines.h"
+
+#include <filesystem>
 
 namespace Vulkan {
 	void VulkanSurface::CreateSurfaceResources(std::shared_ptr<VulkanCore> vulkanCore, GLFWwindow* p_GLFWWindow)
@@ -62,6 +67,28 @@ namespace Vulkan {
 
 		offscreenSampler = CreateOffscreenSampler(vulkanCore);
 		CreateEmptyStartingDescriptors(vulkanCore, 16);
+
+		// --- 5. Recreate pipeline layout & pipeline (push constants unchanged) ---
+		PipelineLayoutInfo pipelineLayoutInfo{};
+		pipelineLayoutInfo.setLayouts.push_back(SurfaceDescriptorResult.layout);
+
+		VkPushConstantRange pushConstantRange{};
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = sizeof(SurfacePushConstants);
+
+		pipelineLayoutInfo.pushConstants.push_back(pushConstantRange);
+		surfacePipelineLayout = CreatePipelineLayout(vulkanCore, pipelineLayoutInfo);
+
+		std::cout << std::filesystem::current_path().string() << std::endl;
+
+		PipelineInfo pipelineInfo{};
+		pipelineInfo.vertShaderPath = std::filesystem::current_path().string() + "/SpellGame_Solution/Clever_Engine/Vulkan/res/surfaceVert.spv";
+		pipelineInfo.fragShaderPath = std::filesystem::current_path().string() + "/SpellGame_Solution/Clever_Engine/Vulkan/res/surfaceFrag.spv";
+		pipelineInfo.pipelineLayout = surfacePipelineLayout;
+		pipelineInfo.renderPass = surfaceRenderPass;
+		pipelineInfo.cullMode = VK_CULL_MODE_NONE;
+		surfacePipeline = CreateGraphicsPipeline(vulkanCore, pipelineInfo);
 	}
 
 	int VulkanSurface::AddNewScene(std::shared_ptr<VulkanCore> vulkanCore, uint32_t width, uint32_t height)
@@ -115,25 +142,6 @@ namespace Vulkan {
 		descriptorSetInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
 
 		SurfaceDescriptorResult = CreateDescriptors(vulkanCore, descriptorSetInfo);
-
-		// --- 5. Recreate pipeline layout & pipeline (push constants unchanged) ---
-		PipelineLayoutInfo pipelineLayoutInfo{};
-		pipelineLayoutInfo.setLayouts.push_back(SurfaceDescriptorResult.layout);
-
-		VkPushConstantRange pushConstantRange{};
-		pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		pushConstantRange.offset = 0;
-		pushConstantRange.size = sizeof(SurfacePushConstants);
-
-		pipelineLayoutInfo.pushConstants.push_back(pushConstantRange);
-		surfacePipelineLayout = CreatePipelineLayout(vulkanCore, pipelineLayoutInfo);
-
-		PipelineInfo pipelineInfo{};
-		pipelineInfo.vertShaderPath = "D:/Projects/SpellGame_Solution/Clever_Engine/Vulkan/res/surfaceVert.spv";
-		pipelineInfo.fragShaderPath = "D:/Projects/SpellGame_Solution/Clever_Engine/Vulkan/res/surfaceFrag.spv";
-		pipelineInfo.pipelineLayout = surfacePipelineLayout;
-		pipelineInfo.renderPass = surfaceRenderPass;
-		surfacePipeline = CreateGraphicsPipeline(vulkanCore, pipelineInfo);
 
 		return sceneIndex;
 	}
@@ -337,23 +345,43 @@ namespace Vulkan {
 		CreateCommandBuffers(vulkanCore, sceneCommandPool, static_cast<uint32_t>(sceneOffscreenFrameBuffers.size()), sceneCommandBuffers);
 
 		DescriptorSetInfo info{};
-		//info.maxSets = *MAX_FRAMES_IN_FLIGHT;
-		//info.bindings.push_back({ 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT });
+		info.maxSets = *MAX_FRAMES_IN_FLIGHT;
+
+		// 1. Prepare the buffer info for the descriptor
+		VkDescriptorBufferInfo storageBufferInfo{};
+		storageBufferInfo.buffer = vulkanCore->persistentData.objectMatrixStorageBuffer.buffer;
+		storageBufferInfo.offset = 0;
+		storageBufferInfo.range = VK_WHOLE_SIZE;
+
+		// 2. Create the binding info
+		DescriptorBindingInfo matrixBinding{};
+		matrixBinding.binding = 0;
+		matrixBinding.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		matrixBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+		// 3. IMPORTANT: Add the buffer info for EVERY frame in flight
+		// If you use one global buffer for all frames:
+		for (int i = 0; i < info.maxSets; i++) {
+			matrixBinding.buffers.push_back(storageBufferInfo);
+		}
+
+		info.bindings.push_back(matrixBinding);
 		//info.bindings.push_back({ 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT });
 
-		//descriptorResult = CreateDescriptors(vulkanCore, info);
+		sceneDescriptorResult = CreateDescriptors(vulkanCore, info);
 
 		PipelineLayoutInfo pipelineLayoutInfo{};
-		//pipelineLayoutInfo.setLayouts.push_back(descriptorResult.layout);
+		pipelineLayoutInfo.setLayouts.push_back(sceneDescriptorResult.layout);
 		scenePipelineLayouts.push_back(CreatePipelineLayout(vulkanCore, pipelineLayoutInfo));
 
 		PipelineInfo pipelineInfo{};
-		pipelineInfo.vertShaderPath = "D:/Projects/SpellGame_Solution/Clever_Engine/Vulkan/res/vert.spv";
-		pipelineInfo.fragShaderPath = "D:/Projects/SpellGame_Solution/Clever_Engine/Vulkan/res/frag.spv";
+		pipelineInfo.vertShaderPath = std::filesystem::current_path().string() + "/SpellGame_Solution/Clever_Engine/Vulkan/res/sceneVert.spv";
+		pipelineInfo.fragShaderPath = std::filesystem::current_path().string() + "/SpellGame_Solution/Clever_Engine/Vulkan/res/sceneFrag.spv";
 		pipelineInfo.pipelineLayout = scenePipelineLayouts[0];
 		pipelineInfo.renderPass = sceneRenderPass;
 		pipelineInfo.bindingDescription = Vertex::getBindingDescription();
 		pipelineInfo.attributeDescriptions = Vertex::getAttributeDescriptions();
+		pipelineInfo.cullMode = VK_CULL_MODE_NONE;
 		scenePipelines.push_back(CreateGraphicsPipeline(vulkanCore, pipelineInfo));
 
 		CreateSyncObjects(

@@ -54,7 +54,12 @@ project "Clever_Engine"
         postbuildcommands {
             "doxygen Doxyfile"
         }
+        staticruntime "Off"
 
+        debugdir "%{wks.location}"
+
+        
     filter "configurations:Release"
         runtime "Release"
         optimize "on"
+        staticruntime "Off"

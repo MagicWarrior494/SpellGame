@@ -81,10 +81,10 @@ void Window::InitWindow()
 		GetVulkanWindow()->InitWindow(p_GLFWWindow);
 }
 
-void Window::Render(std::unordered_map<uint32_t, Transform>& transforms)
+void Window::Render()
 {
 	if (IsWindowStillValid())
-		GetVulkanWindow()->RenderScenes(transforms, length);
+		GetVulkanWindow()->RenderScenes();
 }
 
 void Window::CloseWindow()

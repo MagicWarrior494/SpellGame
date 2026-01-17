@@ -36,7 +36,7 @@ namespace Engine {
 
 		uint8_t windowId = renderingController.CreateNewWindow("Main Window", 960, 540);
 
-		SceneCreationInfo info{ windowId, 960, 540, 0, 0 };
+		SceneCreationInfo info{ windowId, 960/2, 540, 0, 0 };
 
 		CameraScene sceneId = sceneController.CreateNewScene<CameraScene>(renderingController, info, 0);
 
@@ -61,18 +61,15 @@ namespace Engine {
 			)
 		);
 
-		/*eventController.RegisterFunction(KeySet{ Keyboard::KEY_S },
+		eventController.RegisterFunction(KeySet{ Keyboard::KEY_S },
 			EventAction(
 				[this](Window& window) {
-					SceneCreationInfo info{ windowId, 540, 960, 0, 0 };
-					sceneController.CreateNewScene<CameraScene>(renderingController, info);
-					window.CreateScene();
-					window.addTriangle();
-					window.resizeScenes();
+					SceneCreationInfo info{ window.GetWindowID(), 960 / 2, 540,  960 / 2, 0};
+					CameraScene sceneId_new = sceneController.CreateNewScene<CameraScene>(renderingController, info, 0);
 				},
 				500
 			)
-		);*/
+		);
 
 		while (true)
 		{

@@ -9,6 +9,7 @@
 #include "Window/RenderSurface.h"
 #include "Window/Window.h"
 #include "Context/VulkanContext.h"
+#include "BufferManager.h"
 
 #include "World/ECS/Registry.h"
 
@@ -66,4 +67,6 @@ private:
 	std::map<uint8_t, std::unique_ptr<RenderSurface>> renderSurfaces;
 	std::map<uint8_t, std::unique_ptr<Window>> windows;
 	std::shared_ptr<Vulkan::VulkanContext> vulkanContext;
+
+	std::unique_ptr<StorageBufferManager> storageBufferManager;
 };

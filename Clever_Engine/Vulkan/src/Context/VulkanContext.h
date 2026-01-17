@@ -34,6 +34,11 @@ namespace Vulkan
 			return nullptr;
 		}
 
+		VulkanBuffer& GetObjectMatrixBuffer()
+		{
+			return vulkanCore->persistentData.objectMatrixStorageBuffer;
+		}
+
 	private:
 
 		std::shared_ptr<VulkanCore> vulkanCore;

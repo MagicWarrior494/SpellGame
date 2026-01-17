@@ -72,6 +72,9 @@
     <ClInclude Include="src\Event\Io\KeySet.h">
       <Filter>src\Event\Io</Filter>
     </ClInclude>
+    <ClInclude Include="src\Render\BufferManager.h">
+      <Filter>src\Render</Filter>
+    </ClInclude>
     <ClInclude Include="src\Render\Object\Element.h">
       <Filter>src\Render\Object</Filter>
     </ClInclude>

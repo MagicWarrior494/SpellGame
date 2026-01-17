@@ -60,7 +60,7 @@
       <AdditionalIncludeDirectories>src;..\Clever_Engine\src;..\Clever_Engine\Vulkan\src;..\Clever_Engine\Dependencies\glm\glm;..\Clever_Engine\Dependencies\stb_image;..\Clever_Engine\Dependencies\tinyobjloader;..\Clever_Engine\Dependencies\spdlog\include\spdlog;..\Clever_Engine\Dependencies\ImGui;..\Clever_Engine\Dependencies\GLFW\include;C:\VulkanSDK\1.3.231.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -81,7 +81,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>

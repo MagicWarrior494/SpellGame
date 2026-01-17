@@ -32,7 +32,7 @@ public:
 
 	void AddChildRenderSurface(uint8_t renderSurfaceID);
 
-	void Render(std::unordered_map<uint32_t, Transform>&);
+	void Render();
 
 	uint8_t CreateNewRenderSurface(uint32_t width, uint32_t height, int posx = 0, int posy = 0);
 

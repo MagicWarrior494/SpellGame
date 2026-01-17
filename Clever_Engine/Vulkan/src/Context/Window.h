@@ -28,9 +28,7 @@ namespace Vulkan {
 		void InitWindow(GLFWwindow* glfwWindowptr);  // Initialize window and OpenGL context
 		void CloseWindow();                          // Close window and unload OpenGL context
 
-
-		void SyncUniformObjectBuffer(std::unordered_map<uint32_t, Transform>& transforms);
-		void RenderScenes(std::unordered_map<uint32_t, Transform>& transforms);
+		void RenderScenes();
 
 		void resizeScenes();
 		uint8_t CreateNewScene(uint32_t width = 0, uint32_t height = 0, uint32_t posx = 0, uint32_t posy = 0);
@@ -42,6 +40,6 @@ namespace Vulkan {
 		Window(const Window&) = delete;
 		Window& operator=(const Window&) = delete;
 	private:
-		uint8_t nextSceneID = 1;
+		uint8_t nextSceneID = 0;
 	};
 }

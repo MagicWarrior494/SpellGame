@@ -14,16 +14,32 @@ void RenderingController::SetUp()
 {
 	vulkanContext = std::make_shared<Vulkan::VulkanContext>();
 	vulkanContext->Init();
+	storageBufferManager = std::make_unique<StorageBufferManager>(vulkanContext);
 }
+
 void RenderingController::Render(Registry& reg)
 {
 	auto& transforms = reg.GetAllComponents<Transform>();
-	int length = static_cast<int>(reg.GetAllComponents<Transform>().size());
+
+	for (auto& [entityId, transform] : transforms)
+	{
+		if (transform.isDirty)
+		{
+			transform.UpdateModelMatrix();
+		}
+	}
+
+	storageBufferManager->SyncDeletions<glm::mat4>({});
+	storageBufferManager->SyncUpdates(transforms, [](const Transform& t){
+		return t.modelMatrix;
+	});
+
 	for (auto& [windowID, window] : windows)
 	{
-		window->Render(transforms);
+		window->Render();
 	}
 }
+
 uint8_t RenderingController::CreateNewRenderSurface(uint8_t windowID, uint32_t width, uint32_t height, int posx, int posy)
 {
 	uint8_t renderSurfaceID = windows.at(windowID)->CreateNewRenderSurface(width, height, posx, posy);

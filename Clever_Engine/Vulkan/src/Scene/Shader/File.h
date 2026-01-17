@@ -6,29 +6,39 @@
 
 namespace Vulkan
 {
-	inline std::vector<char> ReadFile(const std::string& filename) {
-		std::ifstream file(filename, std::ios::ate | std::ios::binary);
+    inline std::vector<char> ReadFile(const std::string& filename) {
+        // Open at the end (ate) to get size, and binary mode is MUST for SPIR-V
+        std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
-		if (!file.is_open())
-			throw std::runtime_error("Failed to open file!");
+        if (!file.is_open()) {
+            // Adding the filename to the error makes life 10x easier
+            throw std::runtime_error("Vulkan IO Error: Could not find or open file: " + filename);
+        }
 
-		size_t fileSize = (size_t)file.tellg();
-		std::vector<char> buffer(fileSize);
+        size_t fileSize = (size_t)file.tellg();
+        std::vector<char> buffer(fileSize);
 
-		file.seekg(0);
-		file.read(buffer.data(), fileSize);
-		file.close();
+        file.seekg(0);
+        file.read(buffer.data(), fileSize);
+        file.close();
 
-		return buffer;
-	}
+        return buffer;
+    }
 
-	inline std::vector<uint32_t> ReadSPIRV(const std::string& filename) {
-		auto bytes = ReadFile(filename);
-		size_t wordCount = bytes.size() / sizeof(uint32_t);
-		std::vector<uint32_t> spirv(wordCount);
-		memcpy(spirv.data(), bytes.data(), bytes.size());
-		return spirv;
-	}
+    inline std::vector<uint32_t> ReadSPIRV(const std::string& filename) {
+        auto bytes = ReadFile(filename);
+
+        // SPIR-V files must be a multiple of 4 bytes (size of uint32_t)
+        if (bytes.size() % sizeof(uint32_t) != 0) {
+            throw std::runtime_error("SPIR-V Error: File size is not a multiple of 4: " + filename);
+        }
+
+        size_t wordCount = bytes.size() / sizeof(uint32_t);
+        std::vector<uint32_t> spirv(wordCount);
+        std::memcpy(spirv.data(), bytes.data(), bytes.size());
+
+        return spirv;
+    }
 
 	inline VkShaderModule CreateShaderModule(std::shared_ptr<VulkanCore> VC, const std::vector<uint32_t>& code)
 	{

@@ -23,7 +23,6 @@ public:
 	virtual ~Scene() = default;
 
 	virtual void Update(float dt, WorldController& world) = 0;
-	virtual void Render(RenderingController& renderer, const WorldController& world) = 0;
 
 	uint8_t GetRenderSurfaceID() const
 	{
@@ -47,9 +46,6 @@ public:
 	void Update(float dt, WorldController& world) override
 	{
 	}
-	void Render(RenderingController& renderer, const WorldController& world) override
-	{
-	}
 private:
 	uint32_t cameraEntityID;
 };
@@ -63,9 +59,6 @@ public:
 	}
 
 	void Update(float dt, WorldController& world) override
-	{
-	}
-	void Render(RenderingController& renderer, const WorldController& world) override
 	{
 	}
 };
