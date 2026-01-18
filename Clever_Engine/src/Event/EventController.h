@@ -1,51 +1,61 @@
 #pragma once
-#include <memory>
+#include <vector>
+#include <functional>
+#include <map>
 #include <unordered_map>
+#include <string>
+#include <algorithm>
 #include <GLFW/glfw3.h>
 
-#include <functional>
-#include <vector>
-#include <chrono>
+#include "Io/KeyCodes.h"
 
-#include "Event/Io/KeySet.h"
-#include "Render/Window/Window.h"
+struct InputEvent {
+    enum class Type { Key, MouseButton, MouseScroll, MouseMove, WindowClose, WindowResize };
+    Type type;
+	int code;      // Clever input code
+    Input::Action action;    // Clever action code
+    double x, y;
+    bool handled = false;
 
-struct EventAction
-{
-	std::function<void(Window& window)> function;
-	uint32_t delay_between_presses = 200; // milliseconds
-	uint32_t time_at_last_press = 0;//since epoch in milliseconds
-public:
-	// Constructor
-	EventAction(std::function<void(Window&)> func, uint32_t delay = 200)
-		: function(std::move(func)), delay_between_presses(delay)
-	{
-		// Initialize last press time to current time since epoch
-		time_at_last_press = static_cast<uint32_t>(
-			std::chrono::duration_cast<std::chrono::milliseconds>(
-				std::chrono::system_clock::now().time_since_epoch()
-			).count()
-		);
-	}
+    void Consume() { handled = true; }
 };
 
-class EventController
-{
+class IInputLayer {
 public:
-	EventController() = default;
+    virtual ~IInputLayer() = default;
+    virtual void OnInput(InputEvent& event) = 0;
+    virtual int GetZIndex() const = 0;
+};
 
-	void Init();
-	void Update(std::map<uint8_t, std::unique_ptr<Window>>& windows);
-	void CleanUp();
+class EventController {
+public:
+    // Functions for GLFW callbacks
+    void PostKeyEvent(int glfwKey, int scancode, int action, int mods);
+    void PostMouseButtonEvent(int glfwButton, int action, double xpos, double ypos, int mods);
+    void PostMouseMoveEvent(double xpos, double ypos);
+    void PostMouseScrollEvent(double xoffset, double yoffset);
+    void PostWindowCloseEvent(GLFWwindow* ptr);
+    void PostResizeEvent(uint8_t windowId, int width, int height);
+    
+    // Layer Management
+    void AttachLayer(IInputLayer* layer);
+    void DetachLayer(IInputLayer* layer);
 
-	void RegisterFunction(KeySet keyset, EventAction eventAction);
+    // Global Actions
+    using EventLambda = std::function<void()>;
+    void RegisterGlobalAction(Input::Keyboard key, Input::Action action, EventLambda func);
 
-	//void setKey(InputCodes::Keyboard key, bool state);
-	//void setMouseButton(InputCodes::Mouse button, bool state);
+    // Helpers to get string names
+    static std::string GetKeyName(Input::Keyboard key);
+    static std::string GetMouseButtonName(Input::Mouse button);
 
 private:
-	std::unordered_map<KeySet, EventAction, KeySetHash> eventSubscriberList;
-	
-	//std::shared_ptr<EventData> eventData = std::make_shared<EventData>();
-	//std::shared_ptr<KeyInputData> keyInputData = std::make_shared<KeyInputData>();
+    void Dispatch(InputEvent& event);
+    std::vector<IInputLayer*> m_LayerStack;
+
+    struct GlobalAction {
+        Input::Action action;
+        EventLambda callback;
+    };
+    std::map<Input::Keyboard, GlobalAction> m_GlobalKeyMap;
 };

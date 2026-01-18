@@ -3,8 +3,6 @@
 #include "Context/VulkanContext.h"
 
 #include "Render/RenderingController.h"
-#include "Scene/SceneController.h"
-#include "Event/EventController.h"
 #include "World/WorldController.h"
 
 #include <stdexcept>
@@ -32,8 +30,6 @@ namespace Engine {
 		void Terminate();
 	private:
 		RenderingController renderingController;
-		SceneController sceneController{};
-		EventController eventController;
 		WorldController worldController;
 		std::string m_SetUpFilePath;
 	};

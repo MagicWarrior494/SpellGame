@@ -1,4 +1,6 @@
 #include "Window.h"
+#include "Window.h"
+#include "Window.h"
 #include "Buffers/CreateBuffer.h"
 #include <iostream>
 
@@ -26,38 +28,6 @@ namespace Vulkan {
 	{
         vulkanSurface.Destroy(vulkanCore);
 	}
-	
-    void Window::resizeScenes()
-    {
-        for (VkFence fence : vulkanSurface.surfaceFences)
-        {
-            vkWaitForFences(vulkanCore->vkDevice, 1, &fence, VK_TRUE, UINT64_MAX);
-        }
-
-        size_t sceneCount = vulkanScenes.size();
-        if (sceneCount == 0) return;
-
-        int actualWidth, actualHeight;
-        glfwGetWindowSize(vulkanSurface.p_GLFWWindow, &actualWidth, &actualHeight);
-
-        // Calculate grid size (rows and columns)
-        size_t cols = static_cast<size_t>(ceil(sqrt(sceneCount)));
-        size_t rows = static_cast<size_t>(ceil(double(sceneCount) / cols));
-
-        uint32_t sceneWidth = actualWidth / cols;
-        uint32_t sceneHeight = actualHeight / rows;
-
-        for (size_t i = 0; i < sceneCount; ++i)
-        {
-            auto& scene = vulkanScenes[i];
-            scene->width = sceneWidth;
-            scene->height = sceneHeight;
-            // Optionally, you can also set position if needed
-            scene->xoffset = (i % cols) * sceneWidth;
-            scene->yoffset = (i / cols) * sceneHeight;
-            scene->ResizeScene(vulkanCore, &vulkanSurface, sceneWidth, sceneHeight, scene->xoffset, scene->yoffset);
-        }
-    }
 
     uint8_t Window::CreateNewScene(uint32_t width, uint32_t height, uint32_t posx, uint32_t posy)
     {
@@ -337,5 +307,17 @@ namespace Vulkan {
         vkQueuePresentKHR(vulkanCore->presentQueue, &presentInfo);
 
         vulkanSurface.imageFrameCounter = (vulkanSurface.imageFrameCounter + 1) % vulkanSurface.MAX_FRAMES_IN_FLIGHT;
+    }
+    void Vulkan::Window::ResizeScene(uint8_t sceneID, uint32_t newWidth, uint32_t newHeight)
+    {
+		uint32_t xpos = vulkanScenes.at(sceneID)->xoffset;
+		uint32_t ypos = vulkanScenes.at(sceneID)->yoffset;
+		vulkanScenes.at(sceneID)->ResizeScene(vulkanCore, &vulkanSurface, newWidth, newHeight, xpos, ypos);
+    }
+    void Vulkan::Window::MoveScene(uint8_t sceneID, uint32_t newX, uint32_t newY)
+    {
+		uint32_t width = vulkanScenes.at(sceneID)->width;
+		uint32_t height = vulkanScenes.at(sceneID)->height;
+		vulkanScenes.at(sceneID)->ResizeScene(vulkanCore, &vulkanSurface, width, height, newX, newY);
     }
 }

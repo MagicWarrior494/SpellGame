@@ -4,7 +4,16 @@
 #include <unordered_map>
 #include <string>
 
-using namespace InputCodes;
+using namespace Input;
+
+static Action TranslateAction(int glfwAction) {
+	switch (glfwAction) {
+	case GLFW_PRESS:   return Action::PRESS;
+	case GLFW_RELEASE: return Action::RELEASE;
+	case GLFW_REPEAT:  return Action::REPEAT;
+	default:           return Action::UNDEFINED;
+	}
+}
 
 static std::unordered_map<int, int> keyboardGLFWtoCleverKeyCodes
 {

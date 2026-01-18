@@ -30,7 +30,9 @@ namespace Vulkan {
 
 		void RenderScenes();
 
-		void resizeScenes();
+		void ResizeScene(uint8_t sceneID, uint32_t newWidth, uint32_t newHeight);
+		void MoveScene(uint8_t sceneID, uint32_t newX, uint32_t newY);
+
 		uint8_t CreateNewScene(uint32_t width = 0, uint32_t height = 0, uint32_t posx = 0, uint32_t posy = 0);
 		inline uint32_t GetNextSceneID() {
 			return nextSceneID++;

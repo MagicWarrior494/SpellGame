@@ -83,8 +83,8 @@ namespace Vulkan {
 		std::cout << std::filesystem::current_path().string() << std::endl;
 
 		PipelineInfo pipelineInfo{};
-		pipelineInfo.vertShaderPath = std::filesystem::current_path().string() + "/SpellGame_Solution/Clever_Engine/Vulkan/res/surfaceVert.spv";
-		pipelineInfo.fragShaderPath = std::filesystem::current_path().string() + "/SpellGame_Solution/Clever_Engine/Vulkan/res/surfaceFrag.spv";
+		pipelineInfo.vertShaderPath = std::filesystem::current_path().string() + "\\Clever_Engine\\Vulkan\\res\\surfaceVert.spv";
+		pipelineInfo.fragShaderPath = std::filesystem::current_path().string() + "\\Clever_Engine\\Vulkan\\res\\surfaceFrag.spv";
 		pipelineInfo.pipelineLayout = surfacePipelineLayout;
 		pipelineInfo.renderPass = surfaceRenderPass;
 		pipelineInfo.cullMode = VK_CULL_MODE_NONE;
@@ -375,8 +375,8 @@ namespace Vulkan {
 		scenePipelineLayouts.push_back(CreatePipelineLayout(vulkanCore, pipelineLayoutInfo));
 
 		PipelineInfo pipelineInfo{};
-		pipelineInfo.vertShaderPath = std::filesystem::current_path().string() + "/SpellGame_Solution/Clever_Engine/Vulkan/res/sceneVert.spv";
-		pipelineInfo.fragShaderPath = std::filesystem::current_path().string() + "/SpellGame_Solution/Clever_Engine/Vulkan/res/sceneFrag.spv";
+		pipelineInfo.vertShaderPath = std::filesystem::current_path().string() + "\\Clever_Engine\\Vulkan\\res\\sceneVert.spv";
+		pipelineInfo.fragShaderPath = std::filesystem::current_path().string() + "\\Clever_Engine\\Vulkan\\res\\sceneFrag.spv";
 		pipelineInfo.pipelineLayout = scenePipelineLayouts[0];
 		pipelineInfo.renderPass = sceneRenderPass;
 		pipelineInfo.bindingDescription = Vertex::getBindingDescription();

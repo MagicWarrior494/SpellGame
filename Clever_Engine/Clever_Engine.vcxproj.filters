@@ -69,9 +69,6 @@
     <ClInclude Include="src\Event\Io\KeyCodes.h">
       <Filter>src\Event\Io</Filter>
     </ClInclude>
-    <ClInclude Include="src\Event\Io\KeySet.h">
-      <Filter>src\Event\Io</Filter>
-    </ClInclude>
     <ClInclude Include="src\Render\BufferManager.h">
       <Filter>src\Render</Filter>
     </ClInclude>
@@ -93,16 +90,16 @@
     <ClInclude Include="src\Render\Window\Window.h">
       <Filter>src\Render\Window</Filter>
     </ClInclude>
-    <ClInclude Include="src\Scene\Object\Element.h">
+    <ClInclude Include="src\Render\Window\Scene\Object\Element.h">
       <Filter>src\Scene\Object</Filter>
     </ClInclude>
-    <ClInclude Include="src\Scene\Object\UIElement.h">
+    <ClInclude Include="src\Render\Window\Scene\Object\UIElement.h">
       <Filter>src\Scene\Object</Filter>
     </ClInclude>
-    <ClInclude Include="src\Scene\Scene.h">
+    <ClInclude Include="src\Render\Window\Scene\Scene.h">
       <Filter>src\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="src\Scene\SceneController.h">
+    <ClInclude Include="src\Render\Window\Scene\SceneController.h">
       <Filter>src\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\World\ECS\Components.h">
@@ -149,10 +146,10 @@
     <ClCompile Include="src\Render\Window\Window.cpp">
       <Filter>src\Render\Window</Filter>
     </ClCompile>
-    <ClCompile Include="src\Scene\Object\Element.cpp">
+    <ClCompile Include="src\Render\Window\Scene\Object\Element.cpp">
       <Filter>src\Scene\Object</Filter>
     </ClCompile>
-    <ClCompile Include="src\Scene\SceneController.cpp">
+    <ClCompile Include="src\Render\Window\Scene\SceneController.cpp">
       <Filter>src\Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\World\WorldController.cpp">

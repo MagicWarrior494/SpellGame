@@ -1,71 +1,94 @@
 #include "EventController.h"
+#include "Event/Io/ConversionData.h"
 
-#include <vector>
-#include <iostream>
+void EventController::PostKeyEvent(int glfwKey, int scancode, int glfwAction, int mods) {
+    if (keyboardGLFWtoCleverKeyCodes.find(glfwKey) == keyboardGLFWtoCleverKeyCodes.end()) return;
 
-#include "Io/ConversionData.h"
-#include "Render/Window/Window.h"
+    InputEvent ev;
+    ev.type = InputEvent::Type::Key;
+    ev.code = keyboardGLFWtoCleverKeyCodes[glfwKey];
+    ev.action = TranslateAction(glfwAction);
+    Dispatch(ev);
+}
+void EventController::PostMouseButtonEvent(int glfwButton, int glfwAction, double xpos, double ypos, int mods) {
+    if (mouseGLFWtoCleverKeyCodes.find(glfwButton) == mouseGLFWtoCleverKeyCodes.end()) return;
 
-void EventController::Init()
-{
+    InputEvent ev;
+    ev.type = InputEvent::Type::MouseButton;
+    ev.code = mouseGLFWtoCleverKeyCodes[glfwButton];
+    ev.x = static_cast<int>(xpos);
+    ev.y = static_cast<int>(ypos);
+    ev.action = TranslateAction(glfwAction);
+    Dispatch(ev);
+}
+void EventController::PostMouseMoveEvent(double xpos, double ypos) {
+    InputEvent ev;
+    ev.type = InputEvent::Type::MouseMove;
+    ev.x = static_cast<int>(xpos);
+	ev.y = static_cast<int>(ypos);
+    ev.action = Input::Action::UNDEFINED;
+    Dispatch(ev);
+}
+void EventController::PostMouseScrollEvent(double xoffset, double yoffset) {
+    InputEvent ev;
+    ev.type = InputEvent::Type::MouseScroll;
+    ev.x = static_cast<int>(xoffset);
+	ev.y = static_cast<int>(yoffset);
+    ev.action = Input::Action::UNDEFINED;
+    Dispatch(ev);
 }
 
-void EventController::Update(std::map<uint8_t, std::unique_ptr<Window>>& windows)
+void EventController::PostWindowCloseEvent(GLFWwindow* ptr)
 {
-	glfwPollEvents();
-	for (auto& [id, window] : windows)
-	{
-		KeySet windowKeyset = window->GetKeySet();
-		
-		for (auto& [eventKeyset, eventAction] : eventSubscriberList)
-		{
-			bool success = true;
-			for (const auto& key : eventKeyset.keys) {
-				if (std::find(windowKeyset.keys.begin(), windowKeyset.keys.end(), key) == windowKeyset.keys.end()) {
-					success = false;
-					break;
-				}
-			}
-
-			for (const auto& mousebutton : eventKeyset.mouseButtons) {
-				if (std::find(windowKeyset.mouseButtons.begin(), windowKeyset.mouseButtons.end(), mousebutton) == windowKeyset.mouseButtons.end()) {
-					success = false;
-					break;
-				}
-			}
-			 
-			if (!success) continue;
-
-			uint32_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-			if (current_time - eventAction.time_at_last_press > eventAction.delay_between_presses)
-			{
-				eventAction.time_at_last_press = current_time;
-				eventAction.function(*window);
-			}
-		}
-
-		window->ClearKeySets();
-	}
+    glfwSetWindowShouldClose(ptr, true);
 }
 
-
-
-void EventController::CleanUp()
+void EventController::PostResizeEvent(uint8_t windowId, int width, int height)
 {
 
 }
 
-void EventController::RegisterFunction(KeySet keyset, EventAction eventAction)
-{
-	eventSubscriberList.insert({ keyset, std::move(eventAction) });
+void EventController::Dispatch(InputEvent& event) {
+    // 1. Layer Dispatch (Z-Order)
+    for (auto* layer : m_LayerStack) {
+        layer->OnInput(event);
+        if (event.handled) return;
+    }
+
+    // 2. Global Actions
+    if (event.type == InputEvent::Type::Key) {
+        auto cleverKey = static_cast<Input::Keyboard>(event.code);
+        auto it = m_GlobalKeyMap.find(cleverKey);
+        if (it != m_GlobalKeyMap.end() && it->second.action == event.action) {
+            it->second.callback();
+        }
+    }
 }
 
-//void EventController::setKey(InputCodes::Keyboard key, bool state)
-//{
-//	keyInputData->keys[key] = state;
-//}
-//
-//void EventController::setMouseButton(InputCodes::Mouse button, bool state)
-//{
-//	keyInputData->mouseButtons[button] = state;
-//}
+void EventController::RegisterGlobalAction(Input::Keyboard key, Input::Action action, EventLambda func) {
+    m_GlobalKeyMap[key] = { action, func };
+}
+
+void EventController::AttachLayer(IInputLayer* layer) {
+    if (std::find(m_LayerStack.begin(), m_LayerStack.end(), layer) != m_LayerStack.end()) {
+        return;
+    }
+
+    m_LayerStack.push_back(layer);
+    std::sort(m_LayerStack.begin(), m_LayerStack.end(), [](IInputLayer* a, IInputLayer* b) {
+        return a->GetZIndex() > b->GetZIndex();
+    });
+}
+
+void EventController::DetachLayer(IInputLayer* layer)
+{
+	auto it = std::find(m_LayerStack.begin(), m_LayerStack.end(), layer);
+
+    if (it != m_LayerStack.end()) {
+		m_LayerStack.erase(it);
+    }
+
+    std::sort(m_LayerStack.begin(), m_LayerStack.end(), [](IInputLayer* a, IInputLayer* b) {
+        return a->GetZIndex() > b->GetZIndex();
+    });
+}

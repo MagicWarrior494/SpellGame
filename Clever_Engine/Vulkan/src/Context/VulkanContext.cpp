@@ -37,7 +37,6 @@ namespace Vulkan {
 		if (windows.empty())
 			return;
 
-		//glfwPollEvents();
 		//Remove renderSurface from list when the VulkanSurface OBJ within has been cleared.
 		for (auto it = windows.begin(); it != windows.end();) {
 			std::shared_ptr<Window> renderSurface = it->second;

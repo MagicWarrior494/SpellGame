@@ -1,13 +1,13 @@
 #include "Engine.h"
-
-
 #include <iostream>
-
 #include "World/ECS/Components.h"
 
 namespace Engine {
 
 	Engine::Engine()
+		:
+		renderingController(RenderingController{}),
+		worldController(WorldController{})
 	{
 	}
 
@@ -29,58 +29,22 @@ namespace Engine {
 		Create Graphics Context
 		Start capturing events
 		*/
-		 
-		//Event::EventSystem ES{};
+
 
 		renderingController.SetUp();
 
 		uint8_t windowId = renderingController.CreateNewWindow("Main Window", 960, 540);
-
-		SceneCreationInfo info{ windowId, 960/2, 540, 0, 0 };
-
-		CameraScene sceneId = sceneController.CreateNewScene<CameraScene>(renderingController, info, 0);
+		renderingController.GetWindow(windowId).CreateNewScene(960 / 2, 540, 0, 0);
 
 		this->worldController.AddTriangle();
 
-		/*eventController.RegisterFunction(KeySet{ Keyboard::KEY_N },
-			EventAction(
-				[this](Window& window) {
-					int id = this->renderingController.CreateNewWindow("NewWindow", 540, 960);
-					this->worldController.AddTriangle();
-					},
-				1000
-			)
-		);*/
-
-		eventController.RegisterFunction(KeySet{ Keyboard::KEY_T },
-			EventAction(
-				[this](Window& window) {
-					this->worldController.AddTriangle();
-				},
-				200
-			)
-		);
-
-		eventController.RegisterFunction(KeySet{ Keyboard::KEY_S },
-			EventAction(
-				[this](Window& window) {
-					SceneCreationInfo info{ window.GetWindowID(), 960 / 2, 540,  960 / 2, 0};
-					CameraScene sceneId_new = sceneController.CreateNewScene<CameraScene>(renderingController, info, 0);
-				},
-				500
-			)
-		);
-
 		while (true)
 		{
-			eventController.Update(renderingController.GetAllWindows());
-			worldController.Update();
-			sceneController.Update();
-			renderingController.Update();
-
 			if (renderingController.GetWindowCount() == 0)
 				break;
 
+			worldController.Update();
+			renderingController.Update();
 			renderingController.Render(worldController.GetRegistry());
 		}
 	}

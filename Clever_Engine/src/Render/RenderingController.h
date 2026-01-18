@@ -7,17 +7,16 @@
 #include <iostream>
 
 #include "Window/RenderSurface.h"
-#include "Window/Window.h"
 #include "Context/VulkanContext.h"
 #include "BufferManager.h"
-
 #include "World/ECS/Registry.h"
+#include "Window/Window.h"
 
 class RenderingController
 {
 public:
-	RenderingController() = default;
-	~RenderingController() = default;
+	RenderingController();
+	~RenderingController();
 
 public:
 	void Update();
@@ -35,26 +34,11 @@ public:
 
 	uint8_t GetNextRenderSurfaceID() { return nextRenderSurfaceID++; }
 
-	RenderSurface& GetRenderSurface(uint8_t renderSurfaceID)
-	{
-		if (renderSurfaces.find(renderSurfaceID) != renderSurfaces.end()) {
-			return *renderSurfaces.at(renderSurfaceID);
-		}
-		throw std::runtime_error("Render Surface ID not found in RenderingController");
-	}
+	RenderSurface& GetRenderSurface(uint8_t renderSurfaceID);
 
-	Window& GetWindow(uint8_t windowID)
-	{
-		if (windows.find(windowID) != windows.end()) {
-			return *windows.at(windowID);
-		}
-		throw std::runtime_error("Window ID not found in RenderingController");
-	}
+	Window& GetWindow(uint8_t windowID);
 
-	std::map<uint8_t, std::unique_ptr<Window>>& GetAllWindows()
-	{
-		return windows;
-	}
+	std::map<uint8_t, std::unique_ptr<Window>>& GetAllWindows();
 
 	int GetWindowCount()
 	{

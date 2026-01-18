@@ -1,70 +1,74 @@
 #pragma once
-#include <stdexcept>
+#include <string>
 #include <memory>
 #include <vector>
-#include <string>
+#include <cstdint>
 #include <GLFW/glfw3.h>
-#include <unordered_map>
 
 #include "Context/VulkanContext.h"
-#include "Event/Io/KeySet.h"
-#include "Event/Io/ConversionData.h"
+#include "Event/EventController.h"
+#include "Scene/SceneController.h" // Assuming this is your SceneController path
 
-#include "World/ECS/Components.h"
-class Window
-{
+// Engine Type Definitions
+using SceneID = uint8_t;
+using WindowID = uint8_t;
+
+class Window : public IInputLayer{
 public:
-	std::string title = "Default";
-	int width = 100;
-	int height = 100;
-	int posx = 0;
-	int posy = 0;
+    Window(std::shared_ptr<Vulkan::VulkanContext> vulkanContext,
+        std::string title, int width, int height, int posx, int posy);
+    ~Window() = default;
 
-	KeySet keyset;
-public:
-	Window(std::shared_ptr<Vulkan::VulkanContext> vulkanContext, std::string title, int width, int height, int posx, int posy);
-	~Window() = default;
+    // Standard Logic
+    bool IsWindowStillValid();
+    void InitWindow();
+    void CloseWindow();
+    void Update();
+    void Render();
 
+    void OnInput(InputEvent& event);
+    int GetZIndex() const;
 
-	bool IsWindowStillValid();
-	void InitWindow();  // Initialize window and OpenGL context
-	void CloseWindow();                                         // Close window and unload OpenGL context
+    // Render Surface Management
+    uint8_t CreateNewScene(uint32_t width, uint32_t height, int posx = 0, int posy = 0);
+	void MoveScene(SceneID sceneID, int newX, int newY);
+    void ResizeScene(SceneID sceneID, int newX, int newY);
+    void AddChildRenderSurface(uint8_t renderSurfaceID);
+    int GetRenderSurfaceCount() const { return static_cast<int>(m_ChildrenRenderSurfaces.size()); }
 
-	void AddChildRenderSurface(uint8_t renderSurfaceID);
+    // --- Getters ---
+    WindowID GetWindowID() const { return m_WindowID; }
+    GLFWwindow* GetGLFWWindowPtr() const { return m_pGLFWWindow; }
+    std::shared_ptr<Vulkan::Window> GetVulkanWindow() { return m_VulkanWindow; }
+    std::vector<uint8_t>& GetChildrenRenderSurfaces() { return m_ChildrenRenderSurfaces; }
+	glm::vec2 GetWindowSize() const { return glm::vec2(static_cast<float>(m_Width), static_cast<float>(m_Height)); }
+	glm::vec2 GetWindowPosition() const { return glm::vec2(static_cast<float>(m_PosX), static_cast<float>(m_PosY)); }
 
-	void Render();
+    // Controller Accessors
+    EventController& GetEventController() { return *m_EventController; }
+    SceneController& GetSceneController() { return *m_SceneController; }
 
-	uint8_t CreateNewRenderSurface(uint32_t width, uint32_t height, int posx = 0, int posy = 0);
+    // Callbacks
+    void OnResize(int width, int height);
 
-	std::shared_ptr<Vulkan::Window> GetVulkanWindow()
-	{
-		return v_VulkanWindow;
-	}
-
-	int RenderSurfaceCount();
-
-	inline void ClearKeySets() { keyset.clear(); }
-	inline KeySet GetKeySet() { return keyset; }
-	uint8_t GetWindowID() { return WindowID; }
 private:
-	uint8_t WindowID = 0;//Same ID as in VulkanContext because there is a 1:1 mapping between Window and RenderSurface in VulkanContext
-	std::vector<uint8_t> childrenRenderSurfaces{};
+    void InitCallbacks();
 
-	GLFWwindow* p_GLFWWindow;
-	std::shared_ptr<Vulkan::Window> v_VulkanWindow;
-	Vulkan::SurfaceFlags defaultVulkanWindowFlags = Vulkan::SurfaceFlags::Resizeable | Vulkan::SurfaceFlags::Fullscreenable;
+    WindowID m_WindowID = 0;
+    std::string m_Title;
+    int m_Width;
+    int m_Height;
+    int m_PosX;
+    int m_PosY;
+
+    GLFWwindow* m_pGLFWWindow = nullptr;
+    std::shared_ptr<Vulkan::VulkanContext> m_VulkanContext;
+    std::shared_ptr<Vulkan::Window> m_VulkanWindow;
+
+    std::vector<uint8_t> m_ChildrenRenderSurfaces{};
+    Vulkan::SurfaceFlags m_DefaultVulkanWindowFlags = Vulkan::SurfaceFlags::Resizeable | Vulkan::SurfaceFlags::Fullscreenable;
+
+    // Controllers Owned by the Window
+    std::unique_ptr<EventController> m_EventController;
+    std::unique_ptr<SceneController> m_SceneController;
 };
-
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	Window* windowObj = static_cast<Window*>(glfwGetWindowUserPointer(window));
-
-	windowObj->keyset.keys.push_back((InputCodes::Keyboard)keyboardGLFWtoCleverKeyCodes.at(key));
-
-}
-
-static void mouseButton_callback(GLFWwindow* window, int mouseButton, int action, int mods)
-{
-	Window* windowObj = static_cast<Window*>(glfwGetWindowUserPointer(window));
-	windowObj->keyset.mouseButtons.push_back((InputCodes::Mouse)mouseGLFWtoCleverKeyCodes.at(mouseButton));
-}
