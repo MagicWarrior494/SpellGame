@@ -47,6 +47,11 @@ namespace Vulkan {
 				it++;
 			}
 		}
+		auto now = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<float> durationSeconds = now - lastFrame;
+		deltaTime = std::min(durationSeconds.count(), 0.1f);
+		lastFrame = now;
+		PrintFPS(deltaTime);
 	}
 
 	uint8_t VulkanContext::CreateNewWindow(SurfaceFlags flags)

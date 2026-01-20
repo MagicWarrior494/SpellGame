@@ -1,6 +1,7 @@
 #include "RenderingController.h"
 #include "World/ECS/Components.h"
 
+
 RenderingController::RenderingController()
 {
 }
@@ -26,9 +27,15 @@ void RenderingController::Update()
 		}
 	}
 
+	vulkanContext->Update();
+
 	for (auto& [id, renderSurface] : renderSurfaces)
 	{
 		renderSurface->Update();
+	}
+	for (auto& [id, window] : windows)
+	{
+		window->Update();
 	}
 }
 
@@ -60,15 +67,6 @@ void RenderingController::Render(Registry& reg)
 	{
 		window->Render();
 	}
-}
-
-uint8_t RenderingController::CreateNewRenderSurface(uint8_t windowID, uint32_t width, uint32_t height, int posx, int posy)
-{
-	uint8_t renderSurfaceID = windows.at(windowID)->CreateNewScene(width, height, posx, posy);
-	RenderSurface renderSurface{ renderSurfaceID, width, height, posx, posy };
-	renderSurface.setParentWindowID(windowID);
-	renderSurfaces.insert({ renderSurfaceID, std::make_unique<RenderSurface>(renderSurface) });
-	return renderSurfaceID;
 }
 
 uint8_t RenderingController::CreateNewWindow(std::string title, uint32_t width, uint32_t height, int posx, int posy)

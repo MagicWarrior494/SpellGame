@@ -16,6 +16,8 @@
 #include "Scene/CreateDescriptors.h"
 #include "Scene/CreatePipelines.h"
 
+#include "Objects/Vertex.h"
+
 #include <filesystem>
 
 namespace Vulkan {
@@ -347,27 +349,37 @@ namespace Vulkan {
 		DescriptorSetInfo info{};
 		info.maxSets = *MAX_FRAMES_IN_FLIGHT;
 
-		// 1. Prepare the buffer info for the descriptor
+		VkDescriptorBufferInfo cameraBufferInfo{};
+		cameraBufferInfo.buffer = vulkanSurface->cameraBuffer.buffer;
+		cameraBufferInfo.offset = 0;
+		cameraBufferInfo.range = sizeof(SceneShaderData);
+
+		DescriptorBindingInfo cameraBinding{};
+		cameraBinding.binding = 0;
+		cameraBinding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+		cameraBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+		for (int i = 0; i < info.maxSets; i++) {
+			cameraBinding.buffers.push_back(cameraBufferInfo);
+		}
+		info.bindings.push_back(cameraBinding);
+
 		VkDescriptorBufferInfo storageBufferInfo{};
 		storageBufferInfo.buffer = vulkanCore->persistentData.objectMatrixStorageBuffer.buffer;
 		storageBufferInfo.offset = 0;
 		storageBufferInfo.range = VK_WHOLE_SIZE;
 
-		// 2. Create the binding info
 		DescriptorBindingInfo matrixBinding{};
-		matrixBinding.binding = 0;
+		matrixBinding.binding = 1; // Matches layout(set = 0, binding = 1)
 		matrixBinding.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 		matrixBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-		// 3. IMPORTANT: Add the buffer info for EVERY frame in flight
-		// If you use one global buffer for all frames:
 		for (int i = 0; i < info.maxSets; i++) {
 			matrixBinding.buffers.push_back(storageBufferInfo);
 		}
-
 		info.bindings.push_back(matrixBinding);
-		//info.bindings.push_back({ 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT });
 
+		// Create the descriptors with both bindings
 		sceneDescriptorResult = CreateDescriptors(vulkanCore, info);
 
 		PipelineLayoutInfo pipelineLayoutInfo{};
@@ -382,6 +394,7 @@ namespace Vulkan {
 		pipelineInfo.bindingDescription = Vertex::getBindingDescription();
 		pipelineInfo.attributeDescriptions = Vertex::getAttributeDescriptions();
 		pipelineInfo.cullMode = VK_CULL_MODE_NONE;
+		pipelineInfo.enableDepthTest = false;
 		scenePipelines.push_back(CreateGraphicsPipeline(vulkanCore, pipelineInfo));
 
 		CreateSyncObjects(

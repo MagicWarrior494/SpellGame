@@ -16,24 +16,35 @@ void EventController::PostMouseButtonEvent(int glfwButton, int glfwAction, doubl
     InputEvent ev;
     ev.type = InputEvent::Type::MouseButton;
     ev.code = mouseGLFWtoCleverKeyCodes[glfwButton];
-    ev.x = static_cast<int>(xpos);
-    ev.y = static_cast<int>(ypos);
+    ev.x = xpos;
+    ev.y = ypos;
     ev.action = TranslateAction(glfwAction);
     Dispatch(ev);
 }
 void EventController::PostMouseMoveEvent(double xpos, double ypos) {
+    if (lastFrameMouseX == -1 || lastFrameMouseY == -1)
+    {
+        lastFrameMouseX = xpos;
+        lastFrameMouseY = ypos;
+    }
+
     InputEvent ev;
     ev.type = InputEvent::Type::MouseMove;
-    ev.x = static_cast<int>(xpos);
-	ev.y = static_cast<int>(ypos);
+    ev.x = xpos;
+    ev.y = ypos;
+    ev.deltaX = xpos - lastFrameMouseX;
+    ev.deltaY = ypos - lastFrameMouseY;
     ev.action = Input::Action::UNDEFINED;
     Dispatch(ev);
+
+    lastFrameMouseX = xpos;
+    lastFrameMouseY = ypos;
 }
 void EventController::PostMouseScrollEvent(double xoffset, double yoffset) {
     InputEvent ev;
     ev.type = InputEvent::Type::MouseScroll;
-    ev.x = static_cast<int>(xoffset);
-	ev.y = static_cast<int>(yoffset);
+    ev.x = xoffset;
+    ev.y = yoffset;
     ev.action = Input::Action::UNDEFINED;
     Dispatch(ev);
 }

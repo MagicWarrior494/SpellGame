@@ -52,20 +52,12 @@ void Window::OnInput(InputEvent& event)
             event.Consume();
         }
 	}
-    else if(event.type == InputEvent::Type::MouseMove)
-    {
-		std::cout << "Mouse Move Event at (" << event.x << ", " << event.y << ")" << std::endl;
-    }
     else if (event.type == InputEvent::Type::MouseButton)
     {
         if(event.action == Input::Action::PRESS && event.code == Input::BUTTON_1)
         {
-            ResizeScene(0, event.x, event.y);
+            //ResizeScene(0, event.x, event.y);
         }
-        else if(event.action == Input::Action::RELEASE && event.code == Input::BUTTON_1)
-        {
-            std::cout << "Mouse Button " << event.code << " Released" << std::endl;
-		}
     }
 }
 
@@ -122,7 +114,6 @@ void Window::InitCallbacks() {
 
 void Window::Update() {
     if (IsWindowStillValid()) {
-        glfwPollEvents();
         m_SceneController->Update(); // Update logic for all scenes in this window
     }
 }
@@ -153,10 +144,10 @@ void Window::CloseWindow() {
     }
 }
 
-uint8_t Window::CreateNewScene(uint32_t width, uint32_t height, int posx, int posy) {
+uint8_t Window::CreateNewScene(Registry& registry, uint32_t width, uint32_t height, int posx, int posy) {
     uint8_t vulkanSceneID = m_VulkanWindow->CreateNewScene(width, height, posx, posy);
     SceneCreationInfo info{ m_WindowID, vulkanSceneID, width, height, posx, posy, GetRenderSurfaceCount() + 1};
-    m_SceneController->CreateNewScene<CameraScene>(vulkanSceneID, info, m_VulkanContext, 1);
+    m_SceneController->CreateNewScene<CameraScene>(vulkanSceneID, info, m_VulkanContext, registry, 1);
     m_ChildrenRenderSurfaces.push_back(vulkanSceneID);
 	m_EventController->AttachLayer(&m_SceneController->GetScene(vulkanSceneID));
 

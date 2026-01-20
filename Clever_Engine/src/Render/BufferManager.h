@@ -1,8 +1,12 @@
 #pragma once
 
 #include <unordered_map>
+#include <memory>
 #include <vector>
-#include <glm.hpp>
+#include <stack>
+#include <cstdint>
+#include <cstring>
+#include <cassert>
 
 #include "Context/VulkanContext.h"
 #include "Buffers/CreateBuffer.h"
@@ -106,4 +110,76 @@ private:
 	//Because the GPU index is dense we can use a vector for this
 	std::vector<uint32_t> gpuToCpuMap;
 
+};
+
+class UniformBufferManager {
+public:
+	/**
+	 * @param buffer The VulkanBuffer (must be persistently mapped).
+	 * @param minAlignment Physical device's minUniformBufferOffsetAlignment.
+	 * @param structSize The size of the specific struct this manager handles (e.g., sizeof(SceneData)).
+	 */
+	UniformBufferManager(Vulkan::VulkanBuffer& buffer, size_t minAlignment, size_t structSize)
+		: m_Buffer(buffer), m_MinAlignment(minAlignment), m_StructSize(structSize)
+	{
+		m_MappedPtr = static_cast<uint8_t*>(buffer.mappedPtr);
+		assert(m_MappedPtr != nullptr && "Buffer must be persistently mapped!");
+
+		// Calculate aligned stride: the distance from the start of slot 0 to slot 1
+		m_AlignedStride = (m_StructSize + minAlignment - 1) & ~(minAlignment - 1);
+	}
+
+	~UniformBufferManager() = default;
+
+	// Returns a recycled index or a new one
+	uint32_t AllocateSlot() {
+		if (!m_FreeSlots.empty()) {
+			uint32_t slot = m_FreeSlots.top();
+			m_FreeSlots.pop();
+			return slot;
+		}
+
+		uint32_t newSlot = m_NextAvailableSlot++;
+
+		// Safety check to ensure we don't exceed allocated GPU memory
+		assert((newSlot + 1) * m_AlignedStride <= m_Buffer.capacity && "Uniform Buffer capacity exceeded!");
+
+		return newSlot;
+	}
+
+	// Returns the slot to the pool for reuse
+	void FreeSlot(uint32_t slotIndex) {
+		m_FreeSlots.push(slotIndex);
+	}
+
+	/**
+	 * Updates the GPU memory for a specific slot.
+	 * Use this in your Update/Render loops.
+	 */
+	void UpdateSlot(uint32_t slotIndex, const void* data) {
+		size_t offset = slotIndex * m_AlignedStride;
+		// We only copy the actual struct size, ignoring the padding bytes
+		memcpy(m_MappedPtr + offset, data, m_StructSize);
+	}
+
+	// Returns the offset required for VkDescriptorBufferInfo
+	size_t GetOffset(uint32_t slotIndex) const {
+		return slotIndex * m_AlignedStride;
+	}
+
+	// Returns the size of the actual data (the 'range' in Vulkan descriptors)
+	size_t GetStructSize() const {
+		return m_StructSize;
+	}
+
+private:
+	Vulkan::VulkanBuffer& m_Buffer;
+	uint8_t* m_MappedPtr;
+
+	size_t m_MinAlignment;
+	size_t m_StructSize;
+	size_t m_AlignedStride;
+
+	uint32_t m_NextAvailableSlot = 0;
+	std::stack<uint32_t> m_FreeSlots;
 };

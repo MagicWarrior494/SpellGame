@@ -23,9 +23,6 @@ public:
 	void SetUp();
 	void Render(Registry& reg);
 
-	//This is a scene and shouldnt be called on its own, only when creating a new scene will a new render surface be created
-	uint8_t CreateNewRenderSurface(uint8_t windowID, uint32_t width, uint32_t height, int posx = 0, int posy = 0);
-	
 	//Creates a new window, does NOT create a render surface, that is done separately when creating a scene
 	uint8_t CreateNewWindow(std::string title, uint32_t width, uint32_t height, int posx = 0, int posy = 0);
 

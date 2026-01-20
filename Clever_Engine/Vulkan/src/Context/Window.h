@@ -43,5 +43,6 @@ namespace Vulkan {
 		Window& operator=(const Window&) = delete;
 	private:
 		uint8_t nextSceneID = 0;
+		uint8_t MAX_SCENE_COUNT = 16;
 	};
 }

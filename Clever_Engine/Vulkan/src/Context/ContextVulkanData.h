@@ -6,6 +6,7 @@
 #include <glm.hpp>
 #include <memory>
 #include <array>
+#include <map>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include "Surface/SurfaceFlags.h"
@@ -205,6 +206,9 @@ namespace Vulkan {
 
 			std::vector<std::vector<VulkanImage>> dummyImages{};
 			std::vector<std::shared_ptr<std::vector<VulkanImage>>> offscreenImages{}; // Offscreen images for each frame in flight
+
+			VulkanBuffer cameraBuffer{};
+			std::map<uint8_t, uint32_t> sceneIDToCameraBufferSlot{};
 
 			int AddNewScene(std::shared_ptr<VulkanCore> vulkanCore, uint32_t width, uint32_t height);
 

@@ -15,6 +15,7 @@ struct InputEvent {
 	int code;      // Clever input code
     Input::Action action;    // Clever action code
     double x, y;
+    double deltaX, deltaY;
     bool handled = false;
 
     void Consume() { handled = true; }
@@ -52,6 +53,9 @@ public:
 private:
     void Dispatch(InputEvent& event);
     std::vector<IInputLayer*> m_LayerStack;
+
+    double lastFrameMouseX = -1;
+    double lastFrameMouseY = -1;
 
     struct GlobalAction {
         Input::Action action;

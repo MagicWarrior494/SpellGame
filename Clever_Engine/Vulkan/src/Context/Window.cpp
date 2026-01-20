@@ -1,6 +1,4 @@
 #include "Window.h"
-#include "Window.h"
-#include "Window.h"
 #include "Buffers/CreateBuffer.h"
 #include <iostream>
 
@@ -20,6 +18,9 @@ namespace Vulkan {
 		}
 
         vulkanSurface.CreateSurfaceResources(vulkanCore, glfwWindowptr);
+
+        vulkanSurface.cameraBuffer = std::move(CreateUniformBuffer(vulkanCore, sizeof(SceneShaderData) * MAX_SCENE_COUNT));
+
 		if (vulkanScenes.size() > 0) return;
 		//CREATING FIRST SCENE OF Window, might want to make a way to create a new Window without making a new scene
 
@@ -160,6 +161,8 @@ namespace Vulkan {
             VkRect2D scissor{ {0,0}, {scene->width, scene->height} };
             vkCmdSetScissor(sceneCmd, 0, 1, &scissor);
 
+            uint32_t dynamicOffset = vulkanSurface.sceneIDToCameraBufferSlot.at(sceneID);
+
             vkCmdBindPipeline(sceneCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, scene->scenePipelines[0]);
             if (scene->sceneDescriptorResult.layout != VK_NULL_HANDLE)
             {
@@ -169,7 +172,7 @@ namespace Vulkan {
                     scene->scenePipelineLayouts[0],
                     0, 1,
                     &scene->sceneDescriptorResult.sets[*scene->imageFrameCounter],
-                    0, nullptr
+                    1, &dynamicOffset
                 );
             }
 

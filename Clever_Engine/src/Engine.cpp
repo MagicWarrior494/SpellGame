@@ -30,21 +30,33 @@ namespace Engine {
 		Start capturing events
 		*/
 
-
 		renderingController.SetUp();
 
 		uint8_t windowId = renderingController.CreateNewWindow("Main Window", 960, 540);
-		renderingController.GetWindow(windowId).CreateNewScene(960 / 2, 540, 0, 0);
+
+		renderingController.GetWindow(windowId).CreateNewScene(worldController.GetRegistry(), 960, 540, 0, 0);
+
+		Registry& reg = worldController.GetRegistry();
+		uint32_t camera_id = reg.CreateEntity();
+
+		Camera camera{};
+		camera.fov = 45.0f;
+		camera.nearPlane = 0.1f;
+		camera.farPlane = 100.0f;
+		camera.aspectRatio = (float)960 / (float)540;
+		camera.position = glm::vec3(0.0f, 0.0f, 5.0f);
+
+		reg.SetComponent<Camera>(camera_id, camera);
 
 		this->worldController.AddTriangle();
 
 		while (true)
 		{
+			renderingController.Update();
 			if (renderingController.GetWindowCount() == 0)
 				break;
 
 			worldController.Update();
-			renderingController.Update();
 			renderingController.Render(worldController.GetRegistry());
 		}
 	}

@@ -189,27 +189,25 @@ namespace Vulkan {
 			vc,
 			sizeBytes,
 			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 			buffer
 		);
+
+		vkMapMemory(vc->vkDevice, buffer.memory, 0, sizeBytes, 0, &buffer.mappedPtr);
 
 		return buffer;
 	}
 
 	static void UpdateUniform(
-		std::shared_ptr<VulkanCore> vc,
 		VulkanBuffer& buffer,
 		const void* data,
 		VkDeviceSize dataSize
 	)
 	{
 		assert(dataSize <= buffer.capacity);
+		assert(buffer.mappedPtr != nullptr);
 
-		void* mapped;
-		vkMapMemory(vc->vkDevice, buffer.memory, 0, dataSize, 0, &mapped);
-		memcpy(mapped, data, static_cast<size_t>(dataSize));
-		vkUnmapMemory(vc->vkDevice, buffer.memory);
+		memcpy(buffer.mappedPtr, data, static_cast<size_t>(dataSize));
 
 		buffer.size = dataSize;
 	}

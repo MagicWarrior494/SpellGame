@@ -37,16 +37,18 @@ struct Vertex
 struct Transform
 {
 	glm::vec3 position{ 0.0f, 0.0f, 0.0f };
-	glm::vec4 rotation{ 0.0f, 0.0f, 0.0f, 1.0f }; // Quaternion (x, y, z, w)
+	glm::quat rotation{ 1.0f, 0.0f, 0.0f, 0.0f }; // Quaternion (x, y, z, w)
 	glm::vec3 scale{ 1.0f, 1.0f, 1.0f };
 
 	glm::mat4 modelMatrix{ 1.0f };
+
+	bool isDirty = true;
 
 	void UpdateModelMatrix() {
 		// Translation matrix
 		glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), position);
 		// Rotation matrix from quaternion
-		glm::mat4 rotationMatrix = glm::mat4_cast(glm::quat(rotation[3], rotation[0], rotation[1], rotation[2]));
+		glm::mat4 rotationMatrix = glm::mat4_cast(rotation);
 		// Scale matrix
 		glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), scale);
 		// Combine transformations: ModelMatrix = Translation * Rotation * Scale
@@ -54,6 +56,10 @@ struct Transform
 
 		isDirty = false;
 	}
+};
 
-	bool isDirty = true;
+struct SceneShaderData
+{
+	glm::mat4 view;
+	glm::mat4 proj;
 };

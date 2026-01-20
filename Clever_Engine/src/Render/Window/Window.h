@@ -8,6 +8,7 @@
 #include "Context/VulkanContext.h"
 #include "Event/EventController.h"
 #include "Scene/SceneController.h" // Assuming this is your SceneController path
+#include "World/ECS/Registry.h"
 
 // Engine Type Definitions
 using SceneID = uint8_t;
@@ -30,7 +31,7 @@ public:
     int GetZIndex() const;
 
     // Render Surface Management
-    uint8_t CreateNewScene(uint32_t width, uint32_t height, int posx = 0, int posy = 0);
+    uint8_t CreateNewScene(Registry& registry, uint32_t width, uint32_t height, int posx = 0, int posy = 0);
 	void MoveScene(SceneID sceneID, int newX, int newY);
     void ResizeScene(SceneID sceneID, int newX, int newY);
     void AddChildRenderSurface(uint8_t renderSurfaceID);

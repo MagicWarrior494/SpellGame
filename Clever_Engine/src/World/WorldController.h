@@ -24,7 +24,7 @@ public:
 		Transform transform{};
 		transform.position = glm::vec3(distXY(gen), distXY(gen), 0.5f);
 		transform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
-		transform.rotation = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		transform.rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
 		registry.SetComponent<Transform>(entity, transform);
 	}
