@@ -44,19 +44,38 @@ Window::Window(std::shared_ptr<Vulkan::VulkanContext> vulkanContext, std::string
 
 void Window::OnInput(InputEvent& event)
 {
-    if(event.action == Input::Action::PRESS && event.type == InputEvent::Type::Key)
+    if(event.type == InputEvent::Type::Key)
     {
-        if(event.code == Input::Keyboard::KEY_ESCAPE)
+        if (event.code == Input::Keyboard::KEY_ESCAPE)
         {
-            m_EventController->PostWindowCloseEvent(m_pGLFWWindow);
-            event.Consume();
+                UnlockMouse(m_pGLFWWindow);
+                m_EventController->ResetLayers();
+                m_EventController->AttachLayer(this);
         }
 	}
     else if (event.type == InputEvent::Type::MouseButton)
     {
+        
         if(event.action == Input::Action::PRESS && event.code == Input::BUTTON_1)
         {
-            //ResizeScene(0, event.x, event.y);
+            for (auto sceneID : m_ChildrenRenderSurfaces)
+            {
+                auto& scene = m_SceneController->GetScene(sceneID);
+                auto info = scene.GetCreationInfo();
+                if (event.x > info.posx &&
+                    event.x < info.posx + info.width &&
+                    event.y > info.posy &&
+                    event.y < info.posy + info.height)
+                {
+                    m_EventController->ResetLayers();
+                    m_EventController->AttachLayer(this);
+                    m_EventController->AttachLayer(&scene);
+                    if (scene.GetSceneType() == SceneType::CameraScene)
+                    {
+                        LockMouse(m_pGLFWWindow, (info.posx + info.width)/2, (info.posy + info.height)/2);
+                    }
+                }
+            }
         }
     }
 }
@@ -132,6 +151,19 @@ void Window::InitWindow() {
     if (IsWindowStillValid()) {
         m_VulkanWindow->InitWindow(m_pGLFWWindow);
     }
+
+    Vulkan::Window& window = *m_VulkanContext->GetWindow(m_WindowID);
+
+    Vulkan::VulkanBuffer& buffer = window.vulkanSurface.cameraBuffer;
+
+    size_t minAligment = m_VulkanContext->GetPhysicalDeviceMinAlignment();
+
+    sharedCameraSceneData = std::make_unique<SharedCameraSceneData>
+        (
+            buffer,
+            minAligment,
+            sizeof(SceneShaderData)
+        );
 }
 
 void Window::CloseWindow() {
@@ -142,16 +174,6 @@ void Window::CloseWindow() {
         glfwDestroyWindow(m_pGLFWWindow);
         m_pGLFWWindow = nullptr;
     }
-}
-
-uint8_t Window::CreateNewScene(Registry& registry, uint32_t width, uint32_t height, int posx, int posy) {
-    uint8_t vulkanSceneID = m_VulkanWindow->CreateNewScene(width, height, posx, posy);
-    SceneCreationInfo info{ m_WindowID, vulkanSceneID, width, height, posx, posy, GetRenderSurfaceCount() + 1};
-    m_SceneController->CreateNewScene<CameraScene>(vulkanSceneID, info, m_VulkanContext, registry, 1);
-    m_ChildrenRenderSurfaces.push_back(vulkanSceneID);
-	m_EventController->AttachLayer(&m_SceneController->GetScene(vulkanSceneID));
-
-    return vulkanSceneID;
 }
 
 void Window::MoveScene(SceneID sceneID, int newX, int newY)

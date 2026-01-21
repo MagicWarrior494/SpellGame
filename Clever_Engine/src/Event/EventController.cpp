@@ -103,3 +103,8 @@ void EventController::DetachLayer(IInputLayer* layer)
         return a->GetZIndex() > b->GetZIndex();
     });
 }
+
+void EventController::ResetLayers()
+{
+    m_LayerStack.clear();
+}

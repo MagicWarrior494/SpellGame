@@ -111,6 +111,8 @@
     <ClInclude Include="src\World\WorldController.h">
       <Filter>src\World</Filter>
     </ClInclude>
+    <ClInclude Include="src\Render\Window\Scene\WindowControls.h" />
+    <ClInclude Include="src\Render\Window\WindowControls.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dependencies\ImGui\imgui.cpp">

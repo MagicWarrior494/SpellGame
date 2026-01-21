@@ -41,6 +41,7 @@ public:
     // Layer Management
     void AttachLayer(IInputLayer* layer);
     void DetachLayer(IInputLayer* layer);
+    void ResetLayers();
 
     // Global Actions
     using EventLambda = std::function<void()>;

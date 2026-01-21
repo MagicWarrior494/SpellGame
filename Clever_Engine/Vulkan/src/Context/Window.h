@@ -38,6 +38,7 @@ namespace Vulkan {
 			return nextSceneID++;
 		}
 
+
 	public:
 		Window(const Window&) = delete;
 		Window& operator=(const Window&) = delete;

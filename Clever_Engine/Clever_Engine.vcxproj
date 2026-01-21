@@ -118,11 +118,13 @@
     <ClInclude Include="src\Render\Object\UIElement.h" />
     <ClInclude Include="src\Render\RenderingController.h" />
     <ClInclude Include="src\Render\Window\RenderSurface.h" />
+    <ClInclude Include="src\Render\Window\Scene\WindowControls.h" />
     <ClInclude Include="src\Render\Window\Window.h" />
     <ClInclude Include="src\Render\Window\Scene\Object\Element.h" />
     <ClInclude Include="src\Render\Window\Scene\Object\UIElement.h" />
     <ClInclude Include="src\Render\Window\Scene\Scene.h" />
     <ClInclude Include="src\Render\Window\Scene\SceneController.h" />
+    <ClInclude Include="src\Render\Window\WindowControls.h" />
     <ClInclude Include="src\World\ECS\Components.h" />
     <ClInclude Include="src\World\ECS\Registry.h" />
     <ClInclude Include="src\World\WorldController.h" />

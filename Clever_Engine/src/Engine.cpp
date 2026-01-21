@@ -32,21 +32,21 @@ namespace Engine {
 
 		renderingController.SetUp();
 
-		uint8_t windowId = renderingController.CreateNewWindow("Main Window", 960, 540);
+		uint8_t windowId = renderingController.CreateNewWindow("Main Window", 1000, 540);
 
-		renderingController.GetWindow(windowId).CreateNewScene(worldController.GetRegistry(), 960, 540, 0, 0);
+		CameraScene& scene1 = renderingController.GetWindow(windowId).CreateNewScene<CameraScene>(worldController.GetRegistry(), 960/2, 540, 0, 0);
+		CameraScene& scene2 = renderingController.GetWindow(windowId).CreateNewScene<CameraScene>(worldController.GetRegistry(), 960 / 2, 540, (960 / 2) + 10, 0);
 
 		Registry& reg = worldController.GetRegistry();
-		uint32_t camera_id = reg.CreateEntity();
 
-		Camera camera{};
-		camera.fov = 45.0f;
-		camera.nearPlane = 0.1f;
-		camera.farPlane = 100.0f;
-		camera.aspectRatio = (float)960 / (float)540;
-		camera.position = glm::vec3(0.0f, 0.0f, 5.0f);
+		uint32_t camera1_id = reg.CreateEntity();
+		reg.AddComponent<Camera>(camera1_id);
 
-		reg.SetComponent<Camera>(camera_id, camera);
+		uint32_t camera2_id = reg.CreateEntity();
+		reg.AddComponent<Camera>(camera2_id);
+
+		scene1.SetCameraEntityID(camera1_id);
+		scene2.SetCameraEntityID(camera2_id);
 
 		this->worldController.AddTriangle();
 

@@ -132,7 +132,7 @@ public:
 	~UniformBufferManager() = default;
 
 	// Returns a recycled index or a new one
-	uint32_t AllocateSlot() {
+	uint32_t AllocateSlot() { 
 		if (!m_FreeSlots.empty()) {
 			uint32_t slot = m_FreeSlots.top();
 			m_FreeSlots.pop();

@@ -13,6 +13,7 @@
 #include "Objects/Vertex.h"
 #include "World/ECS/Registry.h"
 #include "World/ECS/Components.h"
+#include "Render/Window/WindowControls.h"
 
 struct SceneCreationInfo {
     uint8_t windowID;
@@ -21,7 +22,33 @@ struct SceneCreationInfo {
     uint32_t height;
     int posx;
     int posy;
-    int zIndex = 0; // Default Z-Index for input priority
+    int zIndex = 1; // Default Z-Index for input priority
+};
+
+struct SharedCameraSceneData
+{
+    static UniformBufferManager* GetManager() { return s_Instance; }
+    SharedCameraSceneData(Vulkan::VulkanBuffer& buffer, size_t minAlignment, size_t structSize)
+    {
+        m_UniformBufferManager = std::make_unique<UniformBufferManager>(
+            buffer, minAlignment, structSize
+        );
+        s_Instance = m_UniformBufferManager.get();
+        
+    }
+
+    ~SharedCameraSceneData() { s_Instance = nullptr; }
+
+    std::unique_ptr<UniformBufferManager> m_UniformBufferManager;
+
+private:
+    static inline UniformBufferManager* s_Instance = nullptr;
+};
+
+enum class SceneType
+{
+    CameraScene,
+    UIScene
 };
 
 class Scene : public IInputLayer
@@ -43,6 +70,7 @@ public:
     virtual void OnInput(InputEvent& event) override {}
 
     virtual int GetZIndex() const override { return m_CreationInfo.zIndex; }
+    virtual SceneType GetSceneType() = 0;
 
     // --- Getters ---
     SceneCreationInfo GetCreationInfo() const { return m_CreationInfo; }
@@ -67,19 +95,28 @@ public:
     CameraScene(SceneCreationInfo& creationInfo, std::shared_ptr<Vulkan::VulkanContext> vulkanContext, Registry& registry, uint32_t entityID)
         : Scene(creationInfo, vulkanContext, registry), m_CameraEntityID(entityID)
     {
-        Vulkan::Window& window = *m_VulkanContext->GetWindow(m_CreationInfo.windowID).get();
+        /*
+        * TODO:::: MOVE UniformBufferManager into window because multiple scenes share this resource. I refuse to use forward definition
+        *           so figure it out. or just suck it up and figure out forward definitions dang it
+        */
+        auto* manager = SharedCameraSceneData::GetManager();
+        if (manager)
+        {
+            m_CameraSlot = manager->AllocateSlot();
+        }
+        Vulkan::Window& window = *m_VulkanContext->GetWindow(creationInfo.windowID);
 
-        Vulkan::VulkanBuffer& buffer = window.vulkanSurface.cameraBuffer;
+        window.vulkanSurface.sceneIDToCameraBufferSlot.insert({ creationInfo.sceneID, manager->GetOffset(m_CameraSlot)});
+    }
 
-        size_t minAligment = vulkanContext->GetPhysicalDeviceMinAlignment();
+    void SetCameraEntityID(uint32_t id)
+    {
+        m_CameraEntityID = id;
+    }
 
-        m_UniformBufferManager = std::make_unique<UniformBufferManager>(
-            buffer,
-            minAligment,
-            sizeof(SceneShaderData)
-        );
-        m_CameraSlot = m_UniformBufferManager->AllocateSlot();
-        window.vulkanSurface.sceneIDToCameraBufferSlot.insert({ creationInfo.sceneID, m_CameraSlot });
+    virtual SceneType GetSceneType() override
+    {
+        return SceneType::CameraScene;
     }
 
     virtual void Update() override
@@ -112,7 +149,11 @@ public:
 
         // 6. Update the GPU Buffer using the manager
         // m_CameraSlot should be the index you got from AllocateSlot()
-        m_UniformBufferManager->UpdateSlot(m_CameraSlot, &gpuData);
+        auto* manager = SharedCameraSceneData::GetManager();
+        if (manager)
+        {
+            manager->UpdateSlot(m_CameraSlot, &gpuData);
+        }
     }
 
     // Example of handling specific input in a scene
@@ -168,7 +209,6 @@ private:
 
     //Slot in the UniformBuffer
     uint32_t m_CameraSlot;
-    std::unique_ptr<UniformBufferManager> m_UniformBufferManager;
 };
 
 class UIScene : public Scene
@@ -178,6 +218,11 @@ public:
         : Scene(creationInfo, vulkanContext, registry)
     {
         m_CreationInfo.zIndex = 100;
+    }
+
+    virtual SceneType GetSceneType() override
+    {
+        return SceneType::UIScene;
     }
 
     virtual void Update() override

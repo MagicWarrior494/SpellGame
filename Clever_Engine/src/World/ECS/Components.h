@@ -6,7 +6,7 @@
 
 struct Camera
 {
-    glm::vec3 position{ 0.0f, 0.0f, 0.0f };
+    glm::vec3 position{ 0.0f, 0.0f, 5.0f };
     glm::quat rotation = glm::identity<glm::quat>();
     Camera()
     {
@@ -23,7 +23,7 @@ struct Camera
     float fov = 90.0f;
 
     // Window Width / Window Height
-    float aspectRatio = 1.777f; // Default 16:9
+    float aspectRatio = (float)960 / (float)540; // Default 16:9
 
     // The closest distance the camera can see (don't use 0.0f!)
     float nearPlane = 0.1f;

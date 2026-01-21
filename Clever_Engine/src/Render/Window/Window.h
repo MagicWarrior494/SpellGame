@@ -9,6 +9,7 @@
 #include "Event/EventController.h"
 #include "Scene/SceneController.h" // Assuming this is your SceneController path
 #include "World/ECS/Registry.h"
+#include "WindowControls.h"
 
 // Engine Type Definitions
 using SceneID = uint8_t;
@@ -31,8 +32,19 @@ public:
     int GetZIndex() const;
 
     // Render Surface Management
-    uint8_t CreateNewScene(Registry& registry, uint32_t width, uint32_t height, int posx = 0, int posy = 0);
+    template<typename T>
+    T& CreateNewScene(Registry& registry, uint32_t width, uint32_t height, int posx = 0, int posy = 0)
+    {
+        uint8_t vulkanSceneID = m_VulkanWindow->CreateNewScene(width, height, posx, posy);
+        SceneCreationInfo info{ m_WindowID, vulkanSceneID, width, height, posx, posy, GetRenderSurfaceCount() + 1 };
+        T& scene = m_SceneController->CreateNewScene<T>(vulkanSceneID, info, m_VulkanContext, registry, 1);
+        m_ChildrenRenderSurfaces.push_back(vulkanSceneID);
+
+        return scene;
+    }
+
 	void MoveScene(SceneID sceneID, int newX, int newY);
+    //Currently needs repair because if size changes then scenemanager is not updated too
     void ResizeScene(SceneID sceneID, int newX, int newY);
     void AddChildRenderSurface(uint8_t renderSurfaceID);
     int GetRenderSurfaceCount() const { return static_cast<int>(m_ChildrenRenderSurfaces.size()); }
@@ -72,4 +84,7 @@ private:
     // Controllers Owned by the Window
     std::unique_ptr<EventController> m_EventController;
     std::unique_ptr<SceneController> m_SceneController;
+
+    //Scene Shared Data
+    std::unique_ptr<SharedCameraSceneData> sharedCameraSceneData;
 };

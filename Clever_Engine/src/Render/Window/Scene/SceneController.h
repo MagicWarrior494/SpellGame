@@ -23,22 +23,13 @@ public:
      * to the EventController's layer stack.
      */
     template<typename SceneType, typename... Args>
-    void CreateNewScene(uint8_t vulkanSurfaceID, SceneCreationInfo info, Args&&... args)
+    SceneType& CreateNewScene(uint8_t vulkanSurfaceID, SceneCreationInfo info, Args&&... args)
     {
         static_assert(std::is_base_of_v<Scene, SceneType>,
             "SceneType must derive from Scene");
-
-        // 1. Create the scene instance
         auto scene = std::make_unique<SceneType>(info, std::forward<Args>(args)...);
-
-        // 2. Register with Event System if the scene implements IInputLayer
-        // This allows the scene to receive mouse/key events based on its Z-index
-        if (m_EventController) {
-            m_EventController->AttachLayer(scene.get());
-        }
-
-        // 3. Store and return
-        m_Scenes.insert({ vulkanSurfaceID, std::move(scene) });
+        auto [it, inserted] = m_Scenes.insert({ vulkanSurfaceID, std::move(scene) });
+        return static_cast<SceneType&>(*it->second);
     }
 
     void DeleteScene(SceneID sceneID);
@@ -49,6 +40,8 @@ public:
     }
 
 private:
+    uint8_t m_ActiveScene = 0;
+
     // VulkanSceneID mapped to Scene Type
     std::map<SceneID, std::unique_ptr<Scene>> m_Scenes;
 
