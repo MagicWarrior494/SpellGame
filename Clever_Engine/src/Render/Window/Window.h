@@ -5,25 +5,18 @@
 #include <cstdint>
 #include <GLFW/glfw3.h>
 
-#include "Context/VulkanContext.h"
 #include "Event/EventController.h"
 #include "Scene/SceneController.h" // Assuming this is your SceneController path
 #include "World/ECS/Registry.h"
 #include "WindowControls.h"
 
-// Engine Type Definitions
-using SceneID = uint8_t;
-using WindowID = uint8_t;
-
 class Window : public IInputLayer{
 public:
-    Window(std::shared_ptr<Vulkan::VulkanContext> vulkanContext,
-        std::string title, int width, int height, int posx, int posy);
+    Window(std::string title, int width, int height, int posx = 0, int posy = 0);
     ~Window() = default;
 
     // Standard Logic
     bool IsWindowStillValid();
-    void InitWindow();
     void CloseWindow();
     void Update();
     void Render();
@@ -31,35 +24,19 @@ public:
     void OnInput(InputEvent& event);
     int GetZIndex() const;
 
-    // Render Surface Management
-    template<typename T>
-    T& CreateNewScene(Registry& registry, uint32_t width, uint32_t height, int posx = 0, int posy = 0)
-    {
-        uint8_t vulkanSceneID = m_VulkanWindow->CreateNewScene(width, height, posx, posy);
-        SceneCreationInfo info{ m_WindowID, vulkanSceneID, width, height, posx, posy, GetRenderSurfaceCount() + 1 };
-        T& scene = m_SceneController->CreateNewScene<T>(vulkanSceneID, info, m_VulkanContext, registry, 1);
-        m_ChildrenRenderSurfaces.push_back(vulkanSceneID);
+    Scene& CreateNewScene(uint32_t width, uint32_t height, int posx = 0, int posy = 0);
 
-        return scene;
-    }
-
-	void MoveScene(SceneID sceneID, int newX, int newY);
-    //Currently needs repair because if size changes then scenemanager is not updated too
-    void ResizeScene(SceneID sceneID, int newX, int newY);
-    void AddChildRenderSurface(uint8_t renderSurfaceID);
-    int GetRenderSurfaceCount() const { return static_cast<int>(m_ChildrenRenderSurfaces.size()); }
+    int GetSceneCount() const { return m_Scenes.size(); };
 
     // --- Getters ---
-    WindowID GetWindowID() const { return m_WindowID; }
+    int GetWindowID() const { return m_WindowID; }
     GLFWwindow* GetGLFWWindowPtr() const { return m_pGLFWWindow; }
-    std::shared_ptr<Vulkan::Window> GetVulkanWindow() { return m_VulkanWindow; }
-    std::vector<uint8_t>& GetChildrenRenderSurfaces() { return m_ChildrenRenderSurfaces; }
+    std::vector<std::unique_ptr<Scene>>& getScenes() { return m_Scenes; }
 	glm::vec2 GetWindowSize() const { return glm::vec2(static_cast<float>(m_Width), static_cast<float>(m_Height)); }
 	glm::vec2 GetWindowPosition() const { return glm::vec2(static_cast<float>(m_PosX), static_cast<float>(m_PosY)); }
 
     // Controller Accessors
     EventController& GetEventController() { return *m_EventController; }
-    SceneController& GetSceneController() { return *m_SceneController; }
 
     // Callbacks
     void OnResize(int width, int height);
@@ -67,7 +44,7 @@ public:
 private:
     void InitCallbacks();
 
-    WindowID m_WindowID = 0;
+    int m_WindowID = 0;
     std::string m_Title;
     int m_Width;
     int m_Height;
@@ -75,16 +52,8 @@ private:
     int m_PosY;
 
     GLFWwindow* m_pGLFWWindow = nullptr;
-    std::shared_ptr<Vulkan::VulkanContext> m_VulkanContext;
-    std::shared_ptr<Vulkan::Window> m_VulkanWindow;
-
-    std::vector<uint8_t> m_ChildrenRenderSurfaces{};
-    Vulkan::SurfaceFlags m_DefaultVulkanWindowFlags = Vulkan::SurfaceFlags::Resizeable | Vulkan::SurfaceFlags::Fullscreenable;
+    std::vector<std::unique_ptr<Scene>> m_Scenes{};
 
     // Controllers Owned by the Window
     std::unique_ptr<EventController> m_EventController;
-    std::unique_ptr<SceneController> m_SceneController;
-
-    //Scene Shared Data
-    std::unique_ptr<SharedCameraSceneData> sharedCameraSceneData;
 };

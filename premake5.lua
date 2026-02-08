@@ -13,7 +13,6 @@ cloneIfMissing("glm",          "https://github.com/g-truc/glm.git",             
 cloneIfMissing("stb",          "https://github.com/nothings/stb.git",             deps .. "/stb_image")
 cloneIfMissing("tinyobjloader","https://github.com/tinyobjloader/tinyobjloader.git", deps .. "/tinyobjloader")
 cloneIfMissing("spdlog",       "https://github.com/gabime/spdlog.git",            deps .. "/spdlog")
-cloneIfMissing("imgui",        "https://github.com/ocornut/imgui.git",            deps .. "/ImGui")
 cloneIfMissing("glfw",         "https://github.com/glfw/glfw.git",                deps .. "/GLFW")
 
 workspace "SpellGame_Solution"

@@ -9,6 +9,28 @@ int main()
 	RunWorld()
 	*/
 	Engine::Engine engine{};
-	engine.SetUp();
+
+	Renderer& renderer = engine.GetRenderer();
+	Window& window = renderer.NewWindow("SpellGame", 800, 600);
+	Scene& scene = window.CreateNewScene();
+
+	RegistryManager& registryManager = engine.GetRegistryManager();
+	Registry& registry = registryManager.newRegistry();
+
+	AssetManager& assetManager = engine.GetAssetManager();
+	int teapotId = assetManager.Load("teapot");
+
+	EntityID teapot = registry.CreateEntity();
+	registry.SetComponent<Mesh>(teapot, MeshComponent{ teapotId });
+	registry.AddComponent<Transform>(teapot);
+
+	scene.BindRegistry(registry);
+
+	bool shouldEnd = false;
+	while (!shouldEnd)
+	{
+		engine.Tick();
+	}
+
 	engine.Terminate();
 }

@@ -7,7 +7,7 @@ project "SpellGame"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++23"
-    staticruntime "on"
+    staticruntime "off"
 
     targetdir ("../bin/" .. outputdir .. "/%{prj.name}")
     objdir ("../bin-int/" .. outputdir .. "/%{prj.name}")
@@ -27,7 +27,6 @@ project "SpellGame"
         "../Clever_Engine/Dependencies/stb_image",
         "../Clever_Engine/Dependencies/tinyobjloader",
         "../Clever_Engine/Dependencies/spdlog/include/spdlog",
-        "../Clever_Engine/Dependencies/ImGui",
         "../Clever_Engine/Dependencies/GLFW/include",
         os.getenv("VULKAN_SDK") .. "/Include"
     }

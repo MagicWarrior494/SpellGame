@@ -1,18 +1,18 @@
 #include "Window.h"
 #include <iostream>
 
-Window::Window(std::shared_ptr<Vulkan::VulkanContext> vulkanContext, std::string title,
+Window::Window(std::string title,
     int width, int height, int posx, int posy)
-    : m_Title(title), m_Width(width), m_Height(height), m_PosX(posx), m_PosY(posy), m_VulkanContext(vulkanContext)
+    : m_Title(title), m_Width(width), m_Height(height), m_PosX(posx), m_PosY(posy)
 {
     m_EventController = std::make_unique<EventController>();
     m_EventController->AttachLayer(this);
-    m_SceneController = std::make_unique<SceneController>(m_EventController.get());
 
-    Vulkan::SurfaceFlags flags = m_DefaultVulkanWindowFlags;
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); // Crucial for Vulkan
-    glfwWindowHint(GLFW_RESIZABLE, (flags & Vulkan::SurfaceFlags::Resizeable) != Vulkan::SurfaceFlags::None ? GLFW_TRUE : GLFW_FALSE);
-    glfwWindowHint(GLFW_DECORATED, (flags & Vulkan::SurfaceFlags::Fullscreenable) != Vulkan::SurfaceFlags::None ? GLFW_TRUE : GLFW_FALSE);
+    
+	//TODO add window flags to the constructor and use them here
+    //glfwWindowHint(GLFW_RESIZABLE, (flags & Vulkan::SurfaceFlags::Resizeable) != Vulkan::SurfaceFlags::None ? GLFW_TRUE : GLFW_FALSE);
+    //glfwWindowHint(GLFW_DECORATED, (flags & Vulkan::SurfaceFlags::Fullscreenable) != Vulkan::SurfaceFlags::None ? GLFW_TRUE : GLFW_FALSE);
 
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -22,9 +22,10 @@ Window::Window(std::shared_ptr<Vulkan::VulkanContext> vulkanContext, std::string
         throw std::runtime_error("Failed to create GLFW window for WindowID: " + std::to_string(m_WindowID));
     }
 
-    if ((flags & Vulkan::SurfaceFlags::Fullscreen) != Vulkan::SurfaceFlags::None) {
+    /*if ((flags & Vulkan::SurfaceFlags::Fullscreen) != Vulkan::SurfaceFlags::None) {
         glfwSetWindowMonitor(m_pGLFWWindow, monitor, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
-    }
+    }*/
+
     else {
         if (m_PosX == 0 && m_PosY == 0) {
             m_PosX = mode->width / 4;
@@ -34,9 +35,6 @@ Window::Window(std::shared_ptr<Vulkan::VulkanContext> vulkanContext, std::string
     }
 
     glfwShowWindow(m_pGLFWWindow);
-
-    m_WindowID = m_VulkanContext->CreateNewWindow(m_DefaultVulkanWindowFlags);
-    m_VulkanWindow = m_VulkanContext->GetWindow(m_WindowID);
 
     glfwSetWindowUserPointer(m_pGLFWWindow, this);
     InitCallbacks();

@@ -6,7 +6,7 @@ project "Clever_Engine"
     kind "StaticLib"
     language "C++"
     cppdialect "C++23"
-    staticruntime "on"
+    staticruntime "off"
 
     targetdir ("../bin/" .. outputdir .. "/%{prj.name}")
     objdir ("../bin-int/" .. outputdir .. "/%{prj.name}")
@@ -14,9 +14,7 @@ project "Clever_Engine"
     files 
     { 
         "src/**.h", 
-        "src/**.cpp",
-        "Dependencies/ImGui/*.h",
-        "Dependencies/ImGui/*.cpp"
+        "src/**.cpp"
     }
 
     includedirs
@@ -26,7 +24,6 @@ project "Clever_Engine"
         "Dependencies/stb_image",
         "Dependencies/tinyobjloader",
         "Dependencies/spdlog/include/spdlog",
-        "Dependencies/ImGui",
         "Dependencies/GLFW/include",
         os.getenv("VULKAN_SDK") .. "/Include",
         "Vulkan/src"

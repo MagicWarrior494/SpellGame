@@ -1,8 +1,6 @@
 #pragma once
 
-#include "Context/VulkanContext.h"
-
-#include "Render/RenderingController.h"
+#include "Render/Renderer.h"
 #include "World/WorldController.h"
 
 #include <stdexcept>
@@ -26,10 +24,11 @@ namespace Engine {
 		//Default Setup
 		void SetUp();
 
+		Renderer& GetRenderer() { return m_renderer; }
 
 		void Terminate();
 	private:
-		RenderingController renderingController;
+		Renderer m_renderer;
 		WorldController worldController;
 		std::string m_SetUpFilePath;
 	};

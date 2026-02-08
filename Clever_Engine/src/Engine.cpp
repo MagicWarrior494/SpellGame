@@ -32,6 +32,7 @@ namespace Engine {
 
 		renderingController.SetUp();
 
+		uint8_t windowId1 = renderingController.CreateNewWindow("Main Window HELLO", 500, 540);
 		uint8_t windowId = renderingController.CreateNewWindow("Main Window", 1000, 540);
 
 		CameraScene& scene1 = renderingController.GetWindow(windowId).CreateNewScene<CameraScene>(worldController.GetRegistry(), 960/2, 540, 0, 0);

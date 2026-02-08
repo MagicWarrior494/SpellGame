@@ -1,161 +1,126 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Dependencies">
-      <UniqueIdentifier>{6C01343A-5864-C3DE-01EA-FB94ED2B8F61}</UniqueIdentifier>
+    <Filter Include="Event">
+      <UniqueIdentifier>{E70B220D-5320-4ABE-1CA2-ED1D887546EF}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Dependencies\ImGui">
-      <UniqueIdentifier>{96D70AF8-82BB-CB4D-EB1B-C6A0D71EB6CF}</UniqueIdentifier>
+    <Filter Include="Event\Io">
+      <UniqueIdentifier>{4EA86998-3A75-C4A3-638E-B24B4FBAF931}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src">
-      <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
+    <Filter Include="Render">
+      <UniqueIdentifier>{C5BB87CE-B15D-B2A4-9A18-C6F8865939F5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Event">
-      <UniqueIdentifier>{3E1ADFB2-AA84-9329-F3C2-44CF5F6C717E}</UniqueIdentifier>
+    <Filter Include="Render\Object">
+      <UniqueIdentifier>{AB193217-17DA-AD4D-E014-F7CA4C94F229}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Event\Io">
-      <UniqueIdentifier>{45ABE3C8-310E-736D-DA93-AB23C6D53EF0}</UniqueIdentifier>
+    <Filter Include="Render\Window">
+      <UniqueIdentifier>{0C395C2A-78F9-D760-4134-21DEADB31C3D}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Render">
-      <UniqueIdentifier>{FC94E62B-E84C-2879-5154-01D53D2BC369}</UniqueIdentifier>
+    <Filter Include="Render\Window\Scene">
+      <UniqueIdentifier>{293F5646-95A0-3354-1E0E-7A068A6E6A13}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Render\Object">
-      <UniqueIdentifier>{028F678E-6EA5-6524-B71C-F145237236AC}</UniqueIdentifier>
+    <Filter Include="Render\Window\Scene\Object">
+      <UniqueIdentifier>{8F64E6F4-7B74-92C5-E42D-F7E3D05C815E}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Render\Window">
-      <UniqueIdentifier>{63AE91A1-CFC4-8F37-183C-1B59849160BF}</UniqueIdentifier>
+    <Filter Include="World">
+      <UniqueIdentifier>{4D25640E-B939-8CBF-82BB-2F1FEE8E88F0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Scene">
-      <UniqueIdentifier>{0A06D2B3-7670-862A-BFAE-37D02B58647F}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\Scene\Object">
-      <UniqueIdentifier>{5084839A-3C7D-A2EC-65AF-8771510782F8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\World">
-      <UniqueIdentifier>{A43321B4-109E-D52A-59DC-86D0C585B37F}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\World\ECS">
-      <UniqueIdentifier>{EE593583-5A1A-B1B9-2355-FA368FD4F595}</UniqueIdentifier>
+    <Filter Include="World\ECS">
+      <UniqueIdentifier>{17F87A43-8362-2FBA-CCA0-E05F384A0D0F}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Dependencies\ImGui\imconfig.h">
-      <Filter>Dependencies\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Dependencies\ImGui\imgui.h">
-      <Filter>Dependencies\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Dependencies\ImGui\imgui_internal.h">
-      <Filter>Dependencies\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Dependencies\ImGui\imstb_rectpack.h">
-      <Filter>Dependencies\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Dependencies\ImGui\imstb_textedit.h">
-      <Filter>Dependencies\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Dependencies\ImGui\imstb_truetype.h">
-      <Filter>Dependencies\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Engine.h">
-      <Filter>src</Filter>
-    </ClInclude>
+    <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\Event\EventController.h">
-      <Filter>src\Event</Filter>
+      <Filter>Event</Filter>
     </ClInclude>
     <ClInclude Include="src\Event\Io\ConversionData.h">
-      <Filter>src\Event\Io</Filter>
+      <Filter>Event\Io</Filter>
     </ClInclude>
     <ClInclude Include="src\Event\Io\KeyCodes.h">
-      <Filter>src\Event\Io</Filter>
+      <Filter>Event\Io</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\BufferManager.h">
-      <Filter>src\Render</Filter>
+      <Filter>Render</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Object\Element.h">
-      <Filter>src\Render\Object</Filter>
+      <Filter>Render\Object</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Object\ElementSetUps.h">
-      <Filter>src\Render\Object</Filter>
+      <Filter>Render\Object</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Object\UIElement.h">
-      <Filter>src\Render\Object</Filter>
+      <Filter>Render\Object</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\RenderingController.h">
-      <Filter>src\Render</Filter>
+      <Filter>Render</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Window\RenderSurface.h">
-      <Filter>src\Render\Window</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Render\Window\Window.h">
-      <Filter>src\Render\Window</Filter>
+      <Filter>Render\Window</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Window\Scene\Object\Element.h">
-      <Filter>src\Scene\Object</Filter>
+      <Filter>Render\Window\Scene\Object</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Window\Scene\Object\UIElement.h">
-      <Filter>src\Scene\Object</Filter>
+      <Filter>Render\Window\Scene\Object</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Window\Scene\Scene.h">
-      <Filter>src\Scene</Filter>
+      <Filter>Render\Window\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Window\Scene\SceneController.h">
-      <Filter>src\Scene</Filter>
+      <Filter>Render\Window\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Render\Window\Window.h">
+      <Filter>Render\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Render\Window\WindowControls.h">
+      <Filter>Render\Window</Filter>
     </ClInclude>
     <ClInclude Include="src\World\ECS\Components.h">
-      <Filter>src\World\ECS</Filter>
+      <Filter>World\ECS</Filter>
     </ClInclude>
     <ClInclude Include="src\World\ECS\Registry.h">
-      <Filter>src\World\ECS</Filter>
+      <Filter>World\ECS</Filter>
     </ClInclude>
     <ClInclude Include="src\World\WorldController.h">
-      <Filter>src\World</Filter>
+      <Filter>World</Filter>
     </ClInclude>
-    <ClInclude Include="src\Render\Window\Scene\WindowControls.h" />
-    <ClInclude Include="src\Render\Window\WindowControls.h" />
+    <ClInclude Include="src\Render\Renderer.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Render\ResourceManager.h" />
+    <ClInclude Include="src\Render\Graphics\GraphicsAPI.h" />
+    <ClInclude Include="src\Render\Graphics\VulkanGrahicsAPI.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Dependencies\ImGui\imgui.cpp">
-      <Filter>Dependencies\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Dependencies\ImGui\imgui_demo.cpp">
-      <Filter>Dependencies\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Dependencies\ImGui\imgui_draw.cpp">
-      <Filter>Dependencies\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Dependencies\ImGui\imgui_tables.cpp">
-      <Filter>Dependencies\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Dependencies\ImGui\imgui_widgets.cpp">
-      <Filter>Dependencies\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Engine.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
+    <ClCompile Include="src\Engine.cpp" />
     <ClCompile Include="src\Event\EventController.cpp">
-      <Filter>src\Event</Filter>
+      <Filter>Event</Filter>
     </ClCompile>
     <ClCompile Include="src\Render\Object\Element.cpp">
-      <Filter>src\Render\Object</Filter>
+      <Filter>Render\Object</Filter>
     </ClCompile>
     <ClCompile Include="src\Render\RenderingController.cpp">
-      <Filter>src\Render</Filter>
+      <Filter>Render</Filter>
     </ClCompile>
     <ClCompile Include="src\Render\Window\RenderSurface.cpp">
-      <Filter>src\Render\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Render\Window\Window.cpp">
-      <Filter>src\Render\Window</Filter>
+      <Filter>Render\Window</Filter>
     </ClCompile>
     <ClCompile Include="src\Render\Window\Scene\Object\Element.cpp">
-      <Filter>src\Scene\Object</Filter>
+      <Filter>Render\Window\Scene\Object</Filter>
     </ClCompile>
     <ClCompile Include="src\Render\Window\Scene\SceneController.cpp">
-      <Filter>src\Scene</Filter>
+      <Filter>Render\Window\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Render\Window\Window.cpp">
+      <Filter>Render\Window</Filter>
     </ClCompile>
     <ClCompile Include="src\World\WorldController.cpp">
-      <Filter>src\World</Filter>
+      <Filter>World</Filter>
     </ClCompile>
+    <ClCompile Include="src\Render\Renderer.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Render\Graphics\VulkanGrahicsAPI.cpp" />
   </ItemGroup>
 </Project>
