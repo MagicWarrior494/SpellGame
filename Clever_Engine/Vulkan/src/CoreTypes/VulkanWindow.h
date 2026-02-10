@@ -42,16 +42,15 @@ namespace Vulkan
 	class VulkanWindow
 	{
 	public:
+		VulkanWindow() = default;
 		VulkanWindow(std::shared_ptr<VulkanCore> vulkanCore, void* windowPtr);
-		~VulkanWindow();
+		~VulkanWindow() = default;
 
-		void RecreateSwapchain();
+		void RecreateSwapchain() {};
 		bool Render();
 
 	private:
 		std::shared_ptr<VulkanCore> vulkanCore = nullptr;
-
-		std::vector<std::unique_ptr<VulkanScene>> vulkanScenes{};
 
 		glm::uvec2 windowSize{ 0, 0 };
 		int MAX_FRAMES_IN_FLIGHT = 2;

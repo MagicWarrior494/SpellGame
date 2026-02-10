@@ -3,12 +3,11 @@
 #include <stdexcept>
 
 namespace Vulkan {
-	void CreatePhysicalDevice(VulkanCore* VC)
+	void CreatePhysicalDevice(VulkanCore* vulkanCore)
 	{
-		VulkanCore& vulkanCore = *VC;
 		uint32_t physicalDeviceCount = 0;
 
-		vkEnumeratePhysicalDevices(vulkanCore.vkInstance, &physicalDeviceCount, NULL);
+		vkEnumeratePhysicalDevices(vulkanCore->vkInstance, &physicalDeviceCount, NULL);
 
 		std::vector<VkPhysicalDevice> possiblePhysicalDevices;
 		std::vector<VkPhysicalDeviceProperties> physicalDeviceProperties;
@@ -16,7 +15,7 @@ namespace Vulkan {
 		possiblePhysicalDevices.resize(physicalDeviceCount);
 		physicalDeviceProperties.resize(physicalDeviceCount);
 
-		if (vkEnumeratePhysicalDevices(vulkanCore.vkInstance, &physicalDeviceCount, possiblePhysicalDevices.data()))
+		if (vkEnumeratePhysicalDevices(vulkanCore->vkInstance, &physicalDeviceCount, possiblePhysicalDevices.data()))
 		{
 			throw std::runtime_error("Unable to find able physical devices");
 		}
@@ -27,8 +26,8 @@ namespace Vulkan {
 
 			if (physicalDeviceData.isComplete())
 			{
-				vulkanCore.physicalDeviceData.vkPhysicalDevice = physicalDevice;
-				vulkanCore.physicalDeviceData = physicalDeviceData;
+				vulkanCore->physicalDeviceData = physicalDeviceData;
+				vulkanCore->physicalDeviceData.vkPhysicalDevice = physicalDevice;
 				return;
 			}
 		}

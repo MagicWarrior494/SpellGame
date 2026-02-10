@@ -24,11 +24,13 @@ namespace Engine {
 		//Default Setup
 		void SetUp();
 
+		void Tick();
+
 		Renderer& GetRenderer() { return m_renderer; }
 
 		void Terminate();
 	private:
-		Renderer m_renderer;
+		Renderer m_renderer{};
 		WorldController worldController;
 		std::string m_SetUpFilePath;
 	};

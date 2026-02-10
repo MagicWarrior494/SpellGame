@@ -152,14 +152,16 @@ namespace Vulkan {
         std::vector<VkImage> images(imageCount);
         vkGetSwapchainImagesKHR(device, swapChain, &imageCount, images.data());
 
-		std::vector<VulkanImage> swapchainImages(imageCount);
+        std::vector<VulkanImage> result{};
+
+        result.resize(imageCount);
 
         for (uint32_t i = 0; i < imageCount; ++i) {
-            swapchainImages[i].image = images[i];
-            swapchainImages[i].memory = VK_NULL_HANDLE; // Owned by swapchain
-            swapchainImages[i].view = VK_NULL_HANDLE;
-            swapchainImages[i].format = swapChainImageFormat;
-            swapchainImages[i].extent = {
+            result[i].image = images[i];
+            result[i].memory = VK_NULL_HANDLE; // Owned by swapchain
+            result[i].view = VK_NULL_HANDLE;
+            result[i].format = swapChainImageFormat;
+            result[i].extent = {
                 static_cast<unsigned int>(windowSize.x),
                 static_cast<unsigned int>(windowSize.y),
                 1
@@ -170,7 +172,7 @@ namespace Vulkan {
         for (uint32_t i = 0; i < imageCount; ++i) {
             VkImageViewCreateInfo viewInfo{};
             viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            viewInfo.image = swapchainImages[i].image;
+            viewInfo.image = result[i].image;
             viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
             viewInfo.format = swapChainImageFormat;
             viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -178,44 +180,45 @@ namespace Vulkan {
             viewInfo.subresourceRange.layerCount = 1;
 
             if (vkCreateImageView(device, &viewInfo, nullptr,
-                &swapchainImages[i].view) != VK_SUCCESS)
+                &result[i].view) != VK_SUCCESS)
             {
                 throw std::runtime_error("Failed to create swapchain image view");
             }
         }
-
-        std::vector<VulkanImage> depthImages;
-
-        // --- Optional Depth/Stencil attachment ---
-        bool makeDepth = (attachmentType != SwapchainAttachmentType::ColorOnly);
-        if (makeDepth) {
-            VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
-            if (attachmentType == SwapchainAttachmentType::ColorDepthStencil) {
-                depthFormat = VK_FORMAT_D24_UNORM_S8_UINT;
-            }
-            depthImages.resize(imageCount);
-            vulkanSurface->surfaceDepthImages =
-                initImageByType(vulkanCore, ImageType::Depth,
-                    vulkanSurface->windowSize.x,
-                    vulkanSurface->windowSize.y,
-                    imageCount,
-                    VK_SAMPLE_COUNT_1_BIT,
-                    depthFormat);
-        }
+		return result;
     }
 
-    void CleanupSwapchainImages(std::shared_ptr<VulkanCore> VC, VulkanSurface& vulkanSurface)
+    std::vector<VulkanImage> CreateDepthImages(
+        VulkanCore* VC,
+		uint32_t imageCount,
+        glm::ivec2 windowSize,
+        SwapchainAttachmentType attachmentType)
+    {
+        std::vector<VulkanImage> result{};
+
+        
+        VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
+        if (attachmentType == SwapchainAttachmentType::ColorDepthStencil) {
+            depthFormat = VK_FORMAT_D24_UNORM_S8_UINT;
+        }
+        result.resize(imageCount);
+        result =
+            initImageByType(VC, ImageType::Depth,
+                windowSize.x,
+                windowSize.y,
+                imageCount,
+                VK_SAMPLE_COUNT_1_BIT,
+                depthFormat);
+		return result;
+    }
+
+    void CleanupImages(std::shared_ptr<VulkanCore> VC, std::vector<VulkanImage> images)
     {
         VulkanCore& vulkanCore = *VC;
-        for (auto& imageView : vulkanSurface.surfaceColorImages) {
+        for (auto& imageView : images) {
             if (imageView.view != VK_NULL_HANDLE)
                 vkDestroyImageView(vulkanCore.vkDevice, imageView.view, nullptr);
         }
-        for (auto& imageView : vulkanSurface.surfaceDepthImages) {
-            if (imageView.view != VK_NULL_HANDLE)
-                vkDestroyImageView(vulkanCore.vkDevice, imageView.view, nullptr);
-        }
-        vulkanSurface.surfaceDepthImages.clear();
-        vulkanSurface.surfaceColorImages.clear();
+        images.clear();
     }
 }

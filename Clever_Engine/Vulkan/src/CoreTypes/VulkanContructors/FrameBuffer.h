@@ -41,7 +41,7 @@ namespace Vulkan {
             if (vkCreateFramebuffer(vulkanCore->vkDevice, &framebufferInfo, nullptr, &framebuffer) != VK_SUCCESS)
                 throw std::runtime_error("Failed to create framebuffer!");
 
-            framebuffers.push_back(framebuffer);
+            framebuffers[i] = framebuffer;
         }
 
         return framebuffers;

@@ -44,17 +44,21 @@ namespace Vulkan
 		swapChainCreateInfo.flags = flags;
 		CreateSwapchain(vulkanCore.get(), swapChainCreateInfo, surfaceSwapChain);
 
-		surfaceColorImages = CreateSwapchainImages(vulkanCore.get(), surfaceSwapChain, surfaceSwapChainImageFormat,
+        surfaceColorImages = CreateSwapchainImages(vulkanCore.get(), surfaceSwapChain, surfaceSwapChainImageFormat,
 			windowSize, surfaceType);
+
+        if((surfaceType != SwapchainAttachmentType::ColorOnly))
+            //surfaceDepthImages = CreateDepthImages(vulkanCore.get(), surfaceColorImages.size(), windowSize, surfaceType);
 
 		surfaceFrameBuffers = CreateFrameBuffers(
             vulkanCore.get(),
 			surfaceRenderPass,
-			surfaceColorImages,
-			surfaceDepthImages,
+            surfaceColorImages,
+            surfaceDepthImages,
 			windowSize.x,
 			windowSize.y
 		);
+
 		surfaceCommandPool = CreateCommandPool(vulkanCore.get());
 		surfacePresentCommandBuffers = CreateCommandBuffers(
             vulkanCore.get(),
@@ -134,8 +138,8 @@ namespace Vulkan
 		surfacePipelineLayout = CreatePipelineLayout(vulkanCore.get(), pipelineLayoutInfo);
 
 		PipelineInfo pipelineInfo{};
-		pipelineInfo.vertShaderPath = std::filesystem::current_path().string() + "\\Vulkan\\res\\surfaceVert.spv";
-		pipelineInfo.fragShaderPath = std::filesystem::current_path().string() + "\\Vulkan\\res\\surfaceFrag.spv";
+		pipelineInfo.vertShaderPath = std::filesystem::current_path().string() + "\\Clever_Engine\\Vulkan\\res\\surfaceVert.spv";
+		pipelineInfo.fragShaderPath = std::filesystem::current_path().string() + "\\Clever_Engine\\Vulkan\\res\\surfaceFrag.spv";
 		pipelineInfo.pipelineLayout = surfacePipelineLayout;
 		pipelineInfo.renderPass = surfaceRenderPass;
 		pipelineInfo.cullMode = VK_CULL_MODE_NONE;
@@ -171,13 +175,13 @@ namespace Vulkan
 
         // --- 4. Render each scene to offscreen framebuffer ---
         std::vector<VkSemaphore> sceneFinishedSemaphores;
-        for (auto& scene : vulkanScenes)
-        {
-            if (!scene->Render())
-            {
-                //Scene Render failed, handle it
-            }
-        }
+        //for (auto& scene : vulkanScenes)
+        //{
+        //    if (!scene->Render())
+        //    {
+        //        //Scene Render failed, handle it
+        //    }
+        //}
 
         VkCommandBuffer cmdBuffer = surfacePresentCommandBuffers[imageFrameCounter];
         vkResetCommandBuffer(cmdBuffer, 0);
@@ -218,7 +222,7 @@ namespace Vulkan
         );
 
         // Draw each scene texture
-        for (auto& scene : vulkanScenes)
+        /*for (auto& scene : vulkanScenes)
         {
             VkViewport sceneViewport{
                 static_cast<float>(scene->sceneOffset.x),
@@ -243,7 +247,7 @@ namespace Vulkan
             );
 
             vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
-        }
+        }*/
 
         vkCmdEndRenderPass(cmdBuffer);
         vkEndCommandBuffer(cmdBuffer);

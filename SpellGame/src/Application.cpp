@@ -12,7 +12,7 @@ int main()
 
 	Renderer& renderer = engine.GetRenderer();
 	Window& window = renderer.NewWindow("SpellGame", 800, 600);
-	Scene& scene = window.CreateNewScene();
+	/*Scene& scene = window.CreateNewScene();
 
 	RegistryManager& registryManager = engine.GetRegistryManager();
 	Registry& registry = registryManager.newRegistry();
@@ -24,12 +24,13 @@ int main()
 	registry.SetComponent<Mesh>(teapot, MeshComponent{ teapotId });
 	registry.AddComponent<Transform>(teapot);
 
-	scene.BindRegistry(registry);
+	scene.BindRegistry(registry);*/
 
 	bool shouldEnd = false;
 	while (!shouldEnd)
 	{
 		engine.Tick();
+		window.Render();
 	}
 
 	engine.Terminate();

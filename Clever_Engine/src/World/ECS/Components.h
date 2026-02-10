@@ -1,8 +1,9 @@
 #pragma once
 #include <glm.hpp>
 
-#include "Objects/Vertex.h"
-
+#define GLM_ENABLE_EXPERIMENTAL
+#include <gtc/matrix_transform.hpp>
+#include <gtx/quaternion.hpp>
 
 struct Camera
 {

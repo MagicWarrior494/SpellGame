@@ -21,12 +21,12 @@ public:
 
 		std::uniform_real_distribution<float> distXY(-0.75f, 0.75f);
 
-		Transform transform{};
-		transform.position = glm::vec3(distXY(gen), distXY(gen), 0.5f);
-		transform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
-		transform.rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+		//Transform transform{};
+		//transform.position = glm::vec3(distXY(gen), distXY(gen), 0.5f);
+		//transform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+		//transform.rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
-		registry.SetComponent<Transform>(entity, transform);
+		//registry.SetComponent<Transform>(entity, transform);
 	}
 
 	Registry& GetRegistry() { return registry; }

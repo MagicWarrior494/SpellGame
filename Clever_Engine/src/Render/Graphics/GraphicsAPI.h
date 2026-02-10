@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <vector>
 #include <glm.hpp>
+#include <string>
+#include <GLFW/glfw3.h>
 
 using TextureHandle = uint32_t;
 using BufferHandle = uint32_t;
@@ -56,4 +58,11 @@ public:
 
     virtual uint32_t CreateSampler(const SamplerDescriptor& desc) = 0;
     virtual void DeleteSampler(uint32_t samplerHandle) = 0;
+
+
+	//Window related functions
+    virtual uint32_t CreateWindow(GLFWwindow* glfwWindow) = 0;
+    virtual void ResizeWindow(uint32_t windowId, int width, int height) = 0;
+    virtual void CloseWindow(uint32_t windowId) = 0;
+    virtual void RenderWindow(uint32_t windowId) = 0;
 };

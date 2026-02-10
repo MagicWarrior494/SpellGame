@@ -1,9 +1,9 @@
 #include "Window.h"
 #include <iostream>
 
-Window::Window(std::string title,
+Window::Window(GraphicsAPI* graphicsAPI, std::string title,
     int width, int height, int posx, int posy)
-    : m_Title(title), m_Width(width), m_Height(height), m_PosX(posx), m_PosY(posy)
+    : m_GraphicsAPI(graphicsAPI), m_Title(title), m_Width(width), m_Height(height), m_PosX(posx), m_PosY(posy)
 {
     m_EventController = std::make_unique<EventController>();
     m_EventController->AttachLayer(this);
@@ -38,11 +38,13 @@ Window::Window(std::string title,
 
     glfwSetWindowUserPointer(m_pGLFWWindow, this);
     InitCallbacks();
+
+    m_GraphicsWindowID = m_GraphicsAPI->CreateWindow(m_pGLFWWindow);
 }
 
 void Window::OnInput(InputEvent& event)
 {
-    if(event.type == InputEvent::Type::Key)
+   /* if(event.type == InputEvent::Type::Key)
     {
         if (event.code == Input::Keyboard::KEY_ESCAPE)
         {
@@ -75,7 +77,7 @@ void Window::OnInput(InputEvent& event)
                 }
             }
         }
-    }
+    }*/
 }
 
 int Window::GetZIndex() const
@@ -88,7 +90,7 @@ void Window::InitCallbacks() {
     glfwSetFramebufferSizeCallback(m_pGLFWWindow, [](GLFWwindow* w, int width, int height) {
         auto* self = static_cast<Window*>(glfwGetWindowUserPointer(w));
         if (self) {
-            self->m_VulkanWindow->needsToBeRecreated = true;
+            //self->m_VulkanWindow->needsToBeRecreated = true;
             self->m_Width = width;
             self->m_Height = height;
             // Notify EventController (The Z-layers might need to move UI)
@@ -130,60 +132,23 @@ void Window::InitCallbacks() {
 }
 
 void Window::Update() {
-    if (IsWindowStillValid()) {
-        m_SceneController->Update(); // Update logic for all scenes in this window
-    }
+    glfwPollEvents();
 }
 
 void Window::Render() {
-    if (IsWindowStillValid()) {
-        m_VulkanWindow->RenderScenes();
-    }
+	std::cout << "Rendering Window ID: " << m_WindowID << std::endl;
+	m_GraphicsAPI->RenderWindow(m_GraphicsWindowID);
 }
 
-bool Window::IsWindowStillValid() {
-    return m_VulkanWindow != nullptr && m_pGLFWWindow != nullptr;
-}
-
-void Window::InitWindow() {
-    if (IsWindowStillValid()) {
-        m_VulkanWindow->InitWindow(m_pGLFWWindow);
-    }
-
-    Vulkan::Window& window = *m_VulkanContext->GetWindow(m_WindowID);
-
-    Vulkan::VulkanBuffer& buffer = window.vulkanSurface.cameraBuffer;
-
-    size_t minAligment = m_VulkanContext->GetPhysicalDeviceMinAlignment();
-
-    sharedCameraSceneData = std::make_unique<SharedCameraSceneData>
-        (
-            buffer,
-            minAligment,
-            sizeof(SceneShaderData)
-        );
+bool Window::ShouldWindowClose()
+{
+	bool result = glfwWindowShouldClose(m_pGLFWWindow);
+    return result;
 }
 
 void Window::CloseWindow() {
-    if (m_VulkanWindow) {
-        m_VulkanWindow->CloseWindow();
-    }
     if (m_pGLFWWindow) {
         glfwDestroyWindow(m_pGLFWWindow);
         m_pGLFWWindow = nullptr;
     }
-}
-
-void Window::MoveScene(SceneID sceneID, int newX, int newY)
-{
-	m_VulkanWindow->MoveScene(sceneID, newX, newY);
-}
-
-void Window::ResizeScene(SceneID sceneID, int newX, int newY)
-{
-	m_VulkanWindow->ResizeScene(sceneID, newX, newY);
-}
-
-void Window::AddChildRenderSurface(uint8_t renderSurfaceID) {
-    m_ChildrenRenderSurfaces.push_back(renderSurfaceID);
 }

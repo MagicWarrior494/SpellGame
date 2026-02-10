@@ -10,6 +10,9 @@
     <Filter Include="Render">
       <UniqueIdentifier>{C5BB87CE-B15D-B2A4-9A18-C6F8865939F5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Render\Graphics">
+      <UniqueIdentifier>{A5917F05-111D-EDC9-1A2E-70BE863849CA}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Render\Object">
       <UniqueIdentifier>{AB193217-17DA-AD4D-E014-F7CA4C94F229}</UniqueIdentifier>
     </Filter>
@@ -40,8 +43,11 @@
     <ClInclude Include="src\Event\Io\KeyCodes.h">
       <Filter>Event\Io</Filter>
     </ClInclude>
-    <ClInclude Include="src\Render\BufferManager.h">
-      <Filter>Render</Filter>
+    <ClInclude Include="src\Render\Graphics\GraphicsAPI.h">
+      <Filter>Render\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Render\Graphics\VulkanGrahicsAPI.h">
+      <Filter>Render\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Object\Element.h">
       <Filter>Render\Object</Filter>
@@ -52,11 +58,11 @@
     <ClInclude Include="src\Render\Object\UIElement.h">
       <Filter>Render\Object</Filter>
     </ClInclude>
-    <ClInclude Include="src\Render\RenderingController.h">
+    <ClInclude Include="src\Render\Renderer.h">
       <Filter>Render</Filter>
     </ClInclude>
-    <ClInclude Include="src\Render\Window\RenderSurface.h">
-      <Filter>Render\Window</Filter>
+    <ClInclude Include="src\Render\ResourceManager.h">
+      <Filter>Render</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Window\Scene\Object\Element.h">
       <Filter>Render\Window\Scene\Object</Filter>
@@ -65,9 +71,6 @@
       <Filter>Render\Window\Scene\Object</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Window\Scene\Scene.h">
-      <Filter>Render\Window\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Render\Window\Scene\SceneController.h">
       <Filter>Render\Window\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Window\Window.h">
@@ -85,32 +88,23 @@
     <ClInclude Include="src\World\WorldController.h">
       <Filter>World</Filter>
     </ClInclude>
-    <ClInclude Include="src\Render\Renderer.h">
-      <Filter>Render</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Render\ResourceManager.h" />
-    <ClInclude Include="src\Render\Graphics\GraphicsAPI.h" />
-    <ClInclude Include="src\Render\Graphics\VulkanGrahicsAPI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Engine.cpp" />
     <ClCompile Include="src\Event\EventController.cpp">
       <Filter>Event</Filter>
     </ClCompile>
+    <ClCompile Include="src\Render\Graphics\VulkanGrahicsAPI.cpp">
+      <Filter>Render\Graphics</Filter>
+    </ClCompile>
     <ClCompile Include="src\Render\Object\Element.cpp">
       <Filter>Render\Object</Filter>
     </ClCompile>
-    <ClCompile Include="src\Render\RenderingController.cpp">
+    <ClCompile Include="src\Render\Renderer.cpp">
       <Filter>Render</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Render\Window\RenderSurface.cpp">
-      <Filter>Render\Window</Filter>
     </ClCompile>
     <ClCompile Include="src\Render\Window\Scene\Object\Element.cpp">
       <Filter>Render\Window\Scene\Object</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Render\Window\Scene\SceneController.cpp">
-      <Filter>Render\Window\Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\Render\Window\Window.cpp">
       <Filter>Render\Window</Filter>
@@ -118,9 +112,5 @@
     <ClCompile Include="src\World\WorldController.cpp">
       <Filter>World</Filter>
     </ClCompile>
-    <ClCompile Include="src\Render\Renderer.cpp">
-      <Filter>Render</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Render\Graphics\VulkanGrahicsAPI.cpp" />
   </ItemGroup>
 </Project>

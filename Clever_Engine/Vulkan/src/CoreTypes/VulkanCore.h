@@ -25,7 +25,7 @@ namespace Vulkan
 	{ 
 	public:
 		VulkanCore();
-		~VulkanCore();
+		~VulkanCore() = default;
 		
 	public:
 		VkInstance vkInstance = VK_NULL_HANDLE;
