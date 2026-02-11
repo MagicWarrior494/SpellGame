@@ -1,6 +1,8 @@
-#include "VulkanWindow.h"
+#include "VulkanScene.h"
 #include <GLFW/glfw3.h>
 #include <filesystem>
+
+
 
 #include "VulkanCore.h"
 #include "VulkanContructors/Surface.h"
@@ -18,137 +20,44 @@
 
 namespace Vulkan
 {
-	VulkanWindow::VulkanWindow(std::shared_ptr<VulkanCore> vulkanCore, void* windowPtr)
-	{
+    VulkanScene::VulkanScene(std::shared_ptr<VulkanCore> vulkanCore, int width, int height, int xoffset, int yoffset, VulkanWindow* parentWindow)
+    {
+		this->height = height;
+		this->width = width;
+		this->xoffset = xoffset;
+		this->yoffset = yoffset;
         this->vulkanCore = vulkanCore;
-		this->windowPtr = windowPtr;
+		this->parentWindow = parentWindow;
 
-		if ((flags & SurfaceFlags::EnableTripleBuffer) != SurfaceFlags::None) {
-			MAX_FRAMES_IN_FLIGHT = 3;
-		}
+        renderImageIndex = parentWindow->AddNewScene(width, height);
 
-		//Sets Window Size based on the actual window from GLFW
-		int width = 0, height = 0;
-		glfwGetFramebufferSize((GLFWwindow*)windowPtr, &width, &height);
-		windowSize = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
-
-		CreateVulkanSurface(vulkanCore.get(), windowPtr, surfaceSurface);
-		surfaceRenderPass = CreateRenderPass(vulkanCore.get(), VK_FORMAT_B8G8R8A8_UNORM,
-			(flags & SurfaceFlags::EnableDepth) != SurfaceFlags::None,
-			VK_FORMAT_D32_SFLOAT,
-			RenderPassType::Onscreen);
-
-		SwapChainCreateInfo swapChainCreateInfo{};
-		swapChainCreateInfo.windowPtr = windowPtr;
-		swapChainCreateInfo.surface = surfaceSurface;
-		swapChainCreateInfo.windowSize = windowSize;
-		swapChainCreateInfo.swapChainImageFormat = surfaceSwapChainImageFormat;
-		swapChainCreateInfo.flags = flags;
-		CreateSwapchain(vulkanCore.get(), swapChainCreateInfo, surfaceSwapChain);
-
-        surfaceColorImages = CreateSwapchainImages(vulkanCore.get(), surfaceSwapChain, surfaceSwapChainImageFormat,
-			windowSize, surfaceType);
-
-        if((surfaceType != SwapchainAttachmentType::ColorOnly))
-            surfaceDepthImages = CreateDepthImages(vulkanCore.get(), surfaceColorImages.size(), windowSize, surfaceType);
-
-		surfaceFrameBuffers = CreateFrameBuffers(
+        sceneRenderPass = CreateRenderPass(
             vulkanCore.get(),
-			surfaceRenderPass,
-            surfaceColorImages,
-            surfaceDepthImages,
-			windowSize.x,
-			windowSize.y
-		);
+            VK_FORMAT_B8G8R8A8_UNORM,
+            false,
+            VK_FORMAT_D32_SFLOAT,
+            RenderPassType::Offscreen
+        );
 
-		surfaceCommandPool = CreateCommandPool(vulkanCore.get());
-		surfacePresentCommandBuffers = CreateCommandBuffers(
+        sceneFrameBuffers = CreateFrameBuffers(
             vulkanCore.get(),
-			surfaceCommandPool,
-			static_cast<uint32_t>(surfaceFrameBuffers.size())
-		);
-		CreateSyncObjects(
+            sceneRenderPass,
+            parentWindow->GetSceneImages(renderImageIndex),
+            { scenedepthAttachment },
+            width,
+            height
+        );
+
+        CreateSyncObjects(
             vulkanCore.get(),
-			MAX_FRAMES_IN_FLIGHT,
-			surfaceImageAvailableSemaphores,
-			surfaceRenderFinishedSemaphores,
-			surfaceFences
-		);
+            parentWindow->GetMaxFramesInFlight(),
+            sceneImageAvailableSemaphores,
+            sceneRenderFinishedSemaphores,
+            sceneFences
+        );
+    }
 
-		offscreenSampler = CreateSampler(vulkanCore.get(), SamplerConfig::Offscreen());
-
-		descriptorSetInfo.bindings.clear();
-		descriptorSetInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
-		DescriptorBindingInfo bindinginfo{};
-		bindinginfo.binding = 0;
-		bindinginfo.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		bindinginfo.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		bindinginfo.count = 0;
-
-		descriptorSetInfo.bindings.push_back(bindinginfo);
-
-		DescriptorBindingInfo& binding = descriptorSetInfo.bindings[0];
-
-		for (int i = 0; i < MAX_SCENES; i++)
-		{
-			std::vector<VulkanImage> newSceneImages = initImageByType(
-                vulkanCore.get(),
-				ImageType::Color,
-				1,
-				1,
-				MAX_FRAMES_IN_FLIGHT,
-				VK_SAMPLE_COUNT_1_BIT,
-				VK_FORMAT_UNDEFINED
-			);
-			for (auto& img : newSceneImages) {
-				TransitionImageLayout(
-                    vulkanCore.get(),
-					img.image,
-					img.format,
-					VK_IMAGE_LAYOUT_UNDEFINED,
-					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-					VK_IMAGE_ASPECT_COLOR_BIT
-				);
-			}
-			sceneImages.push_back(newSceneImages);
-
-			for (int frame = 0; frame < MAX_FRAMES_IN_FLIGHT; frame++) {
-				VkDescriptorImageInfo info{};
-				info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-				info.imageView = newSceneImages[frame].view;
-				info.sampler = offscreenSampler;
-
-				binding.images.push_back(info);
-			}
-		}
-		binding.count = static_cast<uint32_t>(binding.images.size());
-
-		//This creates the offscreen descriptors
-		surfaceDescriptorResult = CreateDescriptors(vulkanCore.get(), descriptorSetInfo);
-
-
-		PipelineLayoutInfo pipelineLayoutInfo{};
-		pipelineLayoutInfo.setLayouts.push_back(surfaceDescriptorResult.layout);
-
-		VkPushConstantRange pushConstantRange{};
-		pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		pushConstantRange.offset = 0;
-		pushConstantRange.size = sizeof(SurfacePushConstants);
-
-		pipelineLayoutInfo.pushConstants.push_back(pushConstantRange);
-		surfacePipelineLayout = CreatePipelineLayout(vulkanCore.get(), pipelineLayoutInfo);
-
-		PipelineInfo pipelineInfo{};
-		pipelineInfo.vertShaderPath = std::filesystem::current_path().string() + "\\Clever_Engine\\Vulkan\\res\\surfaceVert.spv";
-		pipelineInfo.fragShaderPath = std::filesystem::current_path().string() + "\\Clever_Engine\\Vulkan\\res\\surfaceFrag.spv";
-		pipelineInfo.pipelineLayout = surfacePipelineLayout;
-		pipelineInfo.renderPass = surfaceRenderPass;
-		pipelineInfo.cullMode = VK_CULL_MODE_NONE;
-		surfacePipeline = CreateGraphicsPipeline(vulkanCore.get(), pipelineInfo);
-	}
-
-    VulkanWindow::~VulkanWindow()
+    VulkanScene::~VulkanScene()
     {
         if (!vulkanCore || !vulkanCore->vkDevice) return;
 
@@ -216,82 +125,13 @@ namespace Vulkan
 
         vkDestroyDescriptorPool(vulkanCore->vkDevice, surfaceDescriptorResult.pool, nullptr);
     }
-
-    int VulkanWindow::AddNewScene(int width, int height)
+    bool VulkanScene::Render()
     {
-        std::vector<VulkanImage> newSceneImages = initImageByType(
-            vulkanCore.get(),
-            ImageType::Color,
-            width,
-            height,
-            MAX_FRAMES_IN_FLIGHT,
-            VK_SAMPLE_COUNT_1_BIT,
-            VK_FORMAT_UNDEFINED
-        );
-
-        for (auto& img : newSceneImages) {
-            TransitionImageLayout(
-                vulkanCore.get(),
-                img.image,
-                img.format,
-                VK_IMAGE_LAYOUT_UNDEFINED,
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                VK_IMAGE_ASPECT_COLOR_BIT
-            );
-        }
-
-        sceneImages.push_back(newSceneImages);
-        int sceneIndex = static_cast<int>(sceneImages.size()) - 1;
-
-        DescriptorBindingInfo& binding = descriptorSetInfo.bindings[0];
-
-        for (uint32_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
-        {
-            VkDescriptorImageInfo info{};
-            info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            info.imageView = sceneImages[sceneIndex].at(frame).view;
-            info.sampler = offscreenSampler;
-
-            binding.images[(sceneIndex * MAX_FRAMES_IN_FLIGHT) + frame] = info;
-        }
-
-        binding.count = static_cast<uint32_t>(binding.images.size());
-
-        descriptorSetInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
-
-        surfaceDescriptorResult = CreateDescriptors(vulkanCore.get(), descriptorSetInfo);
-
-        return sceneIndex;
-    }
-
-    void VulkanWindow::RecreateSwapchain()
-    {
-		SwapChainCreateInfo swapChainCreateInfo{};
-		swapChainCreateInfo.windowPtr = windowPtr;
-		swapChainCreateInfo.surface = surfaceSurface;
-		swapChainCreateInfo.windowSize = windowSize;
-		swapChainCreateInfo.swapChainImageFormat = surfaceSwapChainImageFormat;
-		swapChainCreateInfo.flags = flags;
-
-        RecreateWindowResources(
-            vulkanCore.get(),
-            swapChainCreateInfo,
-            surfaceSwapChain,
-            surfaceRenderPass,
-            surfaceFrameBuffers,
-            surfaceColorImages,
-            surfaceDepthImages,
-            surfaceType
-        );
-    }
-
-    bool VulkanWindow::Render()
-	{
         VkDevice device = vulkanCore->vkDevice;
 
         VkFence frameFence = surfaceFences[imageFrameCounter];
         vkWaitForFences(device, 1, &frameFence, VK_TRUE, UINT64_MAX);
-        
+
 
         uint32_t swapchainImageIndex;
         VkResult acquireResult = vkAcquireNextImageKHR(
@@ -428,5 +268,5 @@ namespace Vulkan
         vkQueuePresentKHR(vulkanCore->vkPresentQueue, &presentInfo);
 
         imageFrameCounter = (imageFrameCounter + 1) % MAX_FRAMES_IN_FLIGHT;
-	}
+    }
 }

@@ -13,7 +13,8 @@ namespace Vulkan
 		Texture,
 		CubeMap,
 		Multisampled,
-		Storage
+		Storage,
+		Undefined
 	};
 
 	struct VulkanImage {
@@ -25,6 +26,8 @@ namespace Vulkan
 		VkExtent3D extent{};
 		VkImageLayout currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		VkDeviceSize size = 0; // optional
+
+		ImageType type = ImageType::Undefined;
 
 		void Destory(VkDevice& device) {
 			if (view != VK_NULL_HANDLE) {

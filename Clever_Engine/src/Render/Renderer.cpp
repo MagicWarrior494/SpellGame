@@ -2,17 +2,31 @@
 
 void Renderer::Update()
 {
-	for (auto& [id, window] : m_windows)
-	{
-		if (!window->ShouldWindowClose())
-		{
-			window->Update();
-		}
-		else
-		{
-			CloseWindow(*window);
-		}
-	}
+    std::vector<int> windowsToClose;
+
+    // 1. Identify which windows need to close
+    for (auto& [id, window] : m_windows)
+    {
+        if (!window->ShouldWindowClose())
+        {
+            window->Update();
+        }
+        else
+        {
+            windowsToClose.push_back(id);
+        }
+    }
+
+    // 2. Safely close them after the loop is done
+    for (int id : windowsToClose)
+    {
+        // Find the window pointer in the map using the ID
+        auto it = m_windows.find(id);
+        if (it != m_windows.end())
+        {
+            CloseWindow(*it->second);
+        }
+    }
 }
 
 Window& Renderer::NewWindow(const std::string& title, int width, int height)

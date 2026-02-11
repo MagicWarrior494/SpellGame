@@ -211,13 +211,11 @@ namespace Vulkan {
                 depthFormat);
 		return result;
     }
-
-    void CleanupImages(std::shared_ptr<VulkanCore> VC, std::vector<VulkanImage> images)
+    void CleanupImages(VulkanCore* vulkanCore, std::vector<VulkanImage> images)
     {
-        VulkanCore& vulkanCore = *VC;
         for (auto& imageView : images) {
             if (imageView.view != VK_NULL_HANDLE)
-                vkDestroyImageView(vulkanCore.vkDevice, imageView.view, nullptr);
+                vkDestroyImageView(vulkanCore->vkDevice, imageView.view, nullptr);
         }
         images.clear();
     }

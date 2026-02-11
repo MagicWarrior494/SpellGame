@@ -10,7 +10,7 @@
 #include "World/ECS/Registry.h"
 #include "WindowControls.h"
 
-class Window : public IInputLayer{
+class Window : public IInputLayer {
 public:
     Window(GraphicsAPI* graphicsAPI, std::string title, int width, int height, int posx = 0, int posy = 0);
     ~Window() = default;
@@ -47,6 +47,8 @@ private:
     int m_PosY;
 
     GLFWwindow* m_pGLFWWindow = nullptr;
+
+	//std::vector<Scene*> m_Scenes; // Scenes associated with this window
 
     // Controllers Owned by the Window
     std::unique_ptr<EventController> m_EventController;

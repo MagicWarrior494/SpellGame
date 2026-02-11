@@ -12,6 +12,8 @@ int main()
 
 	Renderer& renderer = engine.GetRenderer();
 	Window& window = renderer.NewWindow("SpellGame", 800, 600);
+	int windowId = window.GetWindowID();
+
 	/*Scene& scene = window.CreateNewScene();
 
 	RegistryManager& registryManager = engine.GetRegistryManager();
@@ -30,6 +32,7 @@ int main()
 	while (!shouldEnd)
 	{
 		engine.Tick();
+		if (!renderer.IsWindowAlive(windowId)) break;
 		window.Render();
 	}
 

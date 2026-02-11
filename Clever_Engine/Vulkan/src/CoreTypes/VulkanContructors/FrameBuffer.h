@@ -46,4 +46,15 @@ namespace Vulkan {
 
         return framebuffers;
     }
+
+    inline void CleanupFramebuffers(VulkanCore* vulkanCore, std::vector<VkFramebuffer>& framebuffers)
+    {
+        for (auto& framebuffer : framebuffers) {
+            if (framebuffer != VK_NULL_HANDLE) {
+                vkDestroyFramebuffer(vulkanCore->vkDevice, framebuffer, nullptr);
+                framebuffer = VK_NULL_HANDLE;
+            }
+        }
+        framebuffers.clear();
+	}
 }

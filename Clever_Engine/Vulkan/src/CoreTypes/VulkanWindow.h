@@ -44,11 +44,16 @@ namespace Vulkan
 	public:
 		VulkanWindow() = default;
 		VulkanWindow(std::shared_ptr<VulkanCore> vulkanCore, void* windowPtr);
-		~VulkanWindow() = default;
+		~VulkanWindow();
 
-		void RecreateSwapchain() {};
+		int AddNewScene(int width, int height);//Returns the index of the scene's image in sceneImages
+
+		void RecreateSwapchain();
 		bool Render();
 
+		std::vector<VulkanImage>& GetSceneImages(int sceneIndex) { return sceneImages.at(sceneIndex); }
+		int GetMaxFramesInFlight() const { return MAX_FRAMES_IN_FLIGHT; }
+		int GetMaxScenes() const { return MAX_SCENES; }
 	private:
 		std::shared_ptr<VulkanCore> vulkanCore = nullptr;
 
@@ -60,7 +65,7 @@ namespace Vulkan
 		//TODO: Make configurable
 		SurfaceFlags flags = SurfaceFlags::None;
 		
-		SwapchainAttachmentType surfaceType = SwapchainAttachmentType::ColorDepth;
+		SwapchainAttachmentType surfaceType = SwapchainAttachmentType::ColorOnly;
 
 		uint8_t imageFrameCounter = 0;
 		void* windowPtr = nullptr;
@@ -91,9 +96,7 @@ namespace Vulkan
 
 		VkSampler offscreenSampler = VK_NULL_HANDLE;
 
-		//Need to create here so  do not need to recreate every time a new scene is needed
+		//Need to create here so do not need to recreate every time a new scene is needed
 		std::vector<std::vector<VulkanImage>> sceneImages{};
-
- 		std::vector<std::shared_ptr<std::vector<VulkanImage>>> offscreenImages{}; // Offscreen images for each frame in flight
 	};
 }

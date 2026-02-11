@@ -34,6 +34,9 @@ public:
 	Window& NewWindow(const std::string& title, int width, int height);
 	void CloseWindow(Window& window);
 	void ResizeWindow(Window& window, int width, int height);
+	bool IsWindowAlive(int windowId) {
+		return m_windows.find(windowId) != m_windows.end();
+	}
 
 	Window& GetWindow(int windowId);
 

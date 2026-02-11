@@ -78,8 +78,7 @@ void VulkanGraphicsAPI::UpdateBuffer(BufferHandle bufferHandle, const void* data
 
 uint32_t VulkanGraphicsAPI::CreateWindow(GLFWwindow* glfwWindow)
 {
-	Vulkan::VulkanWindow newWindow{m_vulkanCore, glfwWindow};
-	m_windows[m_nextHandle] = std::move(newWindow);
+	m_windows[m_nextHandle] = std::make_unique<Vulkan::VulkanWindow>(m_vulkanCore, glfwWindow);
 	return m_nextHandle++;
 }
 
@@ -96,10 +95,12 @@ void VulkanGraphicsAPI::RenderWindow(uint32_t windowId)
 {
     auto it = m_windows.find(windowId);
     if (it == m_windows.end()) return;
-    Vulkan::VulkanWindow& window = it->second;
-    if (!window.Render())
-    {
-        // Handle swapchain recreation if needed
-        window.RecreateSwapchain();
-	}
+    Vulkan::VulkanWindow* window = it->second.get();
+    window->Render();
+}
+
+uint32_t VulkanGraphicsAPI::CreateScene(uint32_t WindowId)
+{
+    m_scenes[m_nextHandle] = std::make_unique<Vulkan::VulkanScene>(m_vulkanCore, glfwWindow);
+    return m_nextHandle++;
 }

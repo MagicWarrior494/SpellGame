@@ -8,9 +8,9 @@
 #include "World/WorldController.h"
 #include "Event/EventController.h"
 
-
+#include "Render/Graphics/GraphicsAPI.h"
 #include "World/ECS/Registry.h"
-#include "World/ECS/Components.h"
+
 #include "Render/Window/WindowControls.h"
 
 struct SceneCreationInfo {
@@ -25,6 +25,13 @@ struct SceneCreationInfo {
 
 class Scene : public IInputLayer
 {
+public:
+    Scene(GraphicsAPI* graphicsAPI)
+        : m_GraphicsAPI(graphicsAPI)
+    {
+        //graphicsAPI.CreateScene();
+	}
+
     void Update()
     {
 
@@ -97,4 +104,10 @@ class Scene : public IInputLayer
             //event.Consume();
         }
     }
+
+	void AssignRegistry(Registry* registry) { m_Registry = registry; }
+
+private:
+	Registry* m_Registry = nullptr;
+	GraphicsAPI* m_GraphicsAPI = nullptr;
 };
