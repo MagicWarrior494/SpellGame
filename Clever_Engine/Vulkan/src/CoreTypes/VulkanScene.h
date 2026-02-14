@@ -5,6 +5,16 @@
 
 namespace Vulkan
 {
+	class ISceneSystem {
+	public:
+		virtual void Record(
+			VkCommandBuffer cmd,
+			uint32_t frameIndex,
+			const ResourceMap& resources, // Map of Buffers/Images
+			const DescriptorResult& descriptors
+		) = 0;
+	};
+
 	class VulkanScene
 	{
 	public:
@@ -12,6 +22,11 @@ namespace Vulkan
 		~VulkanScene();
 
 		bool Render();
+
+		void ConstructPipeline(
+			VulkanCore* VC,
+			PipelineInfo& info,
+			const ResourceMap& resourceMap);
 
 	public:
 		uint8_t m_sceneId;
@@ -28,13 +43,10 @@ namespace Vulkan
 
 		std::vector<VkFramebuffer>  sceneFrameBuffers{};
 
-		//This need to be moved to be created through VulkanGraphics API becuase each scene has a unique pipeline layout and pipeline
-		/*
-		* std::vector<VkPipelineLayout> scenePipelineLayouts{};
-		std::vector<VkPipeline> scenePipelines{};
-		DescriptorResult SceneDescriptorResult{};
-		*/
-
+		VkPipelineLayout scenePipelineLayout = VK_NULL_HANDLE;
+		VkPipeline scenePipeline = VK_NULL_HANDLE;
+		DescriptorResult sceneDescriptorResult{};
+		
 		std::vector<VkSemaphore> sceneImageAvailableSemaphores{};
 		std::vector<VkSemaphore> sceneRenderFinishedSemaphores{};
 		std::vector<VkFence> sceneFences{};

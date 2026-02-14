@@ -70,7 +70,7 @@
     <ClInclude Include="src\Render\Window\Scene\Object\UIElement.h">
       <Filter>Render\Window\Scene\Object</Filter>
     </ClInclude>
-    <ClInclude Include="src\Render\Window\Scene\Scene.h">
+    <ClInclude Include="src\Render\Window\Scene.h">
       <Filter>Render\Window\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Window\Window.h">
@@ -88,6 +88,7 @@
     <ClInclude Include="src\World\WorldController.h">
       <Filter>World</Filter>
     </ClInclude>
+    <ClInclude Include="src\Render\Window\Scene\RenderStage.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Engine.cpp" />
@@ -112,5 +113,6 @@
     <ClCompile Include="src\World\WorldController.cpp">
       <Filter>World</Filter>
     </ClCompile>
+    <ClCompile Include="src\Render\Window\Scene.cpp" />
   </ItemGroup>
 </Project>

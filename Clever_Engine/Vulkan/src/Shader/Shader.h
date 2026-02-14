@@ -3,6 +3,8 @@
 #include <string>
 #include <fstream>
 #include "CoreTypes/VulkanCore.h"
+#include "Coretypes/Helper/spirv_reflect.h"
+#include <vector>
 
 namespace Vulkan
 {
@@ -52,5 +54,68 @@ namespace Vulkan
             throw std::runtime_error("Failed to create shader module!");
 
         return shaderModule;
+    }
+
+
+    VkDescriptorType ConvertType(SpvReflectDescriptorType type) {
+        return static_cast<VkDescriptorType>(type);
+    }
+
+    Vulkan::ShaderMetadata ReflectCombinedShaders(const std::vector<uint32_t>& vertCode, const std::vector<uint32_t>& fragCode) {
+        Vulkan::ShaderMetadata meta;
+
+        auto ProcessStage = [&](const std::vector<uint32_t>& code, VkShaderStageFlags stage) {
+            SpvReflectShaderModule module;
+            spvReflectCreateShaderModule(code.size() * sizeof(uint32_t), code.data(), &module);
+
+            uint32_t count = 0;
+            spvReflectEnumerateDescriptorBindings(&module, &count, nullptr);
+            std::vector<SpvReflectDescriptorBinding*> bindings(count);
+            spvReflectEnumerateDescriptorBindings(&module, &count, bindings.data());
+
+            for (auto* b : bindings) {
+                // Check if we already found this binding in a previous stage
+                bool found = false;
+                for (auto& existing : meta.bindings) {
+                    if (existing.binding == b->binding) {
+                        existing.stage |= stage; // Merge stages (e.g. Vertex | Fragment)
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    Vulkan::ShaderBinding sb;
+                    sb.binding = b->binding;
+                    sb.name = b->name; // e.g. "u_ElementTable"
+                    sb.type = ConvertType(b->descriptor_type);
+                    sb.stage = stage;
+                    sb.count = b->count;
+                    meta.bindings.push_back(sb);
+                }
+            }
+
+
+            uint32_t pcCount = 0;
+            spvReflectEnumeratePushConstantBlocks(&module, &pcCount, nullptr);
+            std::vector<SpvReflectBlockVariable*> pcs(pcCount);
+            spvReflectEnumeratePushConstantBlocks(&module, &pcCount, pcs.data());
+
+            for (auto* p : pcs) {
+                Vulkan::ShaderMetadata::PushConstant pc;
+                pc.name = p->name;
+                pc.size = p->size;
+                pc.offset = p->offset;
+                pc.stageFlags = stage;
+                meta.pushConstants.push_back(pc);
+            }
+
+            spvReflectDestroyShaderModule(&module);
+        };
+
+        ProcessStage(vertCode, VK_SHADER_STAGE_VERTEX_BIT);
+        ProcessStage(fragCode, VK_SHADER_STAGE_FRAGMENT_BIT);
+
+        return meta;
     }
 }

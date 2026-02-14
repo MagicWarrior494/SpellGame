@@ -29,12 +29,12 @@ void Renderer::Update()
     }
 }
 
-Window& Renderer::NewWindow(const std::string& title, int width, int height)
+int Renderer::NewWindow(const std::string& title, int width, int height)
 {
 	std::unique_ptr<Window> newWindow = std::make_unique<Window>(m_graphicsAPI.get(), title, width, height, 0, 0);
 	int windowId = newWindow->GetWindowID();
 	m_windows[windowId] = std::move(newWindow);
-	return *m_windows[windowId];
+    return windowId;
 }
 
 void Renderer::CloseWindow(Window& window)

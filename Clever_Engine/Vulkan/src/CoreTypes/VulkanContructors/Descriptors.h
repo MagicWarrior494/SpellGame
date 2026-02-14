@@ -2,7 +2,13 @@
 #include <memory>
 #include <stdexcept>
 #include <unordered_set>
+#include <vector>
+#include <map>
+#include <string>
+
 #include "CoreTypes/VulkanCore.h"
+
+#include "CoreTypes/Resource.h"
 
 namespace Vulkan {
     inline void UpdateDescriptorSets(VulkanCore* VC, const DescriptorSetInfo& info, DescriptorResult& result)
@@ -165,5 +171,59 @@ namespace Vulkan {
         UpdateDescriptorSets(VC, info, result);
 
         return result;
+    }
+
+    inline DescriptorResult CreateDescriptorsFromResources(
+        VulkanCore* VC,
+        const ShaderMetadata& meta,
+        const ResourceMap& resourceMap,
+        uint32_t maxSets)
+    {
+        DescriptorSetInfo info{};
+        info.maxSets = maxSets;
+
+        // 1. Translate reflected metadata into DescriptorSetInfo
+        for (const auto& shaderReq : meta.bindings) {
+            DescriptorBindingInfo binding{};
+            binding.binding = shaderReq.binding;
+            binding.type = shaderReq.type;
+            binding.stageFlags = shaderReq.stage;
+
+            // Find the named resource in our Map
+            auto it = resourceMap.find(shaderReq.name);
+            if (it == resourceMap.end()) {
+                throw std::runtime_error("Shader required resource not found in map: " + shaderReq.name);
+            }
+
+            const Resource& res = it->second;
+
+            // 2. Fill the specific descriptor info (Buffer or Image)
+            // We repeat the resource 'maxSets' times so UpdateDescriptorSets
+            // can distribute them across frames-in-flight.
+            for (uint32_t i = 0; i < maxSets; ++i) {
+                if (res.isBuffer()) {
+                    VkDescriptorBufferInfo bufferInfo{};
+                    bufferInfo.buffer = res.getBuffer()->buffer;
+                    bufferInfo.offset = 0;
+                    bufferInfo.range = VK_WHOLE_SIZE;
+                    binding.buffers.push_back(bufferInfo);
+                }
+                else if (res.isImage()) {
+                    VkDescriptorImageInfo imageInfo{};
+                    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                    imageInfo.imageView = res.getImage()->view;
+                    // Note: You might need to store the sampler in the Resource as well
+                    imageInfo.sampler = VK_NULL_HANDLE;
+                    binding.images.push_back(imageInfo);
+                }
+            }
+
+            binding.count = static_cast<uint32_t>(maxSets);
+
+            info.bindings.push_back(binding);
+        }
+
+        // 3. Reuse your existing robust creation function
+        return CreateDescriptors(VC, info);
     }
 }

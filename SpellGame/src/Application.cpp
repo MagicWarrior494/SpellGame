@@ -11,10 +11,9 @@ int main()
 	Engine::Engine engine{};
 
 	Renderer& renderer = engine.GetRenderer();
-	Window& window = renderer.NewWindow("SpellGame", 800, 600);
-	int windowId = window.GetWindowID();
+	int windowId = renderer.NewWindow("SpellGame", 800, 600);
 
-	/*Scene& scene = window.CreateNewScene();
+	int sceneId = renderer.NewScene(windowId, 400, 300);
 
 	RegistryManager& registryManager = engine.GetRegistryManager();
 	Registry& registry = registryManager.newRegistry();
@@ -26,14 +25,14 @@ int main()
 	registry.SetComponent<Mesh>(teapot, MeshComponent{ teapotId });
 	registry.AddComponent<Transform>(teapot);
 
-	scene.BindRegistry(registry);*/
+	scene.BindRegistry(registry);
 
 	bool shouldEnd = false;
 	while (!shouldEnd)
 	{
 		engine.Tick();
 		if (!renderer.IsWindowAlive(windowId)) break;
-		window.Render();
+		renderer.GetWindow(windowId).Render();
 	}
 
 	engine.Terminate();

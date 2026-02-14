@@ -3,6 +3,7 @@
 #include <memory>
 #include <GLFW/glfw3.h>
 #include "Render/Window/Window.h"
+#include "Render/Window/Scene.h"
 #include "Graphics/GraphicsAPI.h"
 
 #define VULKAN 1
@@ -31,7 +32,7 @@ public:
 	
 	void Update();
 	
-	Window& NewWindow(const std::string& title, int width, int height);
+	int NewWindow(const std::string& title, int width, int height);
 	void CloseWindow(Window& window);
 	void ResizeWindow(Window& window, int width, int height);
 	bool IsWindowAlive(int windowId) {
@@ -40,8 +41,14 @@ public:
 
 	Window& GetWindow(int windowId);
 
+	int NewScene(int windowId, int width, int height);
+	void MoveScene(int sceneId, int x, int y);
+	void ResizeScene(int sceneId, int width, int height);
+	void DeleteScene(int sceneId);
+
 private:
 	std::unique_ptr<GraphicsAPI> m_graphicsAPI;
 	std::map<int, std::unique_ptr<Window>> m_windows;
+	std::map<int, std::unique_ptr<Scene>> m_scenes;
 };
 

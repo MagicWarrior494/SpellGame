@@ -46,6 +46,8 @@ private:
     int m_PosX;
     int m_PosY;
 
+	std::vector<int> m_SceneIDs; // IDs of scenes associated with this window
+
     GLFWwindow* m_pGLFWWindow = nullptr;
 
 	//std::vector<Scene*> m_Scenes; // Scenes associated with this window
