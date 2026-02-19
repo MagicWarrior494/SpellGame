@@ -1,37 +1,43 @@
 #pragma once
 
-#include "Render/Renderer.h"
+#include <GLFW/glfw3.h>
+#include "Render/Window/Window.h"
+#include "Render/Window/Scene.h"
+#include "Render/Graphics/GraphicsAPI.h"
+
 #include "World/WorldController.h"
+#include "World/AssetManager.h"
 
 #include <stdexcept>
+#include <map>
+#include <memory>
 #include <string>
 
-namespace Engine {
+class Engine
+{
+public:
+	Engine();
 
-	class Engine
-	{
-	public:
-		/*
-		This is the INIT for the Engine, It takes a file path which contains JSON data about anything the engine would like
-		to remember from run to run. Like How many windows, window positions, file locations for model and texture data,
-		Optimization for different Vulkan object and stuff like that.
-		This is not The WORLD SCENE DATA, nothing about the in world object themselves.
-		*/
-		Engine();
+	void SetUp(std::string setUpFilePath);
 
-		void SetUp(std::string setUpFilePath);
+	//Default Setup
+	void SetUp();
 
-		//Default Setup
-		void SetUp();
+	void Tick();
 
-		void Tick();
+	Window& CreateWindow(const std::string& title, int width, int height);
+	Scene& CreateScene(int windowId, int width, int height);
 
-		Renderer& GetRenderer() { return m_renderer; }
+	AssetManager& GetAssetManager() { return m_AssetManager; }
 
-		void Terminate();
-	private:
-		Renderer m_renderer{};
-		WorldController worldController;
-		std::string m_SetUpFilePath;
-	};
-}
+	void Terminate();
+private:
+	std::map<int, std::unique_ptr<Window>> m_windows;
+	std::map<int, std::unique_ptr<Scene>> m_scenes;
+
+	std::unique_ptr<GraphicsAPI> m_graphicsAPI;
+
+	AssetManager m_AssetManager;
+	WorldController m_WorldController;
+	std::string m_SetUpFilePath;
+};

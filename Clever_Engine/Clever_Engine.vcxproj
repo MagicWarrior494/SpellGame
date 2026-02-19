@@ -102,6 +102,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\World\AssetManager.h" />
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\Event\EventController.h" />
     <ClInclude Include="src\Event\Io\ConversionData.h" />
@@ -111,11 +112,10 @@
     <ClInclude Include="src\Render\Object\Element.h" />
     <ClInclude Include="src\Render\Object\ElementSetUps.h" />
     <ClInclude Include="src\Render\Object\UIElement.h" />
-    <ClInclude Include="src\Render\Renderer.h" />
     <ClInclude Include="src\Render\ResourceManager.h" />
+    <ClInclude Include="src\Render\Window\Scene.h" />
     <ClInclude Include="src\Render\Window\Scene\Object\Element.h" />
     <ClInclude Include="src\Render\Window\Scene\Object\UIElement.h" />
-    <ClInclude Include="src\Render\Window\Scene.h" />
     <ClInclude Include="src\Render\Window\Scene\RenderStage.h" />
     <ClInclude Include="src\Render\Window\Window.h" />
     <ClInclude Include="src\Render\Window\WindowControls.h" />
@@ -124,11 +124,11 @@
     <ClInclude Include="src\World\WorldController.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\World\AssetManager.cpp" />
     <ClCompile Include="src\Engine.cpp" />
     <ClCompile Include="src\Event\EventController.cpp" />
     <ClCompile Include="src\Render\Graphics\VulkanGrahicsAPI.cpp" />
     <ClCompile Include="src\Render\Object\Element.cpp" />
-    <ClCompile Include="src\Render\Renderer.cpp" />
     <ClCompile Include="src\Render\Window\Scene.cpp" />
     <ClCompile Include="src\Render\Window\Scene\Object\Element.cpp">
       <ObjectFileName>$(IntDir)\Element1.obj</ObjectFileName>

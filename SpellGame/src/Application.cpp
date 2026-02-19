@@ -2,38 +2,27 @@
 
 int main()
 {
-	/*
-	Load Settings File
-	Create Engine()
-	LoadWorld()
-	RunWorld()
-	*/
-	Engine::Engine engine{};
+    Engine engine{};
 
-	Renderer& renderer = engine.GetRenderer();
-	int windowId = renderer.NewWindow("SpellGame", 800, 600);
+    Window& window = engine.CreateWindow("SpellGame", 800, 600);
+    Scene& scene = engine.CreateScene(window.GetWindowID(), 400, 300);
 
-	int sceneId = renderer.NewScene(windowId, 400, 300);
+    Registry& registry = scene.GetRegistry();
+    auto& assets = engine.GetAssetManager();
 
-	RegistryManager& registryManager = engine.GetRegistryManager();
-	Registry& registry = registryManager.newRegistry();
+    auto teapotMesh = assets.LoadAsset<Mesh>("utah_teapot");
 
-	AssetManager& assetManager = engine.GetAssetManager();
-	int teapotId = assetManager.Load("teapot");
+    EntityID teapot = registry.Create();
+    registry.Add<Transform>(teapot);
+    registry.Set<Mesh>(teapot, Mesh{ teapotMesh });
 
-	EntityID teapot = registry.CreateEntity();
-	registry.SetComponent<Mesh>(teapot, MeshComponent{ teapotId });
-	registry.AddComponent<Transform>(teapot);
+    while (window.IsAlive())
+    {
+        engine.BeginFrame();
 
-	scene.BindRegistry(registry);
+        scene.Render();   // explicit
+        engine.EndFrame();
+    }
 
-	bool shouldEnd = false;
-	while (!shouldEnd)
-	{
-		engine.Tick();
-		if (!renderer.IsWindowAlive(windowId)) break;
-		renderer.GetWindow(windowId).Render();
-	}
-
-	engine.Terminate();
+    engine.Shutdown();
 }

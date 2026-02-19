@@ -49,7 +49,7 @@ public:
 
 public:
 	//This returns an unique EntityID
-	EntityID CreateEntity()
+	EntityID Create()
 	{
 		return nextEntityID++;
 	}
@@ -79,7 +79,7 @@ public:
 
 	//This adds a provided component
 	template<typename ComponentType>
-	void SetComponent(EntityID entity, const ComponentType& component)
+	void Set(EntityID entity, const ComponentType& component)
 	{
 		std::type_index type = std::type_index(typeid(ComponentType));
 
@@ -93,10 +93,10 @@ public:
 	
 	//This Adds a default constructed component which then can be modified or replaced
 	template<typename ComponentType>
-	void AddComponent(EntityID entity)
+	void Add(EntityID entity)
 	{
 		ComponentType component{};
-		SetComponent<ComponentType>(entity, component);
+		Set<ComponentType>(entity, component);
 	}
 
 	//Removes a component from an entity

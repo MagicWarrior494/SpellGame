@@ -35,6 +35,10 @@ public:
 
     void Update();
 
+	void Render();
+
+	Registry& GetRegistry() { return *m_Registry; }
+
     virtual void OnInput(InputEvent& event) override
     {
         if (event.type == InputEvent::Type::Key &&
@@ -42,14 +46,11 @@ public:
         {}
     }
 
-	void AssignRegistry(Registry* registry) { m_Registry = registry; }
-
-
 private:
 	SceneCreationInfo m_SceneInfo;
     
 	std::vector<RenderStage> m_RenderStages;//This should be rendered starting from the front
 
-	Registry* m_Registry = nullptr;
+	std::unique_ptr<Registry> m_Registry = nullptr;
 	GraphicsAPI* m_GraphicsAPI = nullptr;
 };

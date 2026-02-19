@@ -58,11 +58,11 @@
     <ClInclude Include="src\Render\Object\UIElement.h">
       <Filter>Render\Object</Filter>
     </ClInclude>
-    <ClInclude Include="src\Render\Renderer.h">
-      <Filter>Render</Filter>
-    </ClInclude>
     <ClInclude Include="src\Render\ResourceManager.h">
       <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Render\Window\Scene.h">
+      <Filter>Render\Window</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Window\Scene\Object\Element.h">
       <Filter>Render\Window\Scene\Object</Filter>
@@ -70,7 +70,7 @@
     <ClInclude Include="src\Render\Window\Scene\Object\UIElement.h">
       <Filter>Render\Window\Scene\Object</Filter>
     </ClInclude>
-    <ClInclude Include="src\Render\Window\Scene.h">
+    <ClInclude Include="src\Render\Window\Scene\RenderStage.h">
       <Filter>Render\Window\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Window\Window.h">
@@ -88,7 +88,9 @@
     <ClInclude Include="src\World\WorldController.h">
       <Filter>World</Filter>
     </ClInclude>
-    <ClInclude Include="src\Render\Window\Scene\RenderStage.h" />
+    <ClInclude Include="src\World\AssetManager.h">
+      <Filter>World</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Engine.cpp" />
@@ -101,8 +103,8 @@
     <ClCompile Include="src\Render\Object\Element.cpp">
       <Filter>Render\Object</Filter>
     </ClCompile>
-    <ClCompile Include="src\Render\Renderer.cpp">
-      <Filter>Render</Filter>
+    <ClCompile Include="src\Render\Window\Scene.cpp">
+      <Filter>Render\Window</Filter>
     </ClCompile>
     <ClCompile Include="src\Render\Window\Scene\Object\Element.cpp">
       <Filter>Render\Window\Scene\Object</Filter>
@@ -113,6 +115,8 @@
     <ClCompile Include="src\World\WorldController.cpp">
       <Filter>World</Filter>
     </ClCompile>
-    <ClCompile Include="src\Render\Window\Scene.cpp" />
+    <ClCompile Include="src\World\AssetManager.cpp">
+      <Filter>World</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

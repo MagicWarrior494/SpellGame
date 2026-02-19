@@ -14,7 +14,7 @@ public:
 
 	void AddTriangle()
 	{
-		auto entity = registry.CreateEntity();
+		auto entity = registry.Create();
 
 		std::random_device rd;
 		std::mt19937 gen(rd());
