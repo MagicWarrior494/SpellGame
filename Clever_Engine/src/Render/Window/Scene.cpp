@@ -1,7 +1,6 @@
 #include "Scene.h"
 #include "World/Assets/Mesh.h"
 #include "World/Assets/Material.h"
-#include "Render/PushConstants.h"
 #include "World/ECS/Components.h"
 
 void Scene::Update()

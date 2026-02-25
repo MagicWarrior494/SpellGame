@@ -2,8 +2,8 @@
 #include "Asset.h"
 
 #include "Render/Graphics/GraphicsAPI.h"
-#include "Helper/spirv_reflect.h"
-#include "Resource.h"
+
+#include "ShaderReflected.h"
 
 #include <stdexcept>
 
@@ -13,12 +13,8 @@ public:
     ShaderHandle vertexHandle;
     ShaderHandle fragmentHandle;
 
-    ShaderMetadata metaData;
+    ShaderReflection m_Reflection;
 
-    void UploadToGPU(GraphicsAPI& api) override
-    {
-
-	}
+	PipelineLayoutHandle pipelineHandle;
 };
-
-ShaderMetadata ReflectCombinedShaders(const std::vector<uint32_t>& vertCode, const std::vector<uint32_t>& fragCode);
+ShaderReflection ReflectCombinedShaders(const std::vector<uint32_t>& vertCode, const std::vector<uint32_t>& fragCode);

@@ -9,6 +9,7 @@ struct TextureHandle { uint32_t value; };
 struct BufferHandle  { uint32_t value; };
 struct SamplerHandle { uint32_t value; };
 struct ShaderHandle  { uint32_t value; };
+struct PipelineLayoutHandle { uint32_t value; };
 
 inline bool operator==(const BufferHandle& a, const BufferHandle& b) { return a.value == b.value; }
 inline bool operator!=(const BufferHandle& a, const BufferHandle& b) { return a.value != b.value; }
@@ -18,39 +19,18 @@ inline bool operator==(const SamplerHandle& a, const SamplerHandle& b) { return 
 inline bool operator!=(const SamplerHandle& a, const SamplerHandle& b) { return a.value != b.value; }
 inline bool operator==(const ShaderHandle& a, const ShaderHandle& b) { return a.value == b.value; }
 inline bool operator!=(const ShaderHandle& a, const ShaderHandle& b) { return a.value != b.value; }
+inline bool operator==(const PipelineLayoutHandle& a, const PipelineLayoutHandle& b) { return a.value == b.value; }
+inline bool operator!=(const PipelineLayoutHandle& a, const PipelineLayoutHandle& b) { return a.value != b.value; }
 
 namespace std {
     template<> struct hash<BufferHandle>  { size_t operator()(const BufferHandle& h)  const { return hash<uint32_t>()(h.value); } };
     template<> struct hash<TextureHandle> { size_t operator()(const TextureHandle& h) const { return hash<uint32_t>()(h.value); } };
     template<> struct hash<SamplerHandle> { size_t operator()(const SamplerHandle& h) const { return hash<uint32_t>()(h.value); } };
     template<> struct hash<ShaderHandle>  { size_t operator()(const ShaderHandle& h)  const { return hash<uint32_t>()(h.value); } };
+	template<> struct hash<PipelineLayoutHandle> { size_t operator()(const PipelineLayoutHandle& h)  const { return hash<uint32_t>()(h.value); } };
 }
 
 enum class BufferUsage { Vertex, Index, Uniform, Storage };
-
-enum class ShaderStage : uint32_t
-{
-    None     = 0,
-    Vertex   = 1 << 0,
-    Fragment = 1 << 1,
-    Compute  = 1 << 2
-};
-
-inline ShaderStage operator|(ShaderStage a, ShaderStage b)
-{
-    return static_cast<ShaderStage>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
-}
-
-inline ShaderStage operator&(ShaderStage a, ShaderStage b)
-{
-    return static_cast<ShaderStage>(static_cast<uint32_t>(a) & static_cast<uint32_t>(b));
-}
-
-inline ShaderStage& operator|=(ShaderStage& a, ShaderStage b)
-{
-    a = a | b;
-    return a;
-}
 
 class Registry;
 class AssetManager;

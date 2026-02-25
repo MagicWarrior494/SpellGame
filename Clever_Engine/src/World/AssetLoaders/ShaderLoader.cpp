@@ -43,7 +43,7 @@ std::shared_ptr<Shader> ShaderLoader::LoadFromFile(std::shared_ptr<GraphicsAPI> 
     auto shader = std::make_shared<Shader>();
     shader->vertexHandle = vertHandle;
     shader->fragmentHandle = fragHandle;
-	shader->metaData = ReflectCombinedShaders(vertCode, fragCode);
+	shader->m_Reflection = ReflectCombinedShaders(vertCode, fragCode);
     
 	//Create Descriptor Layouts using Spir-v reflection data
     //Gets stored in GraphicsAPI and uses the shaderHandle as the key

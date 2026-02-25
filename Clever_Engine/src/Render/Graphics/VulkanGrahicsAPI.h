@@ -32,6 +32,8 @@ private:
     std::unordered_map<uint32_t, std::unique_ptr<Vulkan::VulkanWindow>> m_windows;
     std::unordered_map<uint32_t, Vulkan::VulkanScene> m_scenes;
 
+	std::unordered_map<ShaderHandle, Vulkan::DescriptorResult> m_descriptorResults;
+
 public:
     VulkanGraphicsAPI();
     ~VulkanGraphicsAPI() override;

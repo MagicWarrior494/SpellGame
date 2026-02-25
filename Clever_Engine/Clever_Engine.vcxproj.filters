@@ -13,6 +13,9 @@
     <Filter Include="Render\Graphics">
       <UniqueIdentifier>{A5917F05-111D-EDC9-1A2E-70BE863849CA}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Render\ResourceManagement">
+      <UniqueIdentifier>{D9B19D28-4574-D1B2-8E24-603FFA25AA90}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Render\Window">
       <UniqueIdentifier>{0C395C2A-78F9-D760-4134-21DEADB31C3D}</UniqueIdentifier>
     </Filter>
@@ -49,20 +52,14 @@
     <ClInclude Include="src\Event\Io\KeyCodes.h">
       <Filter>Event\Io</Filter>
     </ClInclude>
-    <ClInclude Include="src\Render\GlobalRenderContext.h">
-      <Filter>Render</Filter>
-    </ClInclude>
     <ClInclude Include="src\Render\Graphics\GraphicsAPI.h">
       <Filter>Render\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Graphics\VulkanGrahicsAPI.h">
       <Filter>Render\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="src\Render\PushConstants.h">
-      <Filter>Render</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Render\ResourceManager.h">
-      <Filter>Render</Filter>
+    <ClInclude Include="src\Render\ResourceManagement\PushConstants.h">
+      <Filter>Render\ResourceManagement</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Window\Scene.h">
       <Filter>Render\Window</Filter>
@@ -106,9 +103,6 @@
     <ClInclude Include="src\World\Assets\Mesh.h">
       <Filter>World\Assets</Filter>
     </ClInclude>
-    <ClInclude Include="src\World\Assets\Resource.h">
-      <Filter>World\Assets</Filter>
-    </ClInclude>
     <ClInclude Include="src\World\Assets\Shader.h">
       <Filter>World\Assets</Filter>
     </ClInclude>
@@ -124,14 +118,17 @@
     <ClInclude Include="src\World\WorldController.h">
       <Filter>World</Filter>
     </ClInclude>
+    <ClInclude Include="src\Render\ShaderProviders\GlobalProviders.h">
+      <Filter>Render\ResourceManagement</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\Assets\ShaderReflected.h">
+      <Filter>World\Assets</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Engine.cpp" />
     <ClCompile Include="src\Event\EventController.cpp">
       <Filter>Event</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Render\GlobalRenderContext.cpp">
-      <Filter>Render</Filter>
     </ClCompile>
     <ClCompile Include="src\Render\Graphics\VulkanGrahicsAPI.cpp">
       <Filter>Render\Graphics</Filter>
@@ -163,6 +160,5 @@
     <ClCompile Include="src\World\WorldController.cpp">
       <Filter>World</Filter>
     </ClCompile>
-    <ClCompile Include="src\World\Assets\Helper\spirv_reflect.c" />
   </ItemGroup>
 </Project>

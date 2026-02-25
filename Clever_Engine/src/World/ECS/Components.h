@@ -58,12 +58,12 @@ struct MeshComponent
 
 struct MaterialComponent
 {
-    std::string materialName;
+    std::shared_ptr<Material> material;
 };
 
 struct ShaderComponent
 {
-    std::string shaderName;
+    std::shared_ptr<Shader> shader;
 };
 
 struct MaterialInstanceComponent

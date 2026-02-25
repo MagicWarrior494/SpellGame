@@ -16,17 +16,16 @@ int main()
     auto& assets = engine.GetAssetManager();
 
     auto teapotMesh = assets.Get<Mesh>("models/utah_teapot.obj");
-    auto standardShader = assets.Get<Shader>("shaders/standard");
+    auto standardShader = assets.Get<Shader>("shaders/simple");
 
     auto teapotMaterial = std::make_shared<Material>(standardShader);
-    teapotMaterial->SetColor("baseColor", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
-    teapotMaterial->SetFloat("metallic", 0.0f);
-    teapotMaterial->SetFloat("roughness", 0.5f);
+    teapotMaterial->SetVector4("color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
 
     EntityID teapot = registry.Create();
     registry.Set<Transform>(teapot, Transform{});
     registry.Set<MeshComponent>(teapot, MeshComponent{ teapotMesh->GetName() });
-    registry.Set<MaterialInstanceComponent>(teapot, MaterialInstanceComponent{ teapotMaterial });
+	registry.Set<MaterialComponent>(teapot, MaterialComponent{ teapotMaterial });
+	registry.Set<ShaderComponent>(teapot, ShaderComponent{ standardShader });
 
     while (window.IsAlive())
     {

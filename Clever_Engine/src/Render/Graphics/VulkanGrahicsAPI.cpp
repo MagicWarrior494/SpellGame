@@ -91,7 +91,7 @@ BufferHandle VulkanGraphicsAPI::CreateBuffer(size_t size, BufferUsage usage)
     buffer.usageFlags = ToVkBufferUsage(usage) | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     buffer.memoryFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-    buffer.Create(*m_vulkanCore);
+	buffer.Create(m_vulkanCore.get(), buffer.capacity, buffer.usageFlags, buffer.memoryFlags);
 
     const uint32_t handle = m_nextHandle++;
     m_buffers.emplace(handle, std::move(buffer));
@@ -119,8 +119,7 @@ void VulkanGraphicsAPI::UpdateBuffer(BufferHandle bufferHandle, const void* data
     {
         throw std::runtime_error("UpdateBuffer: sizeInBytes exceeds buffer capacity.");
     }
-
-    buffer.Update(*m_vulkanCore, data, sizeInBytes);
+	buffer.Update(m_vulkanCore.get(), data, sizeInBytes);
 }
 
 ShaderHandle VulkanGraphicsAPI::CreateShader(ShaderStage /*stage*/, const std::vector<uint32_t>& code)
@@ -297,18 +296,13 @@ void VulkanGraphicsAPI::RenderScene(uint32_t sceneId, Registry& registry, AssetM
     Vulkan::VulkanScene& scene = it->second;
 
     auto& meshes = registry.GetAllComponents<MeshComponent>();
-    auto& materials = registry.GetAllComponents<MaterialInstanceComponent>();
+    auto& shaders = registry.GetAllComponents<Shader>();
+    auto& materials = registry.GetAllComponents<Material>();
 
     for (const auto& [entity, meshComp] : meshes)
     {
         auto matIt = materials.find(entity);
         if (matIt == materials.end())
-        {
-            continue;
-        }
-
-        const auto& matInst = matIt->second;
-        if (!matInst.material)
         {
             continue;
         }

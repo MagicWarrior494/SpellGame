@@ -13,7 +13,7 @@ Engine::Engine() :
     m_graphicsAPI = std::make_shared<VulkanGraphicsAPI>();
 #elif defined(OPENGL)
 #endif
-    m_AssetManager.SetAssetRoot("D:/Projects/SpellGame_Solution/Assets");
+    m_AssetManager.SetAssetRoot("C:/Projects/Spellgame");
     m_AssetManager.SetGraphicsAPI(m_graphicsAPI);
 }
 
