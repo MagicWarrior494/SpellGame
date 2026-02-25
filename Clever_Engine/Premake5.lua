@@ -25,6 +25,7 @@ project "Clever_Engine"
         "Dependencies/tinyobjloader",
         "Dependencies/spdlog/include/spdlog",
         "Dependencies/GLFW/include",
+        "Dependencies/SPIRV-Headers/include",
         os.getenv("VULKAN_SDK") .. "/Include",
         "Vulkan/src"
     }

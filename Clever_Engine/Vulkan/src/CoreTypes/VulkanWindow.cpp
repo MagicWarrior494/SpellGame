@@ -187,7 +187,7 @@ namespace Vulkan
 
         for (auto& imageframe : sceneImages) {
             for (auto& image : imageframe) {
-                image.Destory(vulkanCore->vkDevice);
+                image.Destroy(vulkanCore->vkDevice);
             }
         }
 
@@ -199,7 +199,7 @@ namespace Vulkan
 
         // Depth images ARE created by you, so they MUST be destroyed.
         for (auto& img : surfaceDepthImages) {
-            img.Destory(vulkanCore->vkDevice);
+            img.Destroy(vulkanCore->vkDevice);
         }
 
         if (offscreenSampler != VK_NULL_HANDLE) {

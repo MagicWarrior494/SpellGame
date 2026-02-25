@@ -14,7 +14,7 @@ namespace Vulkan
         Offscreen  // Render to offscreen image(s)
     };
 
-    VkRenderPass CreateRenderPass(
+    inline VkRenderPass CreateRenderPass(
         VulkanCore* vulkanCore,
         VkFormat colorFormat,
         bool useDepth,

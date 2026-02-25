@@ -1,59 +1,45 @@
 #pragma once
-#include <glm.hpp>
+#include <vulkan/vulkan.h>
+#include <memory>
+#include <vector>
 
-#include "CoreTypes/VulkanWindow.h"
+#include "CoreTypes/VulkanCore.h"
+#include "Image/VulkanImage.h"
 
 namespace Vulkan
 {
-	class ISceneSystem {
-	public:
-		virtual void Record(
-			VkCommandBuffer cmd,
-			uint32_t frameIndex,
-			const ResourceMap& resources, // Map of Buffers/Images
-			const DescriptorResult& descriptors
-		) = 0;
-	};
+    class VulkanWindow;
 
-	class VulkanScene
-	{
-	public:
-		VulkanScene(std::shared_ptr<VulkanCore> vulkanCore, int width, int height, int xpos, int ypos, VulkanWindow* parentWindow);
-		~VulkanScene();
+    class VulkanScene
+    {
+    public:
+        VulkanScene(std::shared_ptr<VulkanCore> vulkanCore, int width, int height, int xpos, int ypos, VulkanWindow* parentWindow);
+        ~VulkanScene();
 
-		bool Render();
+        VkCommandBuffer BeginFrame(uint32_t frameIndex);
+        void EndFrame(VkCommandBuffer cmd);
 
-		void ConstructPipeline(
-			VulkanCore* VC,
-			PipelineInfo& info,
-			const ResourceMap& resourceMap);
+        VkRenderPass GetRenderPass() const { return sceneRenderPass; }
+        VkExtent2D GetExtent() const { return VkExtent2D{ width, height }; }
 
-	public:
-		uint8_t m_sceneId;
-		uint32_t width = 600;
-		uint32_t height = 400;
-		int32_t xoffset = 0;//Of Surface
-		int32_t yoffset = 0;//Of Surface
+    private:
+        std::shared_ptr<VulkanCore> vulkanCore = nullptr;
+        VulkanWindow* parentWindow = nullptr;
 
-		uint8_t* imageFrameCounter = 0;
+        uint32_t width = 0;
+        uint32_t height = 0;
 
-		VkRenderPass sceneRenderPass = VK_NULL_HANDLE;
+        int renderImageIndex = 0;
 
-		std::vector<VulkanImage> scenedepthAttachment{};
+        VkRenderPass sceneRenderPass = VK_NULL_HANDLE;
+        std::vector<VulkanImage> scenedepthAttachment{};
+        std::vector<VkFramebuffer> sceneFrameBuffers{};
 
-		std::vector<VkFramebuffer>  sceneFrameBuffers{};
+        std::vector<VkSemaphore> sceneImageAvailableSemaphores{};
+        std::vector<VkSemaphore> sceneRenderFinishedSemaphores{};
+        std::vector<VkFence> sceneFences{};
 
-		VkPipelineLayout scenePipelineLayout = VK_NULL_HANDLE;
-		VkPipeline scenePipeline = VK_NULL_HANDLE;
-		DescriptorResult sceneDescriptorResult{};
-		
-		std::vector<VkSemaphore> sceneImageAvailableSemaphores{};
-		std::vector<VkSemaphore> sceneRenderFinishedSemaphores{};
-		std::vector<VkFence> sceneFences{};
-	private:
-		std::shared_ptr<VulkanCore> vulkanCore = nullptr;
-
-		VulkanWindow* parentWindow = nullptr;
-		int renderImageIndex = 0;//The index of SceneImages in the parents window
-	};
+        VkCommandPool sceneCommandPool = VK_NULL_HANDLE;
+        std::vector<VkCommandBuffer> sceneCommandBuffers{};
+    };
 }

@@ -8,6 +8,8 @@
 #include "World/WorldController.h"
 #include "World/AssetManager.h"
 
+#include "World/Assets/AssetIncluder.h"
+
 #include <stdexcept>
 #include <map>
 #include <memory>
@@ -16,28 +18,32 @@
 class Engine
 {
 public:
-	Engine();
+    Engine();
 
-	void SetUp(std::string setUpFilePath);
+    void SetUp(std::string setUpFilePath);
 
-	//Default Setup
-	void SetUp();
+    //Default Setup
+    void SetUp();
+    void Tick();
+    void BeginFrame();
+    void EndFrame();
+    void Shutdown();
 
-	void Tick();
+    Window& CreateWindow(const std::string& title, int width, int height);
+    Scene& CreateScene(uint32_t graphicsWindowId, int width, int height);
 
-	Window& CreateWindow(const std::string& title, int width, int height);
-	Scene& CreateScene(int windowId, int width, int height);
+    AssetManager& GetAssetManager() { return m_AssetManager; }
 
-	AssetManager& GetAssetManager() { return m_AssetManager; }
-
-	void Terminate();
 private:
-	std::map<int, std::unique_ptr<Window>> m_windows;
-	std::map<int, std::unique_ptr<Scene>> m_scenes;
+    std::map<int, std::unique_ptr<Window>> m_windows;
+    std::map<int, std::unique_ptr<Scene>> m_scenes;
 
-	std::unique_ptr<GraphicsAPI> m_graphicsAPI;
+    std::shared_ptr<GraphicsAPI> m_graphicsAPI;
 
-	AssetManager m_AssetManager;
-	WorldController m_WorldController;
-	std::string m_SetUpFilePath;
+    AssetManager m_AssetManager;
+    WorldController m_WorldController;
+    std::string m_SetUpFilePath;
+    
+    // Add scene ID counter
+    int m_nextSceneId = 0;
 };

@@ -1,15 +1,19 @@
 #pragma once
+#include <string>
 #include <glm.hpp>
+#include <memory>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <gtc/matrix_transform.hpp>
 #include <gtx/quaternion.hpp>
 
-struct Camera
+class Material;
+
+struct CameraComponent
 {
     glm::vec3 position{ 0.0f, 0.0f, 5.0f };
     glm::quat rotation = glm::identity<glm::quat>();
-    Camera()
+    CameraComponent()
     {
         glm::quat qYaw = glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0));
         glm::quat qPitch = glm::angleAxis(glm::radians(pitch), glm::vec3(1, 0, 0));
@@ -20,37 +24,49 @@ struct Camera
     float moveSpeed = 150.0f;
     float sensitivity = 0.4f;
 
-    // Field of View in degrees (usually 45.0f to 90.0f)
     float fov = 90.0f;
-
-    // Window Width / Window Height
-    float aspectRatio = (float)960 / (float)540; // Default 16:9
-
-    // The closest distance the camera can see (don't use 0.0f!)
+    float aspectRatio = (float)960 / (float)540;
     float nearPlane = 0.1f;
-
-    // The furthest distance the camera can see
     float farPlane = 1000.0f;
 
-    // Optional: Perspective vs Orthographic toggle
     bool isPerspective = true;
-
-    // Optional: Orthographic scale (used if isPerspective is false)
     float orthoSize = 10.0f;
 
-    // Rotate the standard world axes by our rotation quaternion
-    glm::vec3 GetForward() const {
-        // Rotates (0,0,-1) by the quaternion
-        return rotation * glm::vec3(0.0f, 0.0f, -1.0f);
-    }
+    glm::vec3 GetForward() const { return rotation * glm::vec3(0.0f, 0.0f, -1.0f); }
+    glm::vec3 GetUp() const { return rotation * glm::vec3(0.0f, 1.0f, 0.0f); }
+    glm::vec3 GetRight() const { return rotation * glm::vec3(1.0f, 0.0f, 0.0f); }
+};
 
-    glm::vec3 GetUp() const {
-        // Rotates (0,1,0) by the quaternion
-        return rotation * glm::vec3(0.0f, 1.0f, 0.0f);
+struct Transform
+{
+    glm::vec3 position{ 0.0f, 0.0f, 0.0f };
+    glm::quat rotation = glm::identity<glm::quat>();
+    glm::vec3 scale{ 1.0f, 1.0f, 1.0f };
+    glm::mat4 GetModelMatrix() const
+    {
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
+        model *= glm::toMat4(rotation);
+        model = glm::scale(model, scale);
+        return model;
     }
+};
 
-    glm::vec3 GetRight() const {
-        // Rotates (1,0,0) by the quaternion
-        return rotation * glm::vec3(1.0f, 0.0f, 0.0f);
-    }
+struct MeshComponent
+{
+    std::string assetName;
+};
+
+struct MaterialComponent
+{
+    std::string materialName;
+};
+
+struct ShaderComponent
+{
+    std::string shaderName;
+};
+
+struct MaterialInstanceComponent
+{
+    std::shared_ptr<Material> material;
 };

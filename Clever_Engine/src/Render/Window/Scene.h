@@ -1,9 +1,11 @@
 #pragma once
 #include <cstdint>
 #include <iostream>
+#include <memory>
+#include <vector>
 
 #include <glm.hpp>
-#include <gtc/matrix_transform.hpp> // Required for glm::lookAt and glm::perspective
+#include <gtc/matrix_transform.hpp>
 
 #include "World/WorldController.h"
 #include "Event/EventController.h"
@@ -11,46 +13,57 @@
 #include "Render/Graphics/GraphicsAPI.h"
 #include "World/ECS/Registry.h"
 #include "Scene/RenderStage.h"
-
 #include "Render/Window/WindowControls.h"
+#include "World/AssetManager.h"
 
 struct SceneCreationInfo {
-    uint8_t windowID;
-	uint8_t sceneID;
-    uint32_t width;
-    uint32_t height;
-    int posx;
-    int posy;
-    int zIndex = 1; // Default Z-Index for input priority
+    uint32_t graphicsWindowId = 0;
+    uint32_t graphicsSceneId = 0;
+
+    uint32_t width = 0;
+    uint32_t height = 0;
+    int posx = 0;
+    int posy = 0;
+    int zIndex = 1;
 };
 
 class Scene : public IInputLayer
 {
 public:
-    Scene(GraphicsAPI* graphicsAPI, SceneCreationInfo info)
+    Scene(GraphicsAPI* graphicsAPI, AssetManager* assetManager, SceneCreationInfo info)
         : m_GraphicsAPI(graphicsAPI)
+        , m_AssetManager(assetManager)
+        , m_SceneInfo(info)
+        , m_GraphicsSceneId(info.graphicsSceneId)
     {
-        //graphicsAPI.CreateScene();
-	}
+        m_Registry = std::make_unique<Registry>();
+    }
 
     void Update();
+    void Render();
+    void ExecuteRenderStage(const RenderStage& stage);
 
-	void Render();
-
-	Registry& GetRegistry() { return *m_Registry; }
+    Registry& GetRegistry() { return *m_Registry; }
+    const SceneCreationInfo& GetSceneInfo() const { return m_SceneInfo; }
+    uint32_t GetGraphicsSceneId() const { return m_GraphicsSceneId; }
 
     virtual void OnInput(InputEvent& event) override
     {
         if (event.type == InputEvent::Type::Key &&
             (event.action == Input::Action::PRESS || event.action == Input::Action::REPEAT))
-        {}
+        {
+        }
     }
 
-private:
-	SceneCreationInfo m_SceneInfo;
-    
-	std::vector<RenderStage> m_RenderStages;//This should be rendered starting from the front
+    virtual int GetZIndex() const override { return m_SceneInfo.zIndex; }
 
-	std::unique_ptr<Registry> m_Registry = nullptr;
-	GraphicsAPI* m_GraphicsAPI = nullptr;
+private:
+    SceneCreationInfo m_SceneInfo;
+    uint32_t m_GraphicsSceneId = 0;
+
+    std::vector<RenderStage> m_RenderStages;
+
+    std::unique_ptr<Registry> m_Registry;
+    GraphicsAPI* m_GraphicsAPI = nullptr;
+    AssetManager* m_AssetManager = nullptr;
 };

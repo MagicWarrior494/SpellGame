@@ -5,20 +5,63 @@
 #include <string>
 #include <GLFW/glfw3.h>
 
-using TextureHandle = uint32_t;
-using BufferHandle = uint32_t;
-using ShaderHandle = uint32_t;
+struct TextureHandle { uint32_t value; };
+struct BufferHandle  { uint32_t value; };
+struct SamplerHandle { uint32_t value; };
+struct ShaderHandle  { uint32_t value; };
+
+inline bool operator==(const BufferHandle& a, const BufferHandle& b) { return a.value == b.value; }
+inline bool operator!=(const BufferHandle& a, const BufferHandle& b) { return a.value != b.value; }
+inline bool operator==(const TextureHandle& a, const TextureHandle& b) { return a.value == b.value; }
+inline bool operator!=(const TextureHandle& a, const TextureHandle& b) { return a.value != b.value; }
+inline bool operator==(const SamplerHandle& a, const SamplerHandle& b) { return a.value == b.value; }
+inline bool operator!=(const SamplerHandle& a, const SamplerHandle& b) { return a.value != b.value; }
+inline bool operator==(const ShaderHandle& a, const ShaderHandle& b) { return a.value == b.value; }
+inline bool operator!=(const ShaderHandle& a, const ShaderHandle& b) { return a.value != b.value; }
+
+namespace std {
+    template<> struct hash<BufferHandle>  { size_t operator()(const BufferHandle& h)  const { return hash<uint32_t>()(h.value); } };
+    template<> struct hash<TextureHandle> { size_t operator()(const TextureHandle& h) const { return hash<uint32_t>()(h.value); } };
+    template<> struct hash<SamplerHandle> { size_t operator()(const SamplerHandle& h) const { return hash<uint32_t>()(h.value); } };
+    template<> struct hash<ShaderHandle>  { size_t operator()(const ShaderHandle& h)  const { return hash<uint32_t>()(h.value); } };
+}
+
+enum class BufferUsage { Vertex, Index, Uniform, Storage };
+
+enum class ShaderStage : uint32_t
+{
+    None     = 0,
+    Vertex   = 1 << 0,
+    Fragment = 1 << 1,
+    Compute  = 1 << 2
+};
+
+inline ShaderStage operator|(ShaderStage a, ShaderStage b)
+{
+    return static_cast<ShaderStage>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
+}
+
+inline ShaderStage operator&(ShaderStage a, ShaderStage b)
+{
+    return static_cast<ShaderStage>(static_cast<uint32_t>(a) & static_cast<uint32_t>(b));
+}
+
+inline ShaderStage& operator|=(ShaderStage& a, ShaderStage b)
+{
+    a = a | b;
+    return a;
+}
+
+class Registry;
+class AssetManager;
 
 class GraphicsAPI
 {
 public:
-	GraphicsAPI() = default;
-	virtual ~GraphicsAPI() = default;
+    GraphicsAPI() = default;
+    virtual ~GraphicsAPI() = default;
 
-	enum class BufferUsage { Vertex, Index, Uniform, Storage };
-    enum class ShaderStage { Vertex, Fragment, Compute };
     enum class TextureFormat { RGBA8, R32_FLOAT, SRGB8, Depth32, FloatingPoint16 };
-
     enum class SamplerFilterMode { Linear, Nearest };
     enum class SamplerWrapMode { Repeat, Clamp };
 
@@ -34,46 +77,35 @@ public:
         SamplerWrapMode wrap;
     };
 
-	virtual BufferHandle CreateBuffer(size_t size, BufferUsage usage) = 0;
+    virtual BufferHandle CreateBuffer(size_t size, BufferUsage usage) = 0;
     virtual void UpdateBuffer(BufferHandle bufferHandle, const void* data, size_t sizeInBytes) = 0;
+    virtual void DeleteBuffer(BufferHandle bufferHandle) = 0;
 
-    template<typename T>
-    void UpdateCustomBuffer(BufferHandle bufferHandle, const std::vector<T>& dataList) {
-        size_t calculatedSize = dataList.size() * sizeof(T);
-        UpdateBuffer(bufferHandle, dataList.data(), calculatedSize);
-    }
-	virtual void DeleteBuffer(BufferHandle bufferHandle) = 0;
-
-    virtual ShaderHandle CreateShader(ShaderStage stage, const std::vector<char>& code) = 0;
+    virtual ShaderHandle CreateShader(ShaderStage stage, const std::vector<uint32_t>& code) = 0;
     virtual void DeleteShader(ShaderHandle shaderHandle) = 0;
 
-    virtual void AssignBufferToShader(ShaderHandle shaderHandle, uint32_t resourceHandle) = 0;
-    virtual void AssignTextureToShader(ShaderHandle shaderHandle, uint32_t resourceHandle) = 0;
-    virtual void AssignSamplerToShader(ShaderHandle shaderHandle, uint32_t resourceHandle) = 0;
-
     virtual TextureHandle CreateTexture(const TextureDescriptor& desc) = 0;
-
-    // Note: used void* here because texture data is usually loaded 
-    // from a library like stb_image as a raw byte array.
     virtual void UploadTextureData(TextureHandle textureHandle, const void* data, size_t sizeInBytes) = 0;
-    virtual void UpdateTexture(uint32_t textureHandle, const void* data, size_t sizeInBytes) = 0;
-	virtual void UpdateTextureRegion(TextureHandle textureHandle, uint32_t xOffset, uint32_t yOffset, uint32_t width, uint32_t height, const void* data, size_t sizeInBytes) = 0;
+    virtual void UpdateTexture(TextureHandle textureHandle, const void* data, size_t sizeInBytes) = 0;
+    virtual void UpdateTextureRegion(TextureHandle textureHandle, uint32_t xOffset, uint32_t yOffset, uint32_t width, uint32_t height, const void* data, size_t sizeInBytes) = 0;
     virtual void DeleteTexture(TextureHandle textureHandle) = 0;
 
-    virtual uint32_t CreateSampler(const SamplerDescriptor& desc) = 0;
-    virtual void DeleteSampler(uint32_t samplerHandle) = 0;
+    virtual SamplerHandle CreateSampler(const SamplerDescriptor& desc) = 0;
+    virtual void DeleteSampler(SamplerHandle samplerHandle) = 0;
 
-	//Window related functions
     virtual uint32_t CreateWindow(GLFWwindow* glfwWindow) = 0;
     virtual void ResizeWindow(uint32_t windowId, int width, int height) = 0;
     virtual void CloseWindow(uint32_t windowId) = 0;
     virtual void RenderWindow(uint32_t windowId) = 0;
 
-	//Scene related functions
-	virtual uint32_t CreateScene(uint32_t WindowId) = 0;
+    virtual uint32_t CreateScene(uint32_t windowId) = 0;
+    virtual void RenderScene(uint32_t sceneId, Registry& registry, AssetManager& assetManager) = 0;
+
     virtual void MoveScene(uint32_t sceneId, int x, int y) = 0;
-	virtual void ResizeScene(uint32_t sceneId, uint32_t width, uint32_t height) = 0;
-	virtual void DeleteScene(uint32_t sceneId) = 0;
-	virtual void SetSceneZIndex(uint32_t sceneId, int zIndex) = 0;
-	virtual void MoveSceneToWindow(uint32_t sceneId, uint32_t newWindowId) = 0;
+    virtual void ResizeScene(uint32_t sceneId, uint32_t width, uint32_t height) = 0;
+    virtual void DeleteScene(uint32_t sceneId) = 0;
+    virtual void SetSceneZIndex(uint32_t sceneId, int zIndex) = 0;
+    virtual void MoveSceneToWindow(uint32_t sceneId, uint32_t newWindowId) = 0;
+
+
 };

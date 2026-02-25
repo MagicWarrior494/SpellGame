@@ -14,6 +14,7 @@ cloneIfMissing("stb",          "https://github.com/nothings/stb.git",           
 cloneIfMissing("tinyobjloader","https://github.com/tinyobjloader/tinyobjloader.git", deps .. "/tinyobjloader")
 cloneIfMissing("spdlog",       "https://github.com/gabime/spdlog.git",            deps .. "/spdlog")
 cloneIfMissing("glfw",         "https://github.com/glfw/glfw.git",                deps .. "/GLFW")
+cloneIfMissing("spirv",        "https://github.com/KhronosGroup/SPIRV-Headers.git", deps .. "/SPIRV-Headers")
 
 workspace "SpellGame_Solution"
     architecture "x64"

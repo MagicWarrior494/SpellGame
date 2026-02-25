@@ -29,7 +29,7 @@ namespace Vulkan
 
 		ImageType type = ImageType::Undefined;
 
-		void Destory(VkDevice& device) {
+		void Destroy(VkDevice& device) {
 			if (view != VK_NULL_HANDLE) {
 				vkDestroyImageView(device, view, nullptr);
 				view = VK_NULL_HANDLE;

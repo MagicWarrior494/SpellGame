@@ -13,9 +13,6 @@
     <Filter Include="Render\Graphics">
       <UniqueIdentifier>{A5917F05-111D-EDC9-1A2E-70BE863849CA}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Render\Object">
-      <UniqueIdentifier>{AB193217-17DA-AD4D-E014-F7CA4C94F229}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Render\Window">
       <UniqueIdentifier>{0C395C2A-78F9-D760-4134-21DEADB31C3D}</UniqueIdentifier>
     </Filter>
@@ -27,6 +24,15 @@
     </Filter>
     <Filter Include="World">
       <UniqueIdentifier>{4D25640E-B939-8CBF-82BB-2F1FEE8E88F0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\AssetLoaders">
+      <UniqueIdentifier>{C63A630C-B21E-2462-1B7F-1EB507820EE4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\Assets">
+      <UniqueIdentifier>{8FD367CB-7B36-F76F-24BC-2F2610FEC2F2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\Assets\Helper">
+      <UniqueIdentifier>{1EBF071E-8A20-E52B-138E-2BDE7FEE1BEB}</UniqueIdentifier>
     </Filter>
     <Filter Include="World\ECS">
       <UniqueIdentifier>{17F87A43-8362-2FBA-CCA0-E05F384A0D0F}</UniqueIdentifier>
@@ -43,20 +49,17 @@
     <ClInclude Include="src\Event\Io\KeyCodes.h">
       <Filter>Event\Io</Filter>
     </ClInclude>
+    <ClInclude Include="src\Render\GlobalRenderContext.h">
+      <Filter>Render</Filter>
+    </ClInclude>
     <ClInclude Include="src\Render\Graphics\GraphicsAPI.h">
       <Filter>Render\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Graphics\VulkanGrahicsAPI.h">
       <Filter>Render\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="src\Render\Object\Element.h">
-      <Filter>Render\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Render\Object\ElementSetUps.h">
-      <Filter>Render\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Render\Object\UIElement.h">
-      <Filter>Render\Object</Filter>
+    <ClInclude Include="src\Render\PushConstants.h">
+      <Filter>Render</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\ResourceManager.h">
       <Filter>Render</Filter>
@@ -79,6 +82,39 @@
     <ClInclude Include="src\Render\Window\WindowControls.h">
       <Filter>Render\Window</Filter>
     </ClInclude>
+    <ClInclude Include="src\World\AssetLoaders\Meshloader.h">
+      <Filter>World\AssetLoaders</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\AssetLoaders\ShaderLoader.h">
+      <Filter>World\AssetLoaders</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\AssetManager.h">
+      <Filter>World</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\Assets\Asset.h">
+      <Filter>World\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\Assets\AssetIncluder.h">
+      <Filter>World\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\Assets\Helper\spirv_reflect.h">
+      <Filter>World\Assets\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\Assets\Material.h">
+      <Filter>World\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\Assets\Mesh.h">
+      <Filter>World\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\Assets\Resource.h">
+      <Filter>World\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\Assets\Shader.h">
+      <Filter>World\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\Assets\Vertex.h">
+      <Filter>World\Assets</Filter>
+    </ClInclude>
     <ClInclude Include="src\World\ECS\Components.h">
       <Filter>World\ECS</Filter>
     </ClInclude>
@@ -88,20 +124,17 @@
     <ClInclude Include="src\World\WorldController.h">
       <Filter>World</Filter>
     </ClInclude>
-    <ClInclude Include="src\World\AssetManager.h">
-      <Filter>World</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Engine.cpp" />
     <ClCompile Include="src\Event\EventController.cpp">
       <Filter>Event</Filter>
     </ClCompile>
+    <ClCompile Include="src\Render\GlobalRenderContext.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
     <ClCompile Include="src\Render\Graphics\VulkanGrahicsAPI.cpp">
       <Filter>Render\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Render\Object\Element.cpp">
-      <Filter>Render\Object</Filter>
     </ClCompile>
     <ClCompile Include="src\Render\Window\Scene.cpp">
       <Filter>Render\Window</Filter>
@@ -112,11 +145,24 @@
     <ClCompile Include="src\Render\Window\Window.cpp">
       <Filter>Render\Window</Filter>
     </ClCompile>
-    <ClCompile Include="src\World\WorldController.cpp">
-      <Filter>World</Filter>
+    <ClCompile Include="src\World\AssetLoaders\Meshloader.cpp">
+      <Filter>World\AssetLoaders</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World\AssetLoaders\ShaderLoader.cpp">
+      <Filter>World\AssetLoaders</Filter>
     </ClCompile>
     <ClCompile Include="src\World\AssetManager.cpp">
       <Filter>World</Filter>
     </ClCompile>
+    <ClCompile Include="src\World\Assets\Material.cpp">
+      <Filter>World\Assets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World\Assets\Shader.cpp">
+      <Filter>World\Assets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World\WorldController.cpp">
+      <Filter>World</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World\Assets\Helper\spirv_reflect.c" />
   </ItemGroup>
 </Project>

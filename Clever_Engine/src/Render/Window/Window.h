@@ -16,7 +16,7 @@ public:
     ~Window() = default;
 
     // Standard Logic
-    bool ShouldWindowClose();
+    bool IsAlive();
     void CloseWindow();
     void Update();
     void Render();
@@ -26,6 +26,7 @@ public:
 
     // --- Getters ---
     int GetWindowID() const { return m_WindowID; }
+    uint32_t GetGraphicsWindowID() const { return m_GraphicsWindowID; }
     GLFWwindow* GetGLFWWindowPtr() const { return m_pGLFWWindow; }
 	glm::vec2 GetWindowSize() const { return glm::vec2(static_cast<float>(m_Width), static_cast<float>(m_Height)); }
 	glm::vec2 GetWindowPosition() const { return glm::vec2(static_cast<float>(m_PosX), static_cast<float>(m_PosY)); }
@@ -46,15 +47,13 @@ private:
     int m_PosX;
     int m_PosY;
 
-	std::vector<int> m_SceneIDs; // IDs of scenes associated with this window
+    std::vector<int> m_SceneIDs; // IDs of scenes associated with this window
 
     GLFWwindow* m_pGLFWWindow = nullptr;
-
-	//std::vector<Scene*> m_Scenes; // Scenes associated with this window
 
     // Controllers Owned by the Window
     std::unique_ptr<EventController> m_EventController;
 
-	uint32_t m_GraphicsWindowID = 0; // ID for the GraphicsAPI to reference this window
+    uint32_t m_GraphicsWindowID = 0; // ID for the GraphicsAPI to reference this window
 	GraphicsAPI* m_GraphicsAPI; // Assume this is set externally, or you can initialize it here
 };

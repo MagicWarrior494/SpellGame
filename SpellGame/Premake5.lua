@@ -28,6 +28,7 @@ project "SpellGame"
         "../Clever_Engine/Dependencies/tinyobjloader",
         "../Clever_Engine/Dependencies/spdlog/include/spdlog",
         "../Clever_Engine/Dependencies/GLFW/include",
+        "../Clever_Engine/Dependencies/SPIRV-Headers/include",
         os.getenv("VULKAN_SDK") .. "/Include"
     }
 

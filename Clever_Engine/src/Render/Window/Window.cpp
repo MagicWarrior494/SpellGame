@@ -1,6 +1,7 @@
 #include "Window.h"
 #include <iostream>
 
+// Update constructor to match the new signature
 Window::Window(GraphicsAPI* graphicsAPI, std::string title,
     int width, int height, int posx, int posy)
     : m_GraphicsAPI(graphicsAPI), m_Title(title), m_Width(width), m_Height(height), m_PosX(posx), m_PosY(posy)
@@ -9,8 +10,8 @@ Window::Window(GraphicsAPI* graphicsAPI, std::string title,
     m_EventController->AttachLayer(this);
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); // Crucial for Vulkan
-    
-	//TODO add window flags to the constructor and use them here
+
+    //TODO add window flags to the constructor and use them here
     //glfwWindowHint(GLFW_RESIZABLE, (flags & Vulkan::SurfaceFlags::Resizeable) != Vulkan::SurfaceFlags::None ? GLFW_TRUE : GLFW_FALSE);
     //glfwWindowHint(GLFW_DECORATED, (flags & Vulkan::SurfaceFlags::Fullscreenable) != Vulkan::SurfaceFlags::None ? GLFW_TRUE : GLFW_FALSE);
 
@@ -22,17 +23,11 @@ Window::Window(GraphicsAPI* graphicsAPI, std::string title,
         throw std::runtime_error("Failed to create GLFW window for WindowID: " + std::to_string(m_WindowID));
     }
 
-    /*if ((flags & Vulkan::SurfaceFlags::Fullscreen) != Vulkan::SurfaceFlags::None) {
-        glfwSetWindowMonitor(m_pGLFWWindow, monitor, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
-    }*/
-
-    else {
-        if (m_PosX == 0 && m_PosY == 0) {
-            m_PosX = mode->width / 4;
-            m_PosY = mode->height / 4;
-        }
-        glfwSetWindowMonitor(m_pGLFWWindow, nullptr, m_PosX, m_PosY, m_Width, m_Height, GLFW_DONT_CARE);
+    if (m_PosX == 0 && m_PosY == 0) {
+        m_PosX = mode->width / 4;
+        m_PosY = mode->height / 4;
     }
+    glfwSetWindowMonitor(m_pGLFWWindow, nullptr, m_PosX, m_PosY, m_Width, m_Height, GLFW_DONT_CARE);
 
     glfwShowWindow(m_pGLFWWindow);
 
@@ -41,6 +36,8 @@ Window::Window(GraphicsAPI* graphicsAPI, std::string title,
 
     m_GraphicsWindowID = m_GraphicsAPI->CreateWindow(m_pGLFWWindow);
 }
+
+// Rest of the file remains the same...
 
 void Window::OnInput(InputEvent& event)
 {
@@ -140,10 +137,9 @@ void Window::Render() {
 	m_GraphicsAPI->RenderWindow(m_GraphicsWindowID);
 }
 
-bool Window::ShouldWindowClose()
+bool Window::IsAlive()
 {
-	bool result = glfwWindowShouldClose(m_pGLFWWindow);
-    return result;
+	return glfwWindowShouldClose(m_pGLFWWindow) == 0;
 }
 
 void Window::CloseWindow() {

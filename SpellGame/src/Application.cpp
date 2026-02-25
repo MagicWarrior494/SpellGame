@@ -1,26 +1,37 @@
 #include "Engine.h"
 
+#include "World/Assets/Mesh.h"
+#include "World/Assets/Shader.h"
+#include "World/Assets/Material.h"
+#include "World/ECS/Components.h"
+
 int main()
 {
     Engine engine{};
-
     Window& window = engine.CreateWindow("SpellGame", 800, 600);
-    Scene& scene = engine.CreateScene(window.GetWindowID(), 400, 300);
+
+    Scene& scene = engine.CreateScene(window.GetGraphicsWindowID(), 400, 300);
 
     Registry& registry = scene.GetRegistry();
     auto& assets = engine.GetAssetManager();
 
-    auto teapotMesh = assets.LoadAsset<Mesh>("utah_teapot");
+    auto teapotMesh = assets.Get<Mesh>("models/utah_teapot.obj");
+    auto standardShader = assets.Get<Shader>("shaders/standard");
+
+    auto teapotMaterial = std::make_shared<Material>(standardShader);
+    teapotMaterial->SetColor("baseColor", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
+    teapotMaterial->SetFloat("metallic", 0.0f);
+    teapotMaterial->SetFloat("roughness", 0.5f);
 
     EntityID teapot = registry.Create();
-    registry.Add<Transform>(teapot);
-    registry.Set<Mesh>(teapot, Mesh{ teapotMesh });
+    registry.Set<Transform>(teapot, Transform{});
+    registry.Set<MeshComponent>(teapot, MeshComponent{ teapotMesh->GetName() });
+    registry.Set<MaterialInstanceComponent>(teapot, MaterialInstanceComponent{ teapotMaterial });
 
     while (window.IsAlive())
     {
         engine.BeginFrame();
-
-        scene.Render();   // explicit
+        scene.Render();
         engine.EndFrame();
     }
 

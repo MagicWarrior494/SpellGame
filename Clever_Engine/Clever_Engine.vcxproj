@@ -55,7 +55,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>src;Dependencies\glm\glm;Dependencies\stb_image;Dependencies\tinyobjloader;Dependencies\spdlog\include\spdlog;Dependencies\GLFW\include;C:\VulkanSDK\1.4.335.0\Include;Vulkan\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;Dependencies\glm\glm;Dependencies\stb_image;Dependencies\tinyobjloader;Dependencies\spdlog\include\spdlog;Dependencies\GLFW\include;Dependencies\SPIRV-Headers\include;C:\VulkanSDK\1.3.231.1\Include;Vulkan\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -68,7 +68,7 @@
     </Link>
     <Lib>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>Dependencies\GLFW\lib-vc2022;C:\VulkanSDK\1.4.335.0\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>Dependencies\GLFW\lib-vc2022;C:\VulkanSDK\1.3.231.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
     <PreBuildEvent>
       <Command>IF NOT EXIST Docs (mkdir Docs)</Command>
@@ -81,7 +81,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>src;Dependencies\glm\glm;Dependencies\stb_image;Dependencies\tinyobjloader;Dependencies\spdlog\include\spdlog;Dependencies\GLFW\include;C:\VulkanSDK\1.4.335.0\Include;Vulkan\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;Dependencies\glm\glm;Dependencies\stb_image;Dependencies\tinyobjloader;Dependencies\spdlog\include\spdlog;Dependencies\GLFW\include;Dependencies\SPIRV-Headers\include;C:\VulkanSDK\1.3.231.1\Include;Vulkan\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -98,20 +98,18 @@
     </Link>
     <Lib>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>Dependencies\GLFW\lib-vc2022;C:\VulkanSDK\1.4.335.0\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>Dependencies\GLFW\lib-vc2022;C:\VulkanSDK\1.3.231.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\World\AssetManager.h" />
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\Event\EventController.h" />
     <ClInclude Include="src\Event\Io\ConversionData.h" />
     <ClInclude Include="src\Event\Io\KeyCodes.h" />
+    <ClInclude Include="src\Render\GlobalRenderContext.h" />
     <ClInclude Include="src\Render\Graphics\GraphicsAPI.h" />
     <ClInclude Include="src\Render\Graphics\VulkanGrahicsAPI.h" />
-    <ClInclude Include="src\Render\Object\Element.h" />
-    <ClInclude Include="src\Render\Object\ElementSetUps.h" />
-    <ClInclude Include="src\Render\Object\UIElement.h" />
+    <ClInclude Include="src\Render\PushConstants.h" />
     <ClInclude Include="src\Render\ResourceManager.h" />
     <ClInclude Include="src\Render\Window\Scene.h" />
     <ClInclude Include="src\Render\Window\Scene\Object\Element.h" />
@@ -119,21 +117,35 @@
     <ClInclude Include="src\Render\Window\Scene\RenderStage.h" />
     <ClInclude Include="src\Render\Window\Window.h" />
     <ClInclude Include="src\Render\Window\WindowControls.h" />
+    <ClInclude Include="src\World\AssetLoaders\Meshloader.h" />
+    <ClInclude Include="src\World\AssetLoaders\ShaderLoader.h" />
+    <ClInclude Include="src\World\AssetManager.h" />
+    <ClInclude Include="src\World\Assets\Asset.h" />
+    <ClInclude Include="src\World\Assets\AssetIncluder.h" />
+    <ClInclude Include="src\World\Assets\Helper\spirv_reflect.h" />
+    <ClInclude Include="src\World\Assets\Material.h" />
+    <ClInclude Include="src\World\Assets\Mesh.h" />
+    <ClInclude Include="src\World\Assets\Resource.h" />
+    <ClInclude Include="src\World\Assets\Shader.h" />
+    <ClInclude Include="src\World\Assets\Vertex.h" />
     <ClInclude Include="src\World\ECS\Components.h" />
     <ClInclude Include="src\World\ECS\Registry.h" />
     <ClInclude Include="src\World\WorldController.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\World\AssetManager.cpp" />
     <ClCompile Include="src\Engine.cpp" />
     <ClCompile Include="src\Event\EventController.cpp" />
+    <ClCompile Include="src\Render\GlobalRenderContext.cpp" />
     <ClCompile Include="src\Render\Graphics\VulkanGrahicsAPI.cpp" />
-    <ClCompile Include="src\Render\Object\Element.cpp" />
     <ClCompile Include="src\Render\Window\Scene.cpp" />
-    <ClCompile Include="src\Render\Window\Scene\Object\Element.cpp">
-      <ObjectFileName>$(IntDir)\Element1.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="src\Render\Window\Scene\Object\Element.cpp" />
     <ClCompile Include="src\Render\Window\Window.cpp" />
+    <ClCompile Include="src\World\AssetLoaders\Meshloader.cpp" />
+    <ClCompile Include="src\World\AssetLoaders\ShaderLoader.cpp" />
+    <ClCompile Include="src\World\AssetManager.cpp" />
+    <ClCompile Include="src\World\Assets\Helper\spirv_reflect.c" />
+    <ClCompile Include="src\World\Assets\Material.cpp" />
+    <ClCompile Include="src\World\Assets\Shader.cpp" />
     <ClCompile Include="src\World\WorldController.cpp" />
   </ItemGroup>
   <ItemGroup>
