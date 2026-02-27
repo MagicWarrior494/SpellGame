@@ -55,6 +55,8 @@ namespace Vulkan
         int GetMaxFramesInFlight() const { return MAX_FRAMES_IN_FLIGHT; }
         int GetMaxScenes() const { return MAX_SCENES; }
 
+		glm::uvec2 GetWindowSize() const { return windowSize; }
+
     private:
         std::shared_ptr<VulkanCore> vulkanCore = nullptr;
 

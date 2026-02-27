@@ -146,9 +146,6 @@ ShaderHandle VulkanGraphicsAPI::CreateShader(ShaderStage /*stage*/, const std::v
     const uint32_t handle = m_nextHandle++;
     m_shaders.emplace(handle, module);
 
-    // Ensure there is a resource map entry even if nothing is bound yet.
-    m_shaderResources.emplace(handle, ResourceMap{});
-
     return ShaderHandle{ handle };
 }
 
@@ -173,19 +170,6 @@ void VulkanGraphicsAPI::CloseWindow(uint32_t windowId)
     if (it == m_windows.end())
     {
         return;
-    }
-
-    // Also delete any scenes that belong to this window (defensive: VulkanScene holds raw parentWindow*)
-    for (auto sceneIt = m_scenes.begin(); sceneIt != m_scenes.end();)
-    {
-        if (sceneIt->second.parentWindow == it->second.get())
-        {
-            sceneIt = m_scenes.erase(sceneIt);
-        }
-        else
-        {
-            ++sceneIt;
-        }
     }
 
     m_windows.erase(it);
@@ -215,8 +199,8 @@ uint32_t VulkanGraphicsAPI::CreateScene(uint32_t windowId)
     Vulkan::VulkanWindow* parentWindow = winIt->second.get();
 
     // For now, use the parent window size as scene size.
-    const uint32_t width = parentWindow->windowSize.x;
-    const uint32_t height = parentWindow->windowSize.y;
+    const uint32_t width = parentWindow->GetWindowSize().x;
+    const uint32_t height = parentWindow->GetWindowSize().y;
 
     const int xpos = 0;
     const int ypos = 0;
@@ -227,17 +211,7 @@ uint32_t VulkanGraphicsAPI::CreateScene(uint32_t windowId)
     m_scenes.emplace(sceneId, std::move(scene));
     return sceneId;
 }
-
-const ResourceMap* VulkanGraphicsAPI::GetShaderResources(ShaderHandle shaderHandle) const
-{
-    auto it = m_shaderResources.find(shaderHandle.value);
-    if (it == m_shaderResources.end())
-    {
-        return nullptr;
-    }
-
-    return &it->second;
-}
+ 
 
 VulkanGraphicsAPI::CachedPipeline& VulkanGraphicsAPI::GetOrCreatePipeline(
     Vulkan::VulkanScene& scene,

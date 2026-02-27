@@ -5,6 +5,8 @@
 #include <string>
 #include <GLFW/glfw3.h>
 
+#include "World/Assets/ShaderReflected.h"
+
 struct TextureHandle { uint32_t value; };
 struct BufferHandle  { uint32_t value; };
 struct SamplerHandle { uint32_t value; };

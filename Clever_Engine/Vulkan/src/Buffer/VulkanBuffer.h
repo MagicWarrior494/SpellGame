@@ -4,6 +4,9 @@
 #include <cstring>
 #include <stdexcept>
 
+#include "CoreTypes/VulkanCore.h"
+#include "CoreTypes/VulkanContructors/CommandBuffer.h"
+
 namespace Vulkan {
 
 	struct VulkanCore;
@@ -108,6 +111,137 @@ namespace Vulkan {
 
 	private:
 
+		inline void CreateBuffer(VulkanCore* VC, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+		{
+			VkBufferCreateInfo bufferInfo{};
+			bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+			bufferInfo.size = size;
+			bufferInfo.usage = usage;
+			bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+			if (vkCreateBuffer(VC->vkDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+				throw std::runtime_error("failed to create vertex buffer!");
+			}
+
+			VkMemoryRequirements memRequirements;
+			vkGetBufferMemoryRequirements(VC->vkDevice, buffer, &memRequirements);
+
+			VkMemoryAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+			allocInfo.allocationSize = memRequirements.size;
+			allocInfo.memoryTypeIndex = FindMemoryType(VC->physicalDeviceData.vkPhysicalDevice, memRequirements.memoryTypeBits, properties);
+
+			if (vkAllocateMemory(VC->vkDevice, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
+			{
+				throw std::runtime_error("failed to allocate vertex buffer memory!");
+			}
+
+			vkBindBufferMemory(VC->vkDevice, buffer, bufferMemory, 0);
+		}
+
+		inline void CopyBuffer(VulkanCore* VC, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+		{
+			VkCommandBuffer commandBuffer = BeginSingleTimeCommands(VC);
+
+			VkBufferCopy copyRegion{};
+			copyRegion.srcOffset = 0;
+			copyRegion.dstOffset = 0;
+			copyRegion.size = size;
+			vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+			EndSingleTimeCommands(VC, commandBuffer);
+		}
+
+		void CreateBufferInternal(VulkanCore* vc, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryFlags, VulkanBuffer& outBuffer)
+		{
+			CreateBuffer(
+				vc,
+				size,
+				usage,
+				memoryFlags,
+				outBuffer.buffer,
+				outBuffer.memory
+			);
+		}
+
+		void UploadViaStaging(
+			VulkanCore* vc,
+			VulkanBuffer& dst,
+			const void* data,
+			VkDeviceSize dataSize
+		)
+		{
+			VkBuffer staging;
+			VkDeviceMemory stagingMem;
+
+			CreateBuffer(
+				vc,
+				dataSize,
+				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+				VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+				staging,
+				stagingMem
+			);
+
+			void* mapped;
+			vkMapMemory(vc->vkDevice, stagingMem, 0, dataSize, 0, &mapped);
+			memcpy(mapped, data, static_cast<size_t>(dataSize));
+			vkUnmapMemory(vc->vkDevice, stagingMem);
+
+			CopyBuffer(vc, staging, dst.buffer, dataSize);
+
+			vkDestroyBuffer(vc->vkDevice, staging, nullptr);
+			vkFreeMemory(vc->vkDevice, stagingMem, nullptr);
+
+			dst.size = dataSize;
+		}
+
+		void EnsureCapacity(
+			VulkanCore* vc,
+			VulkanBuffer& buffer,
+			VkDeviceSize requiredSize,
+			VkBufferUsageFlags usage,
+			VkMemoryPropertyFlags memoryFlags
+		)
+		{
+			if (requiredSize <= buffer.capacity)
+				return;
+
+			VkDeviceSize newCapacity =
+				std::max(requiredSize, buffer.capacity * 2);
+
+			VulkanBuffer newBuffer{};
+			newBuffer.capacity = newCapacity;
+
+			CreateBufferInternal(vc, newCapacity, usage, memoryFlags, newBuffer);
+
+			// Copy old data
+			if (buffer.size > 0)
+			{
+				CopyBuffer(vc, buffer.buffer, newBuffer.buffer, buffer.size);
+			}
+
+			// Destroy old buffer
+			vkDestroyBuffer(vc->vkDevice, buffer.buffer, nullptr);
+			vkFreeMemory(vc->vkDevice, buffer.memory, nullptr);
+
+			buffer = newBuffer;
+		}
+		inline uint32_t FindMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
+		{
+			VkPhysicalDeviceMemoryProperties memProperties;
+			vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+			for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+			{
+				if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+				{
+					return i;
+				}
+			}
+			throw std::runtime_error("Failed to find suitable memory type!");
+		}
+
 		void CreateBufferInternal(
 			VulkanCore* vc,
 			VkDeviceSize bufferSize,
@@ -194,135 +328,4 @@ namespace Vulkan {
 			vkFreeMemory(vc->vkDevice, stagingMemory, nullptr);
 		}
 	};
-
-	inline void CreateBuffer(VulkanCore* VC, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
-	{
-		VkBufferCreateInfo bufferInfo{};
-		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		bufferInfo.size = size;
-		bufferInfo.usage = usage;
-		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-		if (vkCreateBuffer(VC->vkDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create vertex buffer!");
-		}
-
-		VkMemoryRequirements memRequirements;
-		vkGetBufferMemoryRequirements(VC->vkDevice, buffer, &memRequirements);
-
-		VkMemoryAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		allocInfo.allocationSize = memRequirements.size;
-		allocInfo.memoryTypeIndex = FindMemoryType(VC->physicalDeviceData.vkPhysicalDevice, memRequirements.memoryTypeBits, properties);
-
-		if (vkAllocateMemory(VC->vkDevice, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to allocate vertex buffer memory!");
-		}
-
-		vkBindBufferMemory(VC->vkDevice, buffer, bufferMemory, 0);
-	}
-
-	inline void CopyBuffer(VulkanCore* VC, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
-	{
-		VkCommandBuffer commandBuffer = BeginSingleTimeCommands(VC);
-
-		VkBufferCopy copyRegion{};
-		copyRegion.srcOffset = 0;
-		copyRegion.dstOffset = 0;
-		copyRegion.size = size;
-		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-
-		EndSingleTimeCommands(VC, commandBuffer);
-	}
-
-	static void CreateBufferInternal(VulkanCore* vc, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryFlags, VulkanBuffer& outBuffer)
-	{
-		CreateBuffer(
-			vc,
-			size,
-			usage,
-			memoryFlags,
-			outBuffer.buffer,
-			outBuffer.memory
-		);
-	}
-
-	static void UploadViaStaging(
-		VulkanCore* vc,
-		VulkanBuffer& dst,
-		const void* data,
-		VkDeviceSize dataSize
-	)
-	{
-		VkBuffer staging;
-		VkDeviceMemory stagingMem;
-
-		CreateBuffer(
-			vc,
-			dataSize,
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			staging,
-			stagingMem
-		);
-
-		void* mapped;
-		vkMapMemory(vc->vkDevice, stagingMem, 0, dataSize, 0, &mapped);
-		memcpy(mapped, data, static_cast<size_t>(dataSize));
-		vkUnmapMemory(vc->vkDevice, stagingMem);
-
-		CopyBuffer(vc, staging, dst.buffer, dataSize);
-
-		vkDestroyBuffer(vc->vkDevice, staging, nullptr);
-		vkFreeMemory(vc->vkDevice, stagingMem, nullptr);
-
-		dst.size = dataSize;
-	}
-
-	static void EnsureCapacity(
-		VulkanCore* vc,
-		VulkanBuffer& buffer,
-		VkDeviceSize requiredSize,
-		VkBufferUsageFlags usage,
-		VkMemoryPropertyFlags memoryFlags
-	)
-	{
-		if (requiredSize <= buffer.capacity)
-			return;
-
-		VkDeviceSize newCapacity =
-			std::max(requiredSize, buffer.capacity * 2);
-
-		VulkanBuffer newBuffer{};
-		newBuffer.capacity = newCapacity;
-
-		CreateBufferInternal(vc, newCapacity, usage, memoryFlags, newBuffer);
-
-		// Copy old data
-		if (buffer.size > 0)
-		{
-			CopyBuffer(vc, buffer.buffer, newBuffer.buffer, buffer.size);
-		}
-
-		// Destroy old buffer
-		vkDestroyBuffer(vc->vkDevice, buffer.buffer, nullptr);
-		vkFreeMemory(vc->vkDevice, buffer.memory, nullptr);
-
-		buffer = newBuffer;
-	}
-	inline uint32_t FindMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties) 
-	{ 
-		VkPhysicalDeviceMemoryProperties memProperties; 
-		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties); 
-		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) 
-		{ 
-			if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-			{ 
-				return i;
-			} 
-		} 
-		throw std::runtime_error("Failed to find suitable memory type!");
-	}
 } 

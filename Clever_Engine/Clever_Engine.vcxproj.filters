@@ -16,6 +16,9 @@
     <Filter Include="Render\ResourceManagement">
       <UniqueIdentifier>{D9B19D28-4574-D1B2-8E24-603FFA25AA90}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Render\ShaderProviders">
+      <UniqueIdentifier>{299E3F1A-1598-686C-FE04-FF7CEA9DCED8}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Render\Window">
       <UniqueIdentifier>{0C395C2A-78F9-D760-4134-21DEADB31C3D}</UniqueIdentifier>
     </Filter>
@@ -60,6 +63,9 @@
     </ClInclude>
     <ClInclude Include="src\Render\ResourceManagement\PushConstants.h">
       <Filter>Render\ResourceManagement</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Render\ShaderProviders\GlobalProviders.h">
+      <Filter>Render\ShaderProviders</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Window\Scene.h">
       <Filter>Render\Window</Filter>
@@ -106,6 +112,9 @@
     <ClInclude Include="src\World\Assets\Shader.h">
       <Filter>World\Assets</Filter>
     </ClInclude>
+    <ClInclude Include="src\World\Assets\ShaderReflected.h">
+      <Filter>World\Assets</Filter>
+    </ClInclude>
     <ClInclude Include="src\World\Assets\Vertex.h">
       <Filter>World\Assets</Filter>
     </ClInclude>
@@ -117,12 +126,6 @@
     </ClInclude>
     <ClInclude Include="src\World\WorldController.h">
       <Filter>World</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Render\ShaderProviders\GlobalProviders.h">
-      <Filter>Render\ResourceManagement</Filter>
-    </ClInclude>
-    <ClInclude Include="src\World\Assets\ShaderReflected.h">
-      <Filter>World\Assets</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

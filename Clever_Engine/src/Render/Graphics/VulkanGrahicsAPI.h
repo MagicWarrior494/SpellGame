@@ -12,7 +12,6 @@
 #include "CoreTypes/VulkanWindow.h"
 #include "CoreTypes/VulkanScene.h"
 #include "Shader/Shader.h"
-#include "World/Assets/Resource.h"
 
 #include "World/ECS/Registry.h"
 #include "World/AssetManager.h"
@@ -26,8 +25,6 @@ private:
     std::unordered_map<uint32_t, Vulkan::VulkanImage> m_textures;
     std::unordered_map<uint32_t, VkSampler> m_samplers;
     std::unordered_map<uint32_t, VkShaderModule> m_shaders;
-
-    std::unordered_map<uint32_t, ResourceMap> m_shaderResources;
 
     std::unordered_map<uint32_t, std::unique_ptr<Vulkan::VulkanWindow>> m_windows;
     std::unordered_map<uint32_t, Vulkan::VulkanScene> m_scenes;
@@ -68,10 +65,8 @@ public:
     void SetSceneZIndex(uint32_t sceneId, int zIndex) override {};
     void MoveSceneToWindow(uint32_t sceneId, uint32_t newWindowId) override {};
 
-    const ResourceMap* GetShaderResources(ShaderHandle shaderHandle) const;
-
 private:
-    CachedPipeline& GetOrCreatePipeline(Vulkan::VulkanScene& scene, ShaderHandle vert, ShaderHandle frag);
+    //CachedPipeline& GetOrCreatePipeline(Vulkan::VulkanScene& scene, ShaderHandle vert, ShaderHandle frag);
 
     std::shared_ptr<Vulkan::VulkanCore> m_vulkanCore;
 };

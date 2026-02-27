@@ -55,7 +55,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>src;Dependencies\glm\glm;Dependencies\stb_image;Dependencies\tinyobjloader;Dependencies\spdlog\include\spdlog;Dependencies\GLFW\include;Dependencies\SPIRV-Headers\include;C:\VulkanSDK\1.4.335.0\Include;Vulkan\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;Dependencies\glm\glm;Dependencies\stb_image;Dependencies\tinyobjloader;Dependencies\spdlog\include\spdlog;Dependencies\GLFW\include;Dependencies\SPIRV-Headers\include;C:\VulkanSDK\1.3.231.1\Include;Vulkan\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -68,7 +68,7 @@
     </Link>
     <Lib>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>Dependencies\GLFW\lib-vc2022;C:\VulkanSDK\1.4.335.0\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>Dependencies\GLFW\lib-vc2022;C:\VulkanSDK\1.3.231.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
     <PreBuildEvent>
       <Command>IF NOT EXIST Docs (mkdir Docs)</Command>
@@ -81,7 +81,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>src;Dependencies\glm\glm;Dependencies\stb_image;Dependencies\tinyobjloader;Dependencies\spdlog\include\spdlog;Dependencies\GLFW\include;Dependencies\SPIRV-Headers\include;C:\VulkanSDK\1.4.335.0\Include;Vulkan\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;Dependencies\glm\glm;Dependencies\stb_image;Dependencies\tinyobjloader;Dependencies\spdlog\include\spdlog;Dependencies\GLFW\include;Dependencies\SPIRV-Headers\include;C:\VulkanSDK\1.3.231.1\Include;Vulkan\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -98,11 +98,10 @@
     </Link>
     <Lib>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>Dependencies\GLFW\lib-vc2022;C:\VulkanSDK\1.4.335.0\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>Dependencies\GLFW\lib-vc2022;C:\VulkanSDK\1.3.231.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\World\Assets\ShaderReflected.h" />
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\Event\EventController.h" />
     <ClInclude Include="src\Event\Io\ConversionData.h" />
@@ -126,6 +125,7 @@
     <ClInclude Include="src\World\Assets\Material.h" />
     <ClInclude Include="src\World\Assets\Mesh.h" />
     <ClInclude Include="src\World\Assets\Shader.h" />
+    <ClInclude Include="src\World\Assets\ShaderReflected.h" />
     <ClInclude Include="src\World\Assets\Vertex.h" />
     <ClInclude Include="src\World\ECS\Components.h" />
     <ClInclude Include="src\World\ECS\Registry.h" />

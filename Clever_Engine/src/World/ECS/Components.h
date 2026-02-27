@@ -7,6 +7,11 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtx/quaternion.hpp>
 
+#include "World/Assets/Shader.h"
+#include "World/Assets/Material.h"
+#include "World/Assets/Mesh.h"
+
+
 class Material;
 
 struct CameraComponent
@@ -53,7 +58,7 @@ struct Transform
 
 struct MeshComponent
 {
-    std::string assetName;
+	std::shared_ptr<Mesh> mesh;
 };
 
 struct MaterialComponent
