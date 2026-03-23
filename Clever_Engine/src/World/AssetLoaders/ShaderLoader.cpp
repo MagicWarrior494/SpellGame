@@ -1,5 +1,4 @@
 #include "ShaderLoader.h"
-#include "World/Assets/Resource.h"
 
 std::shared_ptr<Shader> ShaderLoader::LoadFromFile(std::shared_ptr<GraphicsAPI> graphicsAPI, const std::filesystem::path& filePath)
 {
@@ -44,12 +43,8 @@ std::shared_ptr<Shader> ShaderLoader::LoadFromFile(std::shared_ptr<GraphicsAPI> 
     shader->vertexHandle = vertHandle;
     shader->fragmentHandle = fragHandle;
 	shader->m_Reflection = ReflectCombinedShaders(vertCode, fragCode);
-    
-	//Create Descriptor Layouts using Spir-v reflection data
-    //Gets stored in GraphicsAPI and uses the shaderHandle as the key
 
-	//Create pipeline LAYOUT using descriptor layouts and push constant info from reflection data
-	//Gets stored in GraphicsAPI and uses the shaderHandle as the key
+
 
 
     return shader;

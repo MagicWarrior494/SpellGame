@@ -58,6 +58,9 @@
     <ClInclude Include="src\Render\Graphics\GraphicsAPI.h">
       <Filter>Render\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="src\Render\Graphics\Pipeline.h">
+      <Filter>Render\Graphics</Filter>
+    </ClInclude>
     <ClInclude Include="src\Render\Graphics\VulkanGrahicsAPI.h">
       <Filter>Render\Graphics</Filter>
     </ClInclude>

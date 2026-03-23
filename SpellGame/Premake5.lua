@@ -21,36 +21,21 @@ project "SpellGame"
     includedirs
     {
         "src",
-        "../Clever_Engine/src",
-        "../Clever_Engine/Vulkan/src",
-        "../Clever_Engine/Dependencies/glm/glm",
-        "../Clever_Engine/Dependencies/stb_image",
-        "../Clever_Engine/Dependencies/tinyobjloader",
-        "../Clever_Engine/Dependencies/spdlog/include/spdlog",
-        "../Clever_Engine/Dependencies/GLFW/include",
-        "../Clever_Engine/Dependencies/SPIRV-Headers/include",
-        os.getenv("VULKAN_SDK") .. "/Include"
-    }
-
-    libdirs {
-        "../Clever_Engine/Dependencies/GLFW/lib-vc2022",
-        os.getenv("VULKAN_SDK") .. "/Lib",
+        "../Clever_Engine/src"
     }
 
     links
     {
-        "Clever_Engine",
-        "vulkan-1",
-        "Vulkan",
-        "glfw3"
+        "Clever_Engine"
     }
+
+    filter "system:windows"
+        systemversion "latest"
 
     filter "configurations:Debug"
         runtime "Debug"
         symbols "on"
-        staticruntime "Off"
 
     filter "configurations:Release"
         runtime "Release"
         optimize "on"
-        staticruntime "Off"

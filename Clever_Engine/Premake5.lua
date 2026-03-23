@@ -1,15 +1,16 @@
--- ================================
--- Clever_Engine (Static Library)
--- ================================
+-- Clever_Engine (Engine DLL)
 project "Clever_Engine"
     location "."
-    kind "StaticLib"
+    kind "SharedLib"
     language "C++"
     cppdialect "C++23"
     staticruntime "off"
 
     targetdir ("../bin/" .. outputdir .. "/%{prj.name}")
     objdir ("../bin-int/" .. outputdir .. "/%{prj.name}")
+
+    warnings "Extra"
+    fatalwarnings { "All" }
 
     files 
     { 
@@ -20,44 +21,19 @@ project "Clever_Engine"
     includedirs
     {
         "src",
-        "Dependencies/glm/glm",
-        "Dependencies/stb_image",
-        "Dependencies/tinyobjloader",
-        "Dependencies/spdlog/include/spdlog",
-        "Dependencies/GLFW/include",
-        "Dependencies/SPIRV-Headers/include",
-        os.getenv("VULKAN_SDK") .. "/Include",
-        "Vulkan/src"
-    }
-
-    libdirs {
-        "Dependencies/GLFW/lib-vc2022",
-        os.getenv("VULKAN_SDK") .. "/Lib",
+        "../GraphicsCore/include"
     }
 
     links
     {
-        "vulkan-1",
-        "Vulkan",
-        "glfw3"
+        "GraphicsCore"
     }
 
     filter "configurations:Debug"
         runtime "Debug"
         symbols "on"
-        prebuildcommands {
-            "{MKDIR} Docs"
-        }
-
-        postbuildcommands {
-            "doxygen Doxyfile"
-        }
-        staticruntime "Off"
-
         debugdir "%{wks.location}"
 
-        
     filter "configurations:Release"
         runtime "Release"
         optimize "on"
-        staticruntime "Off"

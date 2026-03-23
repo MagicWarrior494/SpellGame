@@ -29,7 +29,11 @@ private:
     std::unordered_map<uint32_t, std::unique_ptr<Vulkan::VulkanWindow>> m_windows;
     std::unordered_map<uint32_t, Vulkan::VulkanScene> m_scenes;
 
-	std::unordered_map<ShaderHandle, Vulkan::DescriptorResult> m_descriptorResults;
+	std::unordered_map<ShaderHandle, Vulkan::DescriptorResult> m_descriptor;
+
+    std::unordered_map<uint32_t, VkPipeline> m_pipelines;
+	std::unordered_map<uint32_t, VkPipelineLayout> m_pipelineLayouts;
+
 
 public:
     VulkanGraphicsAPI();
@@ -65,6 +69,8 @@ public:
     void SetSceneZIndex(uint32_t sceneId, int zIndex) override {};
     void MoveSceneToWindow(uint32_t sceneId, uint32_t newWindowId) override {};
 
+	uint32_t CreatePipelineLayout();
+	uint32_t CreateGraphicsPipeline(const Vulkan::PipelineModulesInfo& psoInfo);
 private:
     //CachedPipeline& GetOrCreatePipeline(Vulkan::VulkanScene& scene, ShaderHandle vert, ShaderHandle frag);
 

@@ -36,6 +36,14 @@ std::shared_ptr<Shader> AssetManager::LoadInternal<Shader>(const std::filesystem
     std::shared_ptr<Shader> shader = ShaderLoader::LoadFromFile(m_graphicsAPI, fullPath);
     shader->SetName(path.string());
 
+    //Create Descriptor Layouts using Spir-v reflection data
+//Gets stored in GraphicsAPI and uses the shaderHandle as the key
+
+
+
+//Create pipeline LAYOUT using descriptor layouts and push constant info from reflection data
+//Gets stored in GraphicsAPI and uses the shaderHandle as the key
+
     m_assets.insert({ path.string(), shader });
 
     shader->UploadToGPU(*m_graphicsAPI);

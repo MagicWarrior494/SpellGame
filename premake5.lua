@@ -7,7 +7,7 @@ function cloneIfMissing(name, url, dir)
     end
 end
 
-local deps = "Clever_Engine/Dependencies"
+local deps = "Dependencies"
 
 cloneIfMissing("glm",          "https://github.com/g-truc/glm.git",               deps .. "/glm")
 cloneIfMissing("stb",          "https://github.com/nothings/stb.git",             deps .. "/stb_image")
@@ -16,13 +16,26 @@ cloneIfMissing("spdlog",       "https://github.com/gabime/spdlog.git",          
 cloneIfMissing("glfw",         "https://github.com/glfw/glfw.git",                deps .. "/GLFW")
 cloneIfMissing("spirv",        "https://github.com/KhronosGroup/SPIRV-Headers.git", deps .. "/SPIRV-Headers")
 
-workspace "SpellGame_Solution"
+workspace "SpellGameSolution"
     architecture "x64"
-    configurations { "Debug", "Release" }
     startproject "SpellGame"
 
-outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+    configurations
+    {
+        "Debug",
+        "Release"
+    }
 
-include "Clever_Engine/Vulkan" 
-include "Clever_Engine"
-include "SpellGame"
+    outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+
+    group "Core"
+        include "GraphicsCore"
+
+    group "Backends"
+        include "Backend/Vulkan"
+
+    group "Engine"
+        include "Clever_Engine"
+
+    group "Application"
+        include "SpellGame"

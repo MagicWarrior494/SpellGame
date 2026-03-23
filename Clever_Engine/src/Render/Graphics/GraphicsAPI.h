@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 
 #include "World/Assets/ShaderReflected.h"
+#include "Pipeline.h"
 
 struct TextureHandle { uint32_t value; };
 struct BufferHandle  { uint32_t value; };
@@ -89,5 +90,7 @@ public:
     virtual void SetSceneZIndex(uint32_t sceneId, int zIndex) = 0;
     virtual void MoveSceneToWindow(uint32_t sceneId, uint32_t newWindowId) = 0;
 
+	virtual void CreatePipelineLayout(const std::string& layoutName, const PipelineLayoutInfo& info) = 0;
+    virtual void CreatePipeline(const std::string& pipelineName, const PipelineCreationInfo& info) = 0;
 
 };

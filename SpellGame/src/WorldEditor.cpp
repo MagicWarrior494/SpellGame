@@ -24,8 +24,8 @@ int main()
     EntityID teapot = registry.Create();
     registry.Set<Transform>(teapot, Transform{});
     registry.Set<MeshComponent>(teapot, MeshComponent{ teapotMesh });
-	//registry.Set<MaterialComponent>(teapot, MaterialComponent{ teapotMaterial });
-	registry.Set<ShaderComponent>(teapot, ShaderComponent{ standardShader });
+    //registry.Set<MaterialComponent>(teapot, MaterialComponent{ teapotMaterial });
+    registry.Set<ShaderComponent>(teapot, ShaderComponent{ standardShader });
 
     while (window.IsAlive())
     {

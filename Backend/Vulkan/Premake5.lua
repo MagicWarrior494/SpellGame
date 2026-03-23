@@ -1,9 +1,9 @@
 -- ================================
--- Vulkan Static Library
+-- Vulkan Backend (DLL Plugin)
 -- ================================
 project "Vulkan"
     location "."
-    kind "StaticLib"
+    kind "SharedLib"
     language "C++"
     cppdialect "C++23"
     staticruntime "off"
@@ -11,37 +11,41 @@ project "Vulkan"
     targetdir ("../../bin/" .. outputdir .. "/%{prj.name}")
     objdir ("../../bin-int/" .. outputdir .. "/%{prj.name}")
 
-    files { "src/**.h", "src/**.cpp" }
+    warnings "Extra"
+    fatalwarnings { "All" }
 
-    includedirs {
+    files 
+    { 
+        "src/**.h", 
+        "src/**.cpp" 
+    }
+
+    includedirs 
+    {
         "src",
         os.getenv("VULKAN_SDK") .. "/Include",
         "../Dependencies/glm/glm",
-        "../Dependencies/GLFW/include"
+        "../../GraphicsCore/include"
     }
 
-    libdirs {
-        os.getenv("VULKAN_SDK") .. "/Lib",
-        "../Dependencies/GLFW/lib-vc2022"
+    libdirs 
+    {
+        os.getenv("VULKAN_SDK") .. "/Lib"
     }
 
-    links {
+    links 
+    {
         "vulkan-1",
-        "glfw3"
+        "GraphicsCore"
     }
+
+    filter "system:windows"
+        systemversion "latest"
 
     filter "configurations:Debug"
         runtime "Debug"
         symbols "on"
-        prebuildcommands {
-            "{MKDIR} Docs"
-        }
-        postbuildcommands {
-            "doxygen Doxyfile"
-        }
-        staticruntime "Off"
-        
+
     filter "configurations:Release"
         runtime "Release"
         optimize "on"
-        staticruntime "Off"
