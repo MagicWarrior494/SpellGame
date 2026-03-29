@@ -27,7 +27,11 @@ out/
 # ========================
 # Dependencies
 # ========================
-Dependencies/
+# Ignore cloned third-party repos (auto-cloned by premake5.lua)
+Dependencies/*
+
+# Keep our build scripts and config
+!Dependencies/BuildScripts/
 
 # ========================
 # Platform-specific build folders

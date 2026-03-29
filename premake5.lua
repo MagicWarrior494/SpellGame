@@ -30,7 +30,7 @@ workspace "SpellGameSolution"
     outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
     group "Dependencies"
-        include "Dependencies/GLFW"
+        include "Dependencies/BuildScripts/GLFW.lua"
 
     group "Core"
         include "GraphicsCore"
