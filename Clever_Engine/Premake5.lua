@@ -21,7 +21,8 @@ project "Clever_Engine"
     includedirs
     {
         "src",
-        "../GraphicsCore/include"
+        "../GraphicsCore/include",
+        "../Dependencies/glm/glm"
     }
 
     links

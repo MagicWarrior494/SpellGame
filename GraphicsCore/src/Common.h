@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 namespace GraphicsCore
 {
@@ -35,7 +36,8 @@ namespace GraphicsCore
         RG8,
         RGB8,
         RGBA8,
-        R16F,
+        BGRA8,
+        R16F, 
         RG16F,
         RGB16F,
         RGBA16F,

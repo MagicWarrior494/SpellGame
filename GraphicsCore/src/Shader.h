@@ -1,9 +1,15 @@
 #pragma once
 #include "Common.h"
 #include <cstddef>
+#include <vector>
 
 namespace GraphicsCore
 {
+    // Forward declarations
+    class IBuffer;
+    class ITexture;
+    class ISampler;
+
     enum class ResourceType
     {
         UniformBuffer,

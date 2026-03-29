@@ -3,6 +3,9 @@
 
 namespace GraphicsCore
 {
+    // Forward declaration
+    class ITexture;
+
     struct WindowDesc
     {
         uint32_t width;

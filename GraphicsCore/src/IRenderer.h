@@ -7,6 +7,11 @@
 #include "Sampler.h"
 #include "Window.h"
 
+// Windows.h may define CreateWindow as a macro, which conflicts with our method names
+#ifdef CreateWindow
+#undef CreateWindow
+#endif
+
 namespace GraphicsCore
 {
     class IRenderer

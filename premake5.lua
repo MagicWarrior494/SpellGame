@@ -15,6 +15,7 @@ cloneIfMissing("tinyobjloader","https://github.com/tinyobjloader/tinyobjloader.g
 cloneIfMissing("spdlog",       "https://github.com/gabime/spdlog.git",            deps .. "/spdlog")
 cloneIfMissing("glfw",         "https://github.com/glfw/glfw.git",                deps .. "/GLFW")
 cloneIfMissing("spirv",        "https://github.com/KhronosGroup/SPIRV-Headers.git", deps .. "/SPIRV-Headers")
+cloneIfMissing("VMA",          "https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git", deps .. "/VulkanMemoryAllocator")
 
 workspace "SpellGameSolution"
     architecture "x64"
@@ -27,6 +28,9 @@ workspace "SpellGameSolution"
     }
 
     outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+
+    group "Dependencies"
+        include "Dependencies/GLFW"
 
     group "Core"
         include "GraphicsCore"
