@@ -1,24 +1,26 @@
 #include "Engine.h"
-#include <iostream>
-#include "World/ECS/Components.h"
+#include "VulkanRenderer.h"
+#include <filesystem>
 
-#include "Render/Graphics/VulkanGrahicsAPI.h"
-#define VULKAN
-
-Engine::Engine() :
-    m_WorldController(WorldController{}), m_AssetManager(AssetManager{})
+Engine::Engine()
+    : m_worldController(WorldController{})
+    , m_assetManager(AssetManager{})
 {
-    glfwInit();
-#ifdef VULKAN
-    m_graphicsAPI = std::make_shared<VulkanGraphicsAPI>();
-#elif defined(OPENGL)
-#endif
-    m_AssetManager.SetAssetRoot("C:/Projects/Spellgame/Assets");
-    m_AssetManager.SetGraphicsAPI(m_graphicsAPI);
+    m_renderer = std::make_unique<GraphicsCore::VulkanRenderer>();
+
+    // Resolve Assets/ relative to the executable directory
+    std::filesystem::path exeDir = std::filesystem::current_path();
+    std::filesystem::path assetRoot = exeDir / "Assets";
+    if (!std::filesystem::exists(assetRoot))
+        assetRoot = exeDir / "../Assets"; // fallback one level up
+
+    m_assetManager.SetAssetRoot(std::filesystem::weakly_canonical(assetRoot));
+    m_assetManager.SetRenderer(m_renderer.get());
 }
 
-void Engine::SetUp(std::string /*setUpFilePath*/)
+Engine::~Engine()
 {
+    Shutdown();
 }
 
 void Engine::SetUp()
@@ -27,11 +29,16 @@ void Engine::SetUp()
 
 void Engine::Tick()
 {
-    m_WorldController.Update();
+    m_worldController.Update();
     for (auto& [id, window] : m_windows)
     {
         window->Update();
-        window->Render();
+
+        auto it = m_windowScenes.find(id);
+        if (it != m_windowScenes.end())
+            window->Render(it->second);
+        else
+            window->Render({});
     }
 }
 
@@ -45,46 +52,59 @@ void Engine::EndFrame()
 
 void Engine::Shutdown()
 {
+    if (!m_renderer)
+        return;
+
+    m_renderer->WaitIdle();
+
+    m_scenes.clear();
+    m_windows.clear();
+    m_renderer.reset();
 }
 
 Window& Engine::CreateWindow(const std::string& title, int width, int height)
 {
-    int windowId = static_cast<int>(m_windows.size());
+    const int id = m_nextWindowId++;
 
     auto window = std::make_unique<Window>(
-        m_graphicsAPI.get(),
+        m_renderer.get(),
         title,
-        width,
-        height
-    );
+        static_cast<uint32_t>(width),
+        static_cast<uint32_t>(height));
 
-    m_windows[windowId] = std::move(window);
-    return *m_windows[windowId];
+    m_windows[id] = std::move(window);
+    m_windowScenes[id] = {};
+    return *m_windows[id];
 }
 
-Scene& Engine::CreateScene(uint32_t graphicsWindowId, int width, int height)
+Scene& Engine::CreateScene(Window& window, int width, int height)
 {
-    SceneCreationInfo info{};
-    info.graphicsWindowId = graphicsWindowId;
-    info.width = static_cast<uint32_t>(width);
-    info.height = static_cast<uint32_t>(height);
-    info.posx = 0;
-    info.posy = 0;
-    info.zIndex = 1;
+    const int sceneId = m_nextSceneId++;
 
-    const uint32_t graphicsSceneId = m_graphicsAPI->CreateScene(info.graphicsWindowId);
-    info.graphicsSceneId = graphicsSceneId;
+    int windowId = -1;
+    for (auto& [id, w] : m_windows)
+    {
+        if (w.get() == &window)
+        {
+            windowId = id;
+            break;
+        }
+    }
 
-    auto scene = std::make_unique<Scene>(
-        m_graphicsAPI.get(),
-        &m_AssetManager,
-        info
-    );
+    SceneDesc desc{};
+    desc.width = static_cast<uint32_t>(width);
+    desc.height = static_cast<uint32_t>(height);
+    desc.posX = 0;
+    desc.posY = 0;
+    desc.zIndex = static_cast<int>(m_windowScenes[windowId].size()) + 1;
 
-    int sceneId = m_nextSceneId;
-    m_nextSceneId++;
+    auto scene = std::make_unique<Scene>(m_renderer.get(), &m_assetManager, &window, desc);
+    Scene* scenePtr = scene.get();
 
     m_scenes[sceneId] = std::move(scene);
 
-    return *m_scenes[sceneId];
+    if (windowId >= 0)
+        m_windowScenes[windowId].push_back(scenePtr);
+
+    return *scenePtr;
 }

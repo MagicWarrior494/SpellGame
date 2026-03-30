@@ -1,28 +1,28 @@
 #pragma once
-
-#include <GLFW/glfw3.h>
-#include "Render/Window/Window.h"
-#include "Render/Window/Scene.h"
-#include "Render/Graphics/GraphicsAPI.h"
-
-#include "World/WorldController.h"
-#include "World/AssetManager.h"
-
-#include "World/Assets/AssetIncluder.h"
-
-#include <stdexcept>
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
-class Engine
+#include "IRenderer.h"
+#include "Render/Window/Window.h"
+#include "Render/Window/Scene.h"
+#include "World/WorldController.h"
+#include "World/AssetManager.h"
+#include "World/Assets/AssetIncluder.h"
+
+#ifdef _WIN32
+    #define CLEVER_ENGINE_API __declspec(dllexport)
+#else
+    #define CLEVER_ENGINE_API
+#endif
+
+class CLEVER_ENGINE_API Engine
 {
 public:
     Engine();
+    ~Engine();
 
-    void SetUp(std::string setUpFilePath);
-
-    //Default Setup
     void SetUp();
     void Tick();
     void BeginFrame();
@@ -30,20 +30,20 @@ public:
     void Shutdown();
 
     Window& CreateWindow(const std::string& title, int width, int height);
-    Scene& CreateScene(uint32_t graphicsWindowId, int width, int height);
+    Scene&  CreateScene(Window& window, int width, int height);
 
-    AssetManager& GetAssetManager() { return m_AssetManager; }
+    AssetManager& GetAssetManager() { return m_assetManager; }
 
 private:
-    std::map<int, std::unique_ptr<Window>> m_windows;
-    std::map<int, std::unique_ptr<Scene>> m_scenes;
+    std::unique_ptr<GraphicsCore::IRenderer>        m_renderer;
 
-    std::shared_ptr<GraphicsAPI> m_graphicsAPI;
+    std::map<int, std::unique_ptr<Window>>           m_windows;
+    std::map<int, std::unique_ptr<Scene>>            m_scenes;
+    std::map<int, std::vector<Scene*>>               m_windowScenes; // window id -> scenes
 
-    AssetManager m_AssetManager;
-    WorldController m_WorldController;
-    std::string m_SetUpFilePath;
-    
-    // Add scene ID counter
-    int m_nextSceneId = 0;
+    AssetManager    m_assetManager;
+    WorldController m_worldController;
+
+    int m_nextWindowId = 0;
+    int m_nextSceneId  = 0;
 };

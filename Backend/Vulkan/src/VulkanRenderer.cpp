@@ -9,7 +9,6 @@
 #include "Core/VulkanWindow.h"
 #include <stdexcept>
 #include <vector>
-#include <cstring>
 
 namespace GraphicsCore {
 
@@ -28,10 +27,10 @@ namespace GraphicsCore {
 #endif
 
     VulkanRenderer::VulkanRenderer()
-        : m_instance(VK_NULL_HANDLE), m_physicalDevice(VK_NULL_HANDLE), 
-          m_device(VK_NULL_HANDLE), m_allocator(VK_NULL_HANDLE), 
+        : m_instance(VK_NULL_HANDLE), m_physicalDevice(VK_NULL_HANDLE),
+          m_device(VK_NULL_HANDLE), m_allocator(VK_NULL_HANDLE),
           m_graphicsQueue(VK_NULL_HANDLE), m_commandPool(VK_NULL_HANDLE),
-          m_graphicsQueueFamily(0)
+          m_descriptorPool(VK_NULL_HANDLE), m_graphicsQueueFamily(0)
 #ifdef _DEBUG
         , m_debugMessenger(VK_NULL_HANDLE)
 #endif
@@ -41,11 +40,16 @@ namespace GraphicsCore {
         CreateLogicalDevice();
         CreateAllocator();
         CreateCommandPool();
+        CreateDescriptorPool();
     }
 
     VulkanRenderer::~VulkanRenderer() {
         if (m_device != VK_NULL_HANDLE) {
             vkDeviceWaitIdle(m_device);
+        }
+
+        if (m_descriptorPool != VK_NULL_HANDLE) {
+            vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
         }
 
         if (m_commandPool != VK_NULL_HANDLE) {
@@ -238,6 +242,27 @@ namespace GraphicsCore {
         }
     }
 
+    void VulkanRenderer::CreateDescriptorPool() {
+        VkDescriptorPoolSize poolSizes[] = {
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         1000 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,         1000 },
+            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+            { VK_DESCRIPTOR_TYPE_SAMPLER,                1000 }
+        };
+
+        VkDescriptorPoolCreateInfo poolInfo = {};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+        poolInfo.maxSets = 1000;
+        poolInfo.poolSizeCount = 4;
+        poolInfo.pPoolSizes = poolSizes;
+
+        VkResult result = vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_descriptorPool);
+        if (result != VK_SUCCESS) {
+            throw std::runtime_error("Failed to create descriptor pool");
+        }
+    }
+
     // Resource Creation
     IBuffer* VulkanRenderer::CreateBuffer(const BufferDesc& desc) {
         return new VulkanBuffer(m_device, m_allocator, desc);
@@ -303,31 +328,9 @@ namespace GraphicsCore {
         delete layout;
     }
 
-    // Descriptor pool for resource sets (simplified - in production you'd have a pool manager)
-    static VkDescriptorPool g_descriptorPool = VK_NULL_HANDLE;
-
     IResourceSet* VulkanRenderer::CreateResourceSet(IResourceLayout* layout) {
-        // Create descriptor pool if needed
-        if (g_descriptorPool == VK_NULL_HANDLE) {
-            VkDescriptorPoolSize poolSizes[] = {
-                { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-                { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-                { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-                { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 }
-            };
-
-            VkDescriptorPoolCreateInfo poolInfo = {};
-            poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-            poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-            poolInfo.maxSets = 1000;
-            poolInfo.poolSizeCount = 4;
-            poolInfo.pPoolSizes = poolSizes;
-
-            vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &g_descriptorPool);
-        }
-
         VulkanResourceLayout* vkLayout = static_cast<VulkanResourceLayout*>(layout);
-        return new VulkanResourceSet(m_device, g_descriptorPool, vkLayout);
+        return new VulkanResourceSet(m_device, m_descriptorPool, vkLayout);
     }
 
     void VulkanRenderer::DestroyResourceSet(IResourceSet* set) {
@@ -348,8 +351,9 @@ namespace GraphicsCore {
     }
 
     // Execution
-    void VulkanRenderer::Submit(ICommandList* commandList) {
+    void VulkanRenderer::Submit(ICommandList* commandList, IWindow* window) {
         VulkanCommandList* vkCommandList = static_cast<VulkanCommandList*>(commandList);
+        VulkanWindow* vkWindow = static_cast<VulkanWindow*>(window);
 
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -358,13 +362,52 @@ namespace GraphicsCore {
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
-        vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+        VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+        if (vkWindow != nullptr) {
+            // Scene submit: wait for image available, signal sceneFinished. No fence yet.
+            VkSemaphore waitSem   = vkWindow->GetImageAvailableSemaphore();
+            VkSemaphore signalSem = vkWindow->GetSceneFinishedSemaphore();
+            submitInfo.waitSemaphoreCount   = 1;
+            submitInfo.pWaitSemaphores      = &waitSem;
+            submitInfo.pWaitDstStageMask    = &waitStage;
+            submitInfo.signalSemaphoreCount = 1;
+            submitInfo.pSignalSemaphores    = &signalSem;
+            vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+        } else {
+            // Standalone submit (no sync)
+            vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+        }
+    }
+
+    void VulkanRenderer::SubmitBlit(ICommandList* commandList, IWindow* window) {
+        VulkanCommandList* vkCommandList = static_cast<VulkanCommandList*>(commandList);
+        VulkanWindow* vkWindow = static_cast<VulkanWindow*>(window);
+
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        VkCommandBuffer commandBuffer = vkCommandList->GetCommandBuffer();
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+
+        // Blit submit: wait for scene to finish, signal renderFinished, signal fence.
+        // The fence is waited on at the start of the next BeginFrame so the CPU
+        // cannot race ahead and re-use this command buffer before the GPU is done.
+        VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        VkSemaphore waitSem   = vkWindow->GetSceneFinishedSemaphore();
+        VkSemaphore signalSem = vkWindow->GetRenderFinishedSemaphore();
+        submitInfo.waitSemaphoreCount   = 1;
+        submitInfo.pWaitSemaphores      = &waitSem;
+        submitInfo.pWaitDstStageMask    = &waitStage;
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores    = &signalSem;
+
+        vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, vkWindow->GetInFlightFenceRef());
     }
 
     void VulkanRenderer::Present(IWindow* window) {
         VulkanWindow* vkWindow = static_cast<VulkanWindow*>(window);
-
-        uint32_t imageIndex = vkWindow->AcquireNextImage();
 
         VkPresentInfoKHR presentInfo = {};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -376,7 +419,7 @@ namespace GraphicsCore {
         VkSwapchainKHR swapchains[] = { vkWindow->GetSwapchain() };
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = swapchains;
-        presentInfo.pImageIndices = &imageIndex;
+        presentInfo.pImageIndices = &vkWindow->GetCurrentImageIndex();
 
         vkQueuePresentKHR(m_graphicsQueue, &presentInfo);
     }

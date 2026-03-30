@@ -55,7 +55,8 @@ namespace GraphicsCore
 
         // --- Execution ---
         // Pushes the command list to the GPU for processing
-        virtual void Submit(ICommandList* commandList) = 0;
+        virtual void Submit(ICommandList* commandList, IWindow* window = nullptr) = 0;
+        virtual void SubmitBlit(ICommandList* commandList, IWindow* window) = 0;
 
         // Swaps the buffers for the specific window
         virtual void Present(IWindow* window) = 0;

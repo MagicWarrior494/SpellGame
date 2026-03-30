@@ -1,37 +1,19 @@
+#define TINYOBJLOADER_IMPLEMENTATION
 #include "Meshloader.h"
 #include <unordered_map>
-
 #include "World/Assets/Vertex.h"
-
-#define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
-#include <iostream>
 
 std::shared_ptr<Mesh> MeshLoader::LoadFromFile(const std::string& path)
 {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
-
     std::string warn, err;
 
-    bool success = tinyobj::LoadObj(
-        &attrib,
-        &shapes,
-        &materials,
-        &warn,
-        &err,
-        path.c_str()
-    );
+    bool success = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str());
 
-    if (!warn.empty())
-        std::cout << "TinyObj Warning: " << warn << std::endl;
-
-    if (!err.empty())
-        std::cerr << "TinyObj Error: " << err << std::endl;
-
-    if (!success)
-        throw std::runtime_error("Failed to load OBJ: " + path);
+    if (!success || !err.empty()) throw std::runtime_error("Failed to load OBJ: " + path);
 
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
@@ -43,14 +25,12 @@ std::shared_ptr<Mesh> MeshLoader::LoadFromFile(const std::string& path)
         {
             Vertex vertex{};
 
-            // Position
             vertex.position = {
                 attrib.vertices[3 * index.vertex_index + 0],
                 attrib.vertices[3 * index.vertex_index + 1],
                 attrib.vertices[3 * index.vertex_index + 2]
             };
 
-            // Normal
             if (index.normal_index >= 0)
             {
                 vertex.normal = {
@@ -60,12 +40,11 @@ std::shared_ptr<Mesh> MeshLoader::LoadFromFile(const std::string& path)
                 };
             }
 
-            // UV
             if (index.texcoord_index >= 0)
             {
                 vertex.uv = {
                     attrib.texcoords[2 * index.texcoord_index + 0],
-                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1] // Flip for Vulkan
+                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
                 };
             }
 
@@ -82,6 +61,5 @@ std::shared_ptr<Mesh> MeshLoader::LoadFromFile(const std::string& path)
     auto mesh = std::make_shared<Mesh>();
     mesh->vertices = std::move(vertices);
     mesh->indices = std::move(indices);
-
     return mesh;
 }

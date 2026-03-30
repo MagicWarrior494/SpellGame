@@ -40,21 +40,16 @@ enum class SampleCount
     Sample64 = 64
 };
 
-enum class VertexInputRate
-{
-    Vertex,
-	Instance
-};
-
 struct VertexInputBindingDescription
 {
     uint32_t binding;
     uint32_t stride;
-    VertexInputRate inputRate;
+    VertexInputRate inputRate; // uses the one from ShaderReflected.h
 };
 
-struct PipelineCreationInfo {
-    Cullmode cullMode = Cullmode::Back;
+struct PipelineCreationInfo
+{
+    Cullmode  cullMode = Cullmode::Back;
     FrontFace frontFace = FrontFace::CounterClockwise;
     PolygonMode polygonMode = PolygonMode::Fill;
 
@@ -62,13 +57,12 @@ struct PipelineCreationInfo {
     bool enableDepthTest = true;
 
     PrimitiveTopology topology = PrimitiveTopology::TriangleList;
-    SampleCount samples = SampleCount::Sample1;
+    SampleCount       samples = SampleCount::Sample1;
 
     VertexInputBindingDescription bindingDescription{};
-	ShaderReflection reflectedShader{};
+    ShaderReflection              reflectedShader{};
 };
 
-class PipelineLayout
-{
+struct PipelineLayoutInfo {};
 
-};
+class PipelineLayout {};

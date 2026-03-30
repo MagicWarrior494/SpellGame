@@ -1,48 +1,68 @@
 #pragma once
 #include <cstdint>
+#include <vector>
 #include <glm.hpp>
 
 #include "Asset.h"
 #include "Vertex.h"
-#include "Render/Graphics/GraphicsAPI.h"
+#include "IRenderer.h"
 
 class Mesh : public Asset
 {
 public:
+    ~Mesh()
+    {
+        // Buffers are destroyed via IRenderer by the AssetManager before shutdown
+    }
+
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
 
-    BufferHandle vertexBuffer{ 0 };
-    BufferHandle indexBuffer{ 0 };
+    GraphicsCore::IBuffer* vertexBuffer = nullptr;
+    GraphicsCore::IBuffer* indexBuffer  = nullptr;
 
-    void UploadToGPU(GraphicsAPI& api)
+    void UploadToGPU(GraphicsCore::IRenderer& renderer)
     {
-        if (vertexBuffer.value == 0 && !vertices.empty())
+        if (vertexBuffer == nullptr && !vertices.empty())
         {
-            const size_t sizeInBytes = vertices.size() * sizeof(Vertex);
-            vertexBuffer = api.CreateBuffer(sizeInBytes, BufferUsage::Vertex);
-            api.UpdateBuffer(vertexBuffer, vertices.data(), sizeInBytes);
+            GraphicsCore::BufferDesc desc{};
+            desc.size          = vertices.size() * sizeof(Vertex);
+            desc.usage         = GraphicsCore::BufferUsage::Vertex;
+            desc.cpuAccessible = true;
+
+            vertexBuffer = renderer.CreateBuffer(desc);
+
+            void* mapped = renderer.MapBuffer(vertexBuffer);
+            memcpy(mapped, vertices.data(), desc.size);
+            renderer.UnmapBuffer(vertexBuffer);
         }
 
-        if (indexBuffer.value == 0 && !indices.empty())
+        if (indexBuffer == nullptr && !indices.empty())
         {
-            const size_t sizeInBytes = indices.size() * sizeof(uint32_t);
-            indexBuffer = api.CreateBuffer(sizeInBytes, BufferUsage::Index);
-            api.UpdateBuffer(indexBuffer, indices.data(), sizeInBytes);
+            GraphicsCore::BufferDesc desc{};
+            desc.size          = indices.size() * sizeof(uint32_t);
+            desc.usage         = GraphicsCore::BufferUsage::Index;
+            desc.cpuAccessible = true;
+
+            indexBuffer = renderer.CreateBuffer(desc);
+
+            void* mapped = renderer.MapBuffer(indexBuffer);
+            memcpy(mapped, indices.data(), desc.size);
+            renderer.UnmapBuffer(indexBuffer);
         }
     }
 
-    void DeleteGPUResources(GraphicsAPI& api)
+    void DeleteGPUResources(GraphicsCore::IRenderer& renderer)
     {
-        if (vertexBuffer.value != 0)
+        if (vertexBuffer != nullptr)
         {
-            api.DeleteBuffer(vertexBuffer);
-            vertexBuffer = BufferHandle{ 0 };
+            renderer.DestroyBuffer(vertexBuffer);
+            vertexBuffer = nullptr;
         }
-        if (indexBuffer.value != 0)
+        if (indexBuffer != nullptr)
         {
-            api.DeleteBuffer(indexBuffer);
-            indexBuffer = BufferHandle{ 0 };
+            renderer.DestroyBuffer(indexBuffer);
+            indexBuffer = nullptr;
         }
     }
 };

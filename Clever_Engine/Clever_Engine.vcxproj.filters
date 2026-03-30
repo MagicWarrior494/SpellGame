@@ -55,13 +55,8 @@
     <ClInclude Include="src\Event\Io\KeyCodes.h">
       <Filter>Event\Io</Filter>
     </ClInclude>
-    <ClInclude Include="src\Render\Graphics\GraphicsAPI.h">
-      <Filter>Render\Graphics</Filter>
-    </ClInclude>
+    <ClInclude Include="src\Log.h" />
     <ClInclude Include="src\Render\Graphics\Pipeline.h">
-      <Filter>Render\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Render\Graphics\VulkanGrahicsAPI.h">
       <Filter>Render\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\ResourceManagement\PushConstants.h">
@@ -136,9 +131,6 @@
     <ClCompile Include="src\Event\EventController.cpp">
       <Filter>Event</Filter>
     </ClCompile>
-    <ClCompile Include="src\Render\Graphics\VulkanGrahicsAPI.cpp">
-      <Filter>Render\Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="src\Render\Window\Scene.cpp">
       <Filter>Render\Window</Filter>
     </ClCompile>
@@ -156,6 +148,9 @@
     </ClCompile>
     <ClCompile Include="src\World\AssetManager.cpp">
       <Filter>World</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World\Assets\Helper\spirv_reflect.c">
+      <Filter>World\Assets\Helper</Filter>
     </ClCompile>
     <ClCompile Include="src\World\Assets\Material.cpp">
       <Filter>World\Assets</Filter>

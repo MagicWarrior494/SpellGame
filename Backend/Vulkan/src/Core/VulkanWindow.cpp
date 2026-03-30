@@ -3,6 +3,8 @@
 #include "../Resources/VulkanTexture.h"
 #include <stdexcept>
 #include <algorithm>
+#include <chrono>
+#include <thread>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -18,8 +20,9 @@ namespace GraphicsCore {
         : m_desc(desc), m_renderer(renderer), m_platformHandle(nullptr), 
           m_surface(VK_NULL_HANDLE), m_swapchain(VK_NULL_HANDLE), 
           m_swapchainFormat(VK_FORMAT_B8G8R8A8_UNORM), m_currentImageIndex(0),
-          m_imageAvailableSemaphore(VK_NULL_HANDLE), m_renderFinishedSemaphore(VK_NULL_HANDLE),
-          m_inFlightFence(VK_NULL_HANDLE), m_framebufferResized(false)
+          m_imageAvailableSemaphore(VK_NULL_HANDLE), m_sceneFinishedSemaphore(VK_NULL_HANDLE),
+          m_renderFinishedSemaphore(VK_NULL_HANDLE), m_inFlightFence(VK_NULL_HANDLE),
+          m_framebufferResized(false), m_frameReady(false)
     {
         CreatePlatformWindow();
         CreateSurface();
@@ -35,6 +38,7 @@ namespace GraphicsCore {
 
         VkDevice device = renderer->GetDevice();
         vkCreateSemaphore(device, &semaphoreInfo, nullptr, &m_imageAvailableSemaphore);
+        vkCreateSemaphore(device, &semaphoreInfo, nullptr, &m_sceneFinishedSemaphore);
         vkCreateSemaphore(device, &semaphoreInfo, nullptr, &m_renderFinishedSemaphore);
         vkCreateFence(device, &fenceInfo, nullptr, &m_inFlightFence);
     }
@@ -46,6 +50,9 @@ namespace GraphicsCore {
 
         if (m_imageAvailableSemaphore != VK_NULL_HANDLE) {
             vkDestroySemaphore(device, m_imageAvailableSemaphore, nullptr);
+        }
+        if (m_sceneFinishedSemaphore != VK_NULL_HANDLE) {
+            vkDestroySemaphore(device, m_sceneFinishedSemaphore, nullptr);
         }
         if (m_renderFinishedSemaphore != VK_NULL_HANDLE) {
             vkDestroySemaphore(device, m_renderFinishedSemaphore, nullptr);
@@ -82,21 +89,83 @@ namespace GraphicsCore {
         return nullptr;
     }
 
-    uint32_t VulkanWindow::AcquireNextImage() {
-        vkWaitForFences(m_renderer->GetDevice(), 1, &m_inFlightFence, VK_TRUE, UINT64_MAX);
+    void VulkanWindow::BeginFrame() {
+        m_frameReady = false;
 
-        VkResult result = vkAcquireNextImageKHR(m_renderer->GetDevice(), m_swapchain, UINT64_MAX, 
-                             m_imageAvailableSemaphore, VK_NULL_HANDLE, &m_currentImageIndex);
+        GLFWwindow* glfwWindow = static_cast<GLFWwindow*>(m_platformHandle);
+        
+        // Wait for fence with periodic event polling to keep window responsive
+        // Poll events every 1ms while waiting for GPU
+        VkDevice device = m_renderer->GetDevice();
+        VkResult fenceResult = VK_TIMEOUT;
+        
+        while (fenceResult == VK_TIMEOUT) {
+            // Wait for fence with 1ms timeout (1,000,000 nanoseconds)
+            fenceResult = vkWaitForFences(device, 1, &m_inFlightFence, VK_TRUE, 1000000);
+            
+            if (fenceResult == VK_TIMEOUT) {
+                // Fence not ready yet, poll events to keep window responsive
+                glfwPollEvents();
+            }
+        }
+        
+        if (fenceResult != VK_SUCCESS) {
+            throw std::runtime_error("vkWaitForFences failed");
+        }
+        
+        vkResetFences(device, 1, &m_inFlightFence);
 
-        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-            RecreateSwapchain();
-            return m_currentImageIndex;
-        } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-            throw std::runtime_error("Failed to acquire swapchain image");
+        // Acquire next image with zero timeout to avoid blocking
+        // If not available immediately, poll events and try again
+        VkResult result = VK_TIMEOUT;
+        while (result == VK_TIMEOUT) {
+            result = vkAcquireNextImageKHR(device, m_swapchain,
+                                          0, m_imageAvailableSemaphore, VK_NULL_HANDLE,
+                                          &m_currentImageIndex);
+            
+            if (result == VK_TIMEOUT) {
+                // Image not available yet, poll events and try again
+                glfwPollEvents();
+                // Small sleep to avoid busy-waiting
+                std::this_thread::sleep_for(std::chrono::microseconds(100));
+            }
         }
 
-        vkResetFences(m_renderer->GetDevice(), 1, &m_inFlightFence);
+        if (result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR) {
+            m_frameReady = true;
+        } else if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+            RecreateSwapchain();
+        } else {
+            throw std::runtime_error("Failed to acquire swapchain image");
+        }
+    }
+
+    uint32_t VulkanWindow::AcquireNextImage() {
         return m_currentImageIndex;
+    }
+
+    void VulkanWindow::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+        auto* w = reinterpret_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
+        if (w->m_eventSink) w->m_eventSink->OnKey(key, scancode, action, mods);
+    }
+
+    void VulkanWindow::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+        auto* w = reinterpret_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
+        if (w->m_eventSink) {
+            double x, y;
+            glfwGetCursorPos(window, &x, &y);
+            w->m_eventSink->OnMouseButton(button, action, x, y, mods);
+        }
+    }
+
+    void VulkanWindow::MouseMoveCallback(GLFWwindow* window, double xpos, double ypos) {
+        auto* w = reinterpret_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
+        if (w->m_eventSink) w->m_eventSink->OnMouseMove(xpos, ypos);
+    }
+
+    void VulkanWindow::MouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+        auto* w = reinterpret_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
+        if (w->m_eventSink) w->m_eventSink->OnMouseScroll(xoffset, yoffset);
     }
 
     void VulkanWindow::HandleResize() {
@@ -125,6 +194,7 @@ namespace GraphicsCore {
 
         // Tell GLFW not to create an OpenGL context
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
         // Handle fullscreen
         GLFWmonitor* monitor = m_desc.fullscreen ? glfwGetPrimaryMonitor() : nullptr;
@@ -147,6 +217,10 @@ namespace GraphicsCore {
         // Set user pointer for callbacks
         glfwSetWindowUserPointer(window, this);
         glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
+        glfwSetKeyCallback(window, KeyCallback);
+        glfwSetMouseButtonCallback(window, MouseButtonCallback);
+        glfwSetCursorPosCallback(window, MouseMoveCallback);
+        glfwSetScrollCallback(window, MouseScrollCallback);
     }
 
     void VulkanWindow::CreateSurface() {
@@ -221,7 +295,9 @@ namespace GraphicsCore {
                 capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
         }
 
-        // Determine number of images (prefer triple buffering)
+        // Use minImageCount + 1 to give the swapchain one extra image.
+        // This allows the application to acquire the next image without blocking
+        // while the GPU is still rendering the previous frame, improving responsiveness.
         uint32_t imageCount = capabilities.minImageCount + 1;
         if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount) {
             imageCount = capabilities.maxImageCount;
@@ -236,7 +312,7 @@ namespace GraphicsCore {
         createInfo.imageColorSpace = selectedFormat.colorSpace;
         createInfo.imageExtent = m_swapchainExtent;
         createInfo.imageArrayLayers = 1;
-        createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
         createInfo.preTransform = capabilities.currentTransform;
         createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;

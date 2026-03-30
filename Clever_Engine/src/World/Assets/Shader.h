@@ -1,20 +1,19 @@
 #pragma once
 #include "Asset.h"
-
-#include "Render/Graphics/GraphicsAPI.h"
-
 #include "ShaderReflected.h"
-
-#include <stdexcept>
+#include "IRenderer.h"
 
 class Shader : public Asset
 {
 public:
-    ShaderHandle vertexHandle;
-    ShaderHandle fragmentHandle;
+    ~Shader()
+    {
+        // GPU resources destroyed via IRenderer by AssetManager before shutdown
+    }
 
-    ShaderReflection m_Reflection;
+    GraphicsCore::IShader*   vertexShader   = nullptr;
+    GraphicsCore::IShader*   fragmentShader = nullptr;
+    GraphicsCore::IPipeline* pipeline       = nullptr;
 
-	PipelineLayoutHandle pipelineHandle;
+    ShaderReflection reflection;
 };
-ShaderReflection ReflectCombinedShaders(const std::vector<uint32_t>& vertCode, const std::vector<uint32_t>& fragCode);

@@ -16,7 +16,7 @@ class Material;
 
 struct CameraComponent
 {
-    glm::vec3 position{ 0.0f, 0.0f, 5.0f };
+    glm::vec3 position{ 0.0f, 0.0f, 50.0f };
     glm::quat rotation = glm::identity<glm::quat>();
     CameraComponent()
     {

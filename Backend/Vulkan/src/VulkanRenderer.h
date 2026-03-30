@@ -2,7 +2,6 @@
 
 // On Windows, must include Windows.h before Vulkan headers
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #endif
 
@@ -17,8 +16,14 @@
 #undef CreateWindow
 #endif
 
+#ifdef _WIN32
+    #define VULKAN_BACKEND_API __declspec(dllexport)
+#else
+    #define VULKAN_BACKEND_API
+#endif
+
 namespace GraphicsCore {
-    class VulkanRenderer : public IRenderer {
+    class VULKAN_BACKEND_API VulkanRenderer : public IRenderer {
     public:
         VulkanRenderer();
         ~VulkanRenderer();
@@ -56,7 +61,8 @@ namespace GraphicsCore {
         void UnmapBuffer(IBuffer* buffer) override;
 
         // Execution
-        void Submit(ICommandList* commandList) override;
+        void Submit(ICommandList* commandList, IWindow* window = nullptr) override;
+        void SubmitBlit(ICommandList* commandList, IWindow* window) override;
         void Present(IWindow* window) override;
         void WaitIdle() override;
 
@@ -75,6 +81,7 @@ namespace GraphicsCore {
         void CreateLogicalDevice();
         void CreateAllocator();
         void CreateCommandPool();
+        void CreateDescriptorPool();
 
         VkInstance m_instance;
         VkPhysicalDevice m_physicalDevice;
@@ -82,6 +89,7 @@ namespace GraphicsCore {
         VmaAllocator m_allocator;
         VkQueue m_graphicsQueue;
         VkCommandPool m_commandPool;
+        VkDescriptorPool m_descriptorPool;
         uint32_t m_graphicsQueueFamily;
 
 #ifdef _DEBUG

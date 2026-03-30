@@ -33,6 +33,7 @@ namespace GraphicsCore {
 
         void CopyBuffer(IBuffer* srcBuffer, IBuffer* dstBuffer, size_t size, size_t srcOffset, size_t dstOffset) override;
         void TextureBarrier(ITexture* texture, TextureUsageFlags oldUsage, TextureUsageFlags newUsage) override;
+        void BlitTexture(ITexture* src, ITexture* dst) override;
 
         void BindResourceSet(uint32_t setIndex, IResourceSet* resourceSet) override;
         void PushConstants(IShader* shader, uint32_t offset, uint32_t size, const void* data) override;
@@ -45,5 +46,6 @@ namespace GraphicsCore {
         VkCommandBuffer m_commandBuffer;
         bool m_isRecording;
         VkPipelineLayout m_currentPipelineLayout;
+        VkPipelineBindPoint m_currentBindPoint;
     };
 }

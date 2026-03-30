@@ -15,6 +15,7 @@
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Clever_Engine</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -45,6 +46,7 @@
     <IntDir>$(ProjectDir)..\bin-int\Debug-windows-x86_64\Clever_Engine\</IntDir>
     <TargetName>Clever_Engine</TargetName>
     <TargetExt>.dll</TargetExt>
+    <ExternalIncludePath>..\Dependencies\tinyobjloader;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -52,23 +54,29 @@
     <IntDir>$(ProjectDir)..\bin-int\Release-windows-x86_64\Clever_Engine\</IntDir>
     <TargetName>Clever_Engine</TargetName>
     <TargetExt>.dll</TargetExt>
+    <ExternalIncludePath>..\Dependencies\tinyobjloader;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>src;..\GraphicsCore\include;..\Dependencies\glm\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4251;4275;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;..\GraphicsCore\src;..\GraphicsCore\include;..\Backend\Vulkan\src;..\Dependencies\glm\glm;..\Dependencies\GLFW\include;..\Dependencies\SPIRV-Headers\include;..\Dependencies\VulkanMemoryAllocator\include;C:\VulkanSDK\1.3.231.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.231.1\Lib;..\bin\Debug-windows-x86_64\Vulkan;..\bin\Debug-windows-x86_64\GLFW;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>..\bin\Debug-windows-x86_64\Clever_Engine\Clever_Engine.lib</ImportLibrary>
+      <AdditionalOptions>/IMPLIB:../bin/Debug-windows-x86_64/Clever_Engine/Clever_Engine.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -76,7 +84,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>src;..\GraphicsCore\include;..\Dependencies\glm\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4251;4275;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;..\GraphicsCore\src;..\GraphicsCore\include;..\Backend\Vulkan\src;..\Dependencies\glm\glm;..\Dependencies\GLFW\include;..\Dependencies\SPIRV-Headers\include;..\Dependencies\VulkanMemoryAllocator\include;C:\VulkanSDK\1.3.231.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -84,13 +94,16 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.231.1\Lib;..\bin\Release-windows-x86_64\Vulkan;..\bin\Release-windows-x86_64\GLFW;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>..\bin\Release-windows-x86_64\Clever_Engine\Clever_Engine.lib</ImportLibrary>
+      <AdditionalOptions>/IMPLIB:../bin/Release-windows-x86_64/Clever_Engine/Clever_Engine.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -98,9 +111,8 @@
     <ClInclude Include="src\Event\EventController.h" />
     <ClInclude Include="src\Event\Io\ConversionData.h" />
     <ClInclude Include="src\Event\Io\KeyCodes.h" />
-    <ClInclude Include="src\Render\Graphics\GraphicsAPI.h" />
+    <ClInclude Include="src\Log.h" />
     <ClInclude Include="src\Render\Graphics\Pipeline.h" />
-    <ClInclude Include="src\Render\Graphics\VulkanGrahicsAPI.h" />
     <ClInclude Include="src\Render\ResourceManagement\PushConstants.h" />
     <ClInclude Include="src\Render\ShaderProviders\GlobalProviders.h" />
     <ClInclude Include="src\Render\Window\Scene.h" />
@@ -127,20 +139,28 @@
   <ItemGroup>
     <ClCompile Include="src\Engine.cpp" />
     <ClCompile Include="src\Event\EventController.cpp" />
-    <ClCompile Include="src\Render\Graphics\VulkanGrahicsAPI.cpp" />
     <ClCompile Include="src\Render\Window\Scene.cpp" />
     <ClCompile Include="src\Render\Window\Scene\Object\Element.cpp" />
     <ClCompile Include="src\Render\Window\Window.cpp" />
-    <ClCompile Include="src\World\AssetLoaders\Meshloader.cpp" />
+    <ClCompile Include="src\World\AssetLoaders\Meshloader.cpp">
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
     <ClCompile Include="src\World\AssetLoaders\ShaderLoader.cpp" />
     <ClCompile Include="src\World\AssetManager.cpp" />
+    <ClCompile Include="src\World\Assets\Helper\spirv_reflect.c">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
     <ClCompile Include="src\World\Assets\Material.cpp" />
     <ClCompile Include="src\World\Assets\Shader.cpp" />
     <ClCompile Include="src\World\WorldController.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GraphicsCore\GraphicsCore.vcxproj">
-      <Project>{BF92744A-ABF5-03EF-547B-3CA540BDCF71}</Project>
+    <ProjectReference Include="..\Backend\Vulkan\Vulkan.vcxproj">
+      <Project>{D6EAFCD8-C28C-27AF-AB47-3B039788AEFF}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Dependencies\BuildScripts\GLFW.vcxproj">
+      <Project>{154B857C-0182-860D-AA6E-6C109684020F}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -9,12 +9,9 @@ project "Vulkan"
     staticruntime "off"
 
     targetdir ("../../bin/" .. outputdir .. "/%{prj.name}")
-    objdir ("../../bin-int/" .. outputdir .. "/%{prj.name}")
+    objdir   ("../../bin-int/" .. outputdir .. "/%{prj.name}")
 
     warnings "Extra"
-
-    -- Don't treat all warnings as fatal errors - some VMA warnings are unavoidable
-    -- fatalwarnings { "All" }
 
     files 
     { 
@@ -25,11 +22,12 @@ project "Vulkan"
     includedirs 
     {
         "src",
-        os.getenv("VULKAN_SDK") .. "/Include",
+        "../../GraphicsCore/src",
+        "../../GraphicsCore/include",
+        "../../Dependencies/GLFW/include",
         "../../Dependencies/glm/glm",
         "../../Dependencies/VulkanMemoryAllocator/include",
-        "../../GraphicsCore/src",
-        "../../Dependencies/GLFW/include"
+        os.getenv("VULKAN_SDK") .. "/Include"
     }
 
     libdirs 
@@ -39,20 +37,20 @@ project "Vulkan"
 
     links 
     {
-        "vulkan-1",
-        "GLFW"
+        "GLFW",
+        "vulkan-1"
     }
-
-    -- GraphicsCore is a header-only library, so we just need the include path
-    -- No library linking required
 
     defines
     {
-        "VK_USE_PLATFORM_WIN32_KHR"  -- Required for Windows Vulkan surface extensions
+        "VK_USE_PLATFORM_WIN32_KHR",
+        "WIN32_LEAN_AND_MEAN",
+        "NOMINMAX"
     }
 
     filter "system:windows"
         systemversion "latest"
+        linkoptions { "/IMPLIB:../../bin/" .. outputdir .. "/Vulkan/Vulkan.lib" }
 
     filter "configurations:Debug"
         runtime "Debug"

@@ -1,12 +1,11 @@
 #include "VulkanPipeline.h"
 #include "VulkanShader.h"
 #include "VulkanTexture.h"
+#include "VulkanFormats.h"
 #include <stdexcept>
 #include <vector>
 
 namespace GraphicsCore {
-
-    static VkFormat GetVulkanFormat(TextureFormat format); // Forward declaration from VulkanTexture.cpp
 
     static VkPrimitiveTopology GetVulkanTopology(PrimitiveTopology topology) {
         switch (topology) {
@@ -71,16 +70,6 @@ namespace GraphicsCore {
         }
     }
 
-    static VkFormat GetVulkanAttributeFormat(TextureFormat format) {
-        switch (format) {
-        case TextureFormat::R32F: return VK_FORMAT_R32_SFLOAT;
-        case TextureFormat::RG32F: return VK_FORMAT_R32G32_SFLOAT;
-        case TextureFormat::RGB32F: return VK_FORMAT_R32G32B32_SFLOAT;
-        case TextureFormat::RGBA32F: return VK_FORMAT_R32G32B32A32_SFLOAT;
-        default: return VK_FORMAT_R32G32B32_SFLOAT;
-        }
-    }
-
     VulkanPipeline::VulkanPipeline(VkDevice device, const PipelineDesc& desc)
         : m_desc(desc), m_device(device), m_pipeline(VK_NULL_HANDLE), m_pipelineLayout(VK_NULL_HANDLE)
     {
@@ -108,10 +97,17 @@ namespace GraphicsCore {
             setLayouts.push_back(vkLayout->GetDescriptorSetLayout());
         }
 
+        VkPushConstantRange pushConstantRange = {};
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        pushConstantRange.offset     = 0;
+        pushConstantRange.size       = 128; // enough for two mat4s
+
         VkPipelineLayoutCreateInfo layoutInfo = {};
         layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         layoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
         layoutInfo.pSetLayouts = setLayouts.data();
+        layoutInfo.pushConstantRangeCount = 1;
+        layoutInfo.pPushConstantRanges    = &pushConstantRange;
 
         VkResult result = vkCreatePipelineLayout(m_device, &layoutInfo, nullptr, &m_pipelineLayout);
         if (result != VK_SUCCESS) {
@@ -156,7 +152,7 @@ namespace GraphicsCore {
             VkVertexInputAttributeDescription desc = {};
             desc.location = attr.location;
             desc.binding = attr.binding;
-            desc.format = GetVulkanAttributeFormat(attr.format);
+            desc.format = GetVulkanFormat(attr.format);
             desc.offset = attr.offset;
             attributeDescs.push_back(desc);
         }
@@ -233,7 +229,7 @@ namespace GraphicsCore {
         // Rendering info (Vulkan 1.3+ dynamic rendering)
         std::vector<VkFormat> colorFormats;
         for (uint32_t i = 0; i < m_desc.colorAttachmentCount; ++i) {
-            colorFormats.push_back(GetVulkanAttributeFormat(m_desc.colorAttachmentFormats[i]));
+            colorFormats.push_back(GetVulkanFormat(m_desc.colorAttachmentFormats[i]));
         }
 
         VkPipelineRenderingCreateInfo renderingInfo = {};
@@ -241,7 +237,7 @@ namespace GraphicsCore {
         renderingInfo.colorAttachmentCount = static_cast<uint32_t>(colorFormats.size());
         renderingInfo.pColorAttachmentFormats = colorFormats.data();
         if (m_desc.depthStencilFormat != TextureFormat::RGBA8) {
-            renderingInfo.depthAttachmentFormat = GetVulkanAttributeFormat(m_desc.depthStencilFormat);
+            renderingInfo.depthAttachmentFormat = GetVulkanFormat(m_desc.depthStencilFormat);
         }
 
         // Create graphics pipeline

@@ -3,57 +3,62 @@
 #include <memory>
 #include <vector>
 #include <cstdint>
-#include <GLFW/glfw3.h>
-#include "Render/Graphics/GraphicsAPI.h"
 
+#include "IRenderer.h"
 #include "Event/EventController.h"
-#include "World/ECS/Registry.h"
 #include "WindowControls.h"
 
-class Window : public IInputLayer {
+#ifndef CLEVER_ENGINE_API
+    #ifdef _WIN32
+        #define CLEVER_ENGINE_API __declspec(dllexport)
+    #else
+        #define CLEVER_ENGINE_API
+    #endif
+#endif
+
+class Scene;
+
+class CLEVER_ENGINE_API Window : public IInputLayer, public GraphicsCore::IWindowEventSink
+{
 public:
-    Window(GraphicsAPI* graphicsAPI, std::string title, int width, int height, int posx = 0, int posy = 0);
-    ~Window() = default;
+    Window(GraphicsCore::IRenderer* renderer,
+           const std::string&       title,
+           uint32_t                 width,
+           uint32_t                 height,
+           int                      posX = 0,
+           int                      posY = 0);
 
-    // Standard Logic
+    ~Window();
+
     bool IsAlive();
-    void CloseWindow();
     void Update();
-    void Render();
+    void Render(const std::vector<Scene*>& scenes);
 
-    void OnInput(InputEvent& event);
-    int GetZIndex() const;
+    void OnInput(InputEvent& /*event*/) override {}
+    int  GetZIndex() const override { return 0; }
 
-    // --- Getters ---
-    int GetWindowID() const { return m_WindowID; }
-    uint32_t GetGraphicsWindowID() const { return m_GraphicsWindowID; }
-    GLFWwindow* GetGLFWWindowPtr() const { return m_pGLFWWindow; }
-	glm::vec2 GetWindowSize() const { return glm::vec2(static_cast<float>(m_Width), static_cast<float>(m_Height)); }
-	glm::vec2 GetWindowPosition() const { return glm::vec2(static_cast<float>(m_PosX), static_cast<float>(m_PosY)); }
+    // IWindowEventSink
+    void OnKey(int glfwKey, int scancode, int action, int mods) override;
+    void OnMouseButton(int button, int action, double x, double y, int mods) override;
+    void OnMouseMove(double x, double y) override;
+    void OnMouseScroll(double xoffset, double yoffset) override;
 
-    // Controller Accessors
-    EventController& GetEventController() { return *m_EventController; }
+    void OnResize(uint32_t width, uint32_t height);
 
-    // Callbacks
-    void OnResize(int width, int height);
+    GraphicsCore::IWindow* GetIWindow()        const { return m_iWindow; }
+    EventController&       GetEventController()      { return *m_eventController; }
+    uint32_t               GetWidth()          const { return m_width; }
+    uint32_t               GetHeight()         const { return m_height; }
 
 private:
-    void InitCallbacks();
+GraphicsCore::IRenderer* m_renderer    = nullptr;
+GraphicsCore::IWindow*   m_iWindow     = nullptr;
 
-    int m_WindowID = 0;
-    std::string m_Title;
-    int m_Width;
-    int m_Height;
-    int m_PosX;
-    int m_PosY;
+std::string m_title;
+uint32_t    m_width  = 0;
+uint32_t    m_height = 0;
 
-    std::vector<int> m_SceneIDs; // IDs of scenes associated with this window
+GraphicsCore::ICommandList* m_blitCommandList = nullptr;
 
-    GLFWwindow* m_pGLFWWindow = nullptr;
-
-    // Controllers Owned by the Window
-    std::unique_ptr<EventController> m_EventController;
-
-    uint32_t m_GraphicsWindowID = 0; // ID for the GraphicsAPI to reference this window
-	GraphicsAPI* m_GraphicsAPI; // Assume this is set externally, or you can initialize it here
+std::unique_ptr<EventController> m_eventController;
 };

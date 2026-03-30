@@ -1,69 +1,80 @@
 #pragma once
 #include <cstdint>
-#include <iostream>
 #include <memory>
 #include <vector>
+#include <chrono>
+#include <array>
 
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 
-#include "World/WorldController.h"
 #include "Event/EventController.h"
-
-#include "Render/Graphics/GraphicsAPI.h"
+#include "IRenderer.h"
 #include "World/ECS/Registry.h"
 #include "Scene/RenderStage.h"
 #include "Render/Window/WindowControls.h"
 #include "World/AssetManager.h"
 
-struct SceneCreationInfo {
-    uint32_t graphicsWindowId = 0;
-    uint32_t graphicsSceneId = 0;
+#ifndef CLEVER_ENGINE_API
+    #ifdef _WIN32
+        #define CLEVER_ENGINE_API __declspec(dllexport)
+    #else
+        #define CLEVER_ENGINE_API
+    #endif
+#endif
 
+struct CLEVER_ENGINE_API SceneDesc
+{
     uint32_t width = 0;
     uint32_t height = 0;
-    int posx = 0;
-    int posy = 0;
-    int zIndex = 1;
+    int      posX = 0;
+    int      posY = 0;
+    int      zIndex = 1;
 };
 
-class Scene : public IInputLayer
+class Window;
+
+
+class CLEVER_ENGINE_API Scene : public IInputLayer
 {
 public:
-    Scene(GraphicsAPI* graphicsAPI, AssetManager* assetManager, SceneCreationInfo info)
-        : m_GraphicsAPI(graphicsAPI)
-        , m_AssetManager(assetManager)
-        , m_SceneInfo(info)
-        , m_GraphicsSceneId(info.graphicsSceneId)
-    {
-        m_Registry = std::make_unique<Registry>();
-    }
+    Scene(GraphicsCore::IRenderer* renderer,
+        AssetManager* assetManager,
+        Window* window,
+        const SceneDesc& desc);
+
+    ~Scene();
 
     void Update();
     void Render();
-    void ExecuteRenderStage(const RenderStage& stage);
+    void AttachToWindow(Window& window);
 
-    Registry& GetRegistry() { return *m_Registry; }
-    const SceneCreationInfo& GetSceneInfo() const { return m_SceneInfo; }
-    uint32_t GetGraphicsSceneId() const { return m_GraphicsSceneId; }
+    GraphicsCore::ITexture* GetColorTarget() const { return m_colorTarget; }
+    GraphicsCore::ITexture* GetDepthTarget() const { return m_depthTarget; }
 
-    virtual void OnInput(InputEvent& event) override
-    {
-        if (event.type == InputEvent::Type::Key &&
-            (event.action == Input::Action::PRESS || event.action == Input::Action::REPEAT))
-        {
-        }
-    }
+    const SceneDesc& GetDesc()     const { return m_desc; }
+    Registry& GetRegistry() { return *m_registry; }
 
-    virtual int GetZIndex() const override { return m_SceneInfo.zIndex; }
+    void OnInput(InputEvent& event) override;
+    int  GetZIndex() const override { return m_desc.zIndex; }
 
 private:
-    SceneCreationInfo m_SceneInfo;
-    uint32_t m_GraphicsSceneId = 0;
+    SceneDesc m_desc;
 
-    std::vector<RenderStage> m_RenderStages;
+    GraphicsCore::IRenderer* m_renderer = nullptr;
+    AssetManager* m_assetManager = nullptr;
+    Window* m_window = nullptr;
 
-    std::unique_ptr<Registry> m_Registry;
-    GraphicsAPI* m_GraphicsAPI = nullptr;
-    AssetManager* m_AssetManager = nullptr;
+    GraphicsCore::ITexture* m_colorTarget = nullptr;
+    GraphicsCore::ITexture* m_depthTarget = nullptr;
+    GraphicsCore::ICommandList* m_commandList = nullptr;
+
+    std::unique_ptr<Registry>   m_registry;
+    std::vector<RenderStage>    m_renderStages;
+
+    // Camera input state
+    std::array<bool, 6> m_keysHeld = {};  // W S A D Q E
+    bool  m_mouseLocked = false;
+    std::chrono::steady_clock::time_point m_lastFrameTime;
+    bool  m_firstFrame = true;
 };

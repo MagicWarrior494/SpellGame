@@ -87,10 +87,8 @@ namespace GraphicsCore
 
         // --- Transfers & Data Movement ---
         virtual void CopyBuffer(IBuffer* srcBuffer, IBuffer* dstBuffer, size_t size, size_t srcOffset, size_t dstOffset) = 0;
-        // We will add CopyBufferToTexture later when we tackle texture uploads, as it requires image layouts/barriers.
-        
-        // Simplest version for now
         virtual void TextureBarrier(ITexture* texture, TextureUsageFlags oldUsage, TextureUsageFlags newUsage) = 0;
+        virtual void BlitTexture(ITexture* src, ITexture* dst) = 0;
 
         virtual void BindResourceSet(uint32_t setIndex, IResourceSet* resourceSet) = 0;
         virtual void PushConstants(IShader* shader, uint32_t offset, uint32_t size, const void* data) = 0;

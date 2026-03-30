@@ -26,8 +26,8 @@ namespace GraphicsCore {
     }
 
     VulkanCommandList::VulkanCommandList(VulkanRenderer* renderer)
-        : m_renderer(renderer), m_commandBuffer(VK_NULL_HANDLE), m_isRecording(false), 
-          m_currentPipelineLayout(VK_NULL_HANDLE)
+        : m_renderer(renderer), m_commandBuffer(VK_NULL_HANDLE), m_isRecording(false),
+          m_currentPipelineLayout(VK_NULL_HANDLE), m_currentBindPoint(VK_PIPELINE_BIND_POINT_GRAPHICS)
     {
         VkCommandBufferAllocateInfo allocInfo = {};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -82,11 +82,11 @@ namespace GraphicsCore {
             attachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
             attachmentInfo.loadOp = GetVulkanLoadOp(colorAttach.loadOp);
             attachmentInfo.storeOp = GetVulkanStoreOp(colorAttach.storeOp);
-            attachmentInfo.clearValue.color = { 
-                colorAttach.clearColor[0], 
-                colorAttach.clearColor[1], 
-                colorAttach.clearColor[2], 
-                colorAttach.clearColor[3] 
+            attachmentInfo.clearValue.color = {
+                colorAttach.clearColor[0],
+                colorAttach.clearColor[1],
+                colorAttach.clearColor[2],
+                colorAttach.clearColor[3]
             };
 
             colorAttachmentInfos.push_back(attachmentInfo);
@@ -125,8 +125,8 @@ namespace GraphicsCore {
 
     void VulkanCommandList::BindPipeline(IPipeline* pipeline) {
         VulkanPipeline* vkPipeline = static_cast<VulkanPipeline*>(pipeline);
-        VkPipelineBindPoint bindPoint = vkPipeline->IsCompute() ? VK_PIPELINE_BIND_POINT_COMPUTE : VK_PIPELINE_BIND_POINT_GRAPHICS;
-        vkCmdBindPipeline(m_commandBuffer, bindPoint, vkPipeline->GetPipeline());
+        m_currentBindPoint = vkPipeline->IsCompute() ? VK_PIPELINE_BIND_POINT_COMPUTE : VK_PIPELINE_BIND_POINT_GRAPHICS;
+        vkCmdBindPipeline(m_commandBuffer, m_currentBindPoint, vkPipeline->GetPipeline());
         m_currentPipelineLayout = vkPipeline->GetPipelineLayout();
     }
 
@@ -186,6 +186,31 @@ namespace GraphicsCore {
         vkCmdCopyBuffer(m_commandBuffer, src->GetBuffer(), dst->GetBuffer(), 1, &copyRegion);
     }
 
+    void VulkanCommandList::BlitTexture(ITexture* src, ITexture* dst) {
+        VulkanTexture* vkSrc = static_cast<VulkanTexture*>(src);
+        VulkanTexture* vkDst = static_cast<VulkanTexture*>(dst);
+
+        VkImageBlit region = {};
+        region.srcSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.srcSubresource.mipLevel       = 0;
+        region.srcSubresource.baseArrayLayer = 0;
+        region.srcSubresource.layerCount     = 1;
+        region.srcOffsets[0]                 = { 0, 0, 0 };
+        region.srcOffsets[1]                 = { (int32_t)vkSrc->GetDesc().width, (int32_t)vkSrc->GetDesc().height, 1 };
+
+        region.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.dstSubresource.mipLevel       = 0;
+        region.dstSubresource.baseArrayLayer = 0;
+        region.dstSubresource.layerCount     = 1;
+        region.dstOffsets[0]                 = { 0, 0, 0 };
+        region.dstOffsets[1]                 = { (int32_t)vkDst->GetDesc().width, (int32_t)vkDst->GetDesc().height, 1 };
+
+        vkCmdBlitImage(m_commandBuffer,
+            vkSrc->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            vkDst->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            1, &region, VK_FILTER_LINEAR);
+    }
+
     void VulkanCommandList::TextureBarrier(ITexture* texture, TextureUsageFlags oldUsage, TextureUsageFlags newUsage) {
         (void)oldUsage; // Currently unused, but kept for API consistency
         VulkanTexture* vkTexture = static_cast<VulkanTexture*>(texture);
@@ -210,7 +235,10 @@ namespace GraphicsCore {
 
         // Determine new layout based on usage
         if (newUsage & TextureUsage_RenderTarget) {
-            barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            // Swapchain images transition to present layout; owned images to color attachment
+            barrier.newLayout = vkTexture->OwnsImage()
+                ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+                : VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
         } else if (newUsage & TextureUsage_DepthStencil) {
             barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         } else if (newUsage & TextureUsage_ShaderResource) {
@@ -234,14 +262,14 @@ namespace GraphicsCore {
     void VulkanCommandList::BindResourceSet(uint32_t setIndex, IResourceSet* resourceSet) {
         VulkanResourceSet* vkResourceSet = static_cast<VulkanResourceSet*>(resourceSet);
         VkDescriptorSet descriptorSet = vkResourceSet->GetDescriptorSet();
-        vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, 
+        vkCmdBindDescriptorSets(m_commandBuffer, m_currentBindPoint,
                                m_currentPipelineLayout, setIndex, 1, &descriptorSet, 0, nullptr);
     }
 
     void VulkanCommandList::PushConstants(IShader* shader, uint32_t offset, uint32_t size, const void* data) {
         VulkanShader* vkShader = static_cast<VulkanShader*>(shader);
         VkShaderStageFlags stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
-        
+
         switch (vkShader->GetDesc().stage) {
         case ShaderStage::Vertex: stageFlags = VK_SHADER_STAGE_VERTEX_BIT; break;
         case ShaderStage::Fragment: stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT; break;

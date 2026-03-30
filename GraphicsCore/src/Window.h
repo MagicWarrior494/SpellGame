@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <functional>
 
 namespace GraphicsCore
 {
@@ -15,6 +16,16 @@ namespace GraphicsCore
         bool vsync;
     };
 
+    // Minimal callback interface the backend calls into
+    struct IWindowEventSink
+    {
+        virtual ~IWindowEventSink() = default;
+        virtual void OnKey(int glfwKey, int scancode, int action, int mods) = 0;
+        virtual void OnMouseButton(int button, int action, double x, double y, int mods) = 0;
+        virtual void OnMouseMove(double x, double y) = 0;
+        virtual void OnMouseScroll(double xoffset, double yoffset) = 0;
+    };
+
     class IWindow
     {
     public:
@@ -23,5 +34,8 @@ namespace GraphicsCore
         virtual void* GetNativeHandle() const = 0;
         virtual void* GetPlatformHandle() const = 0;
         virtual ITexture* GetCurrentBackbuffer() = 0;
+        virtual void BeginFrame() = 0;
+        virtual bool IsFrameReady() const = 0;
+        virtual void SetEventSink(IWindowEventSink* sink) = 0;
     };
 }

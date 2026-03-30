@@ -1,37 +1,46 @@
 #include "Engine.h"
-
 #include "World/Assets/Mesh.h"
 #include "World/Assets/Shader.h"
 #include "World/Assets/Material.h"
 #include "World/ECS/Components.h"
+#include "Log.h"
+#include <cstdio>
 
 int main()
 {
-    Engine engine{};
-    Window& window = engine.CreateWindow("SpellGame", 800, 600);
 
-    Scene& scene = engine.CreateScene(window.GetGraphicsWindowID(), 400, 300);
+    Engine engine{};    
+    Window& window = engine.CreateWindow("SpellGame", 800, 600);
+    Scene& scene = engine.CreateScene(window, 800, 600);
+    scene.AttachToWindow(window);
 
     Registry& registry = scene.GetRegistry();
-    auto& assets = engine.GetAssetManager();
+    AssetManager& assets = engine.GetAssetManager();
 
     auto teapotMesh = assets.Get<Mesh>("models/utah_teapot.obj");
     auto standardShader = assets.Get<Shader>("shaders/simple");
 
-    //auto teapotMaterial = std::make_shared<Material>(standardShader);
-    //teapotMaterial->SetVector4("color", glm::vec4(0.8f, 0.2f, 0.2f, 1.0f));
 
     EntityID teapot = registry.Create();
     registry.Set<Transform>(teapot, Transform{});
     registry.Set<MeshComponent>(teapot, MeshComponent{ teapotMesh });
-	//registry.Set<MaterialComponent>(teapot, MaterialComponent{ teapotMaterial });
-	registry.Set<ShaderComponent>(teapot, ShaderComponent{ standardShader });
+    registry.Set<ShaderComponent>(teapot, ShaderComponent{ standardShader });
 
+    EntityID camera = registry.Create();
+    CameraComponent cam{};
+    cam.position    = glm::vec3(0.0f, 3.0f, 8.0f);
+    cam.aspectRatio = 800.0f / 600.0f;
+    cam.fov         = 60.0f;
+    cam.moveSpeed   = 5.0f;
+    cam.sensitivity = 0.15f;
+    registry.Set<CameraComponent>(camera, cam);
+
+    int frameCount = 0;
     while (window.IsAlive())
     {
-        engine.BeginFrame();
-        scene.Render();
-        engine.EndFrame();
+        window.Update();
+        scene.Update();
+        window.Render({ &scene });
     }
 
     engine.Shutdown();
