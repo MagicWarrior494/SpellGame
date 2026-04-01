@@ -105,7 +105,37 @@ std::shared_ptr<Shader> ShaderLoader::LoadFromFile(
     pipelineDesc.colorAttachmentFormats[0] = GraphicsCore::TextureFormat::RGBA8;
     pipelineDesc.depthStencilFormat        = GraphicsCore::TextureFormat::Depth32F;
 
+    // Descriptor set layout: set 0, binding 0 = combined image sampler (fragment)
+    GraphicsCore::ResourceBinding texBinding{};
+    texBinding.binding = 0;
+    texBinding.type    = GraphicsCore::ResourceType::Texture;
+    texBinding.stage   = GraphicsCore::ShaderStage::Fragment;
+
+    GraphicsCore::ResourceLayoutDesc layoutDesc{};
+    layoutDesc.bindings.push_back(texBinding);
+
+    shader->textureLayout = renderer->CreateResourceLayout(layoutDesc);
+    pipelineDesc.layouts.push_back(shader->textureLayout);
+
     shader->pipeline = renderer->CreatePipeline(pipelineDesc);
+
+    // Default linear sampler shared by all draw calls using this shader
+    GraphicsCore::SamplerDesc samplerDesc{};
+    samplerDesc.minFilter        = GraphicsCore::FilterMode::Linear;
+    samplerDesc.magFilter        = GraphicsCore::FilterMode::Linear;
+    samplerDesc.mipFilter        = GraphicsCore::FilterMode::Linear;
+    samplerDesc.wrapU            = GraphicsCore::WrapMode::Repeat;
+    samplerDesc.wrapV            = GraphicsCore::WrapMode::Repeat;
+    samplerDesc.wrapW            = GraphicsCore::WrapMode::Repeat;
+    samplerDesc.mipLodBias       = 0.0f;
+    samplerDesc.minLod           = 0.0f;
+    samplerDesc.maxLod           = 1.0f;
+    samplerDesc.anisotropyEnable = false;
+    samplerDesc.maxAnisotropy    = 1.0f;
+    samplerDesc.compareEnable    = false;
+    samplerDesc.compareOp        = GraphicsCore::CompareOp::Always;
+
+    shader->sampler = renderer->CreateSampler(samplerDesc);
 
     return shader;
 }

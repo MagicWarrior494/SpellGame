@@ -7,6 +7,7 @@
 #include "Resources/VulkanPipeline.h"
 #include "Core/VulkanCommandList.h"
 #include "Core/VulkanWindow.h"
+#include <GLFW/glfw3.h>
 #include <stdexcept>
 #include <vector>
 
@@ -20,7 +21,16 @@ namespace GraphicsCore {
         void* pUserData) {
 
         if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
-            // Log or handle the validation message
+            // OutputDebugStringA routes to the Visual Studio Output window
+            // regardless of which DLL emits it, so it is always visible.
+            char buf[4096];
+            const char* severity = (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+                ? "[Vulkan ERROR]   "
+                : "[Vulkan WARNING] ";
+            _snprintf_s(buf, sizeof(buf), _TRUNCATE, "%s%s\n", severity, pCallbackData->pMessage);
+            OutputDebugStringA(buf);    
+            fprintf(stderr, "%s", buf);
+            fflush(stderr);
         }
         return VK_FALSE;
     }
@@ -351,51 +361,48 @@ namespace GraphicsCore {
     }
 
     // Execution
-    void VulkanRenderer::Submit(ICommandList* commandList, IWindow* window) {
+    void VulkanRenderer::Submit(ICommandList* commandList, IWindow* /*window*/) {
         VulkanCommandList* vkCommandList = static_cast<VulkanCommandList*>(commandList);
-        VulkanWindow* vkWindow = static_cast<VulkanWindow*>(window);
+
+        // Accumulate scene command buffers; they will all be submitted together
+        // with the blit in SubmitBlit so a single fence covers everything.
+        m_pendingCommandBuffers.push_back(vkCommandList->GetCommandBuffer());
+    }
+
+    void VulkanRenderer::SubmitImmediate(ICommandList* commandList) {
+        VulkanCommandList* vkCommandList = static_cast<VulkanCommandList*>(commandList);
+        VkCommandBuffer cmdBuf = vkCommandList->GetCommandBuffer();
 
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-        VkCommandBuffer commandBuffer = vkCommandList->GetCommandBuffer();
         submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
+        submitInfo.pCommandBuffers    = &cmdBuf;
 
-        VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-        if (vkWindow != nullptr) {
-            // Scene submit: wait for image available, signal sceneFinished. No fence yet.
-            VkSemaphore waitSem   = vkWindow->GetImageAvailableSemaphore();
-            VkSemaphore signalSem = vkWindow->GetSceneFinishedSemaphore();
-            submitInfo.waitSemaphoreCount   = 1;
-            submitInfo.pWaitSemaphores      = &waitSem;
-            submitInfo.pWaitDstStageMask    = &waitStage;
-            submitInfo.signalSemaphoreCount = 1;
-            submitInfo.pSignalSemaphores    = &signalSem;
-            vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-        } else {
-            // Standalone submit (no sync)
-            vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-        }
+        vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+        vkQueueWaitIdle(m_graphicsQueue);
     }
 
     void VulkanRenderer::SubmitBlit(ICommandList* commandList, IWindow* window) {
         VulkanCommandList* vkCommandList = static_cast<VulkanCommandList*>(commandList);
         VulkanWindow* vkWindow = static_cast<VulkanWindow*>(window);
 
+        // Append the blit command buffer after all accumulated scene command buffers.
+        m_pendingCommandBuffers.push_back(vkCommandList->GetCommandBuffer());
+
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = static_cast<uint32_t>(m_pendingCommandBuffers.size());
+        submitInfo.pCommandBuffers    = m_pendingCommandBuffers.data();
 
-        VkCommandBuffer commandBuffer = vkCommandList->GetCommandBuffer();
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
-
-        // Blit submit: wait for scene to finish, signal renderFinished, signal fence.
-        // The fence is waited on at the start of the next BeginFrame so the CPU
-        // cannot race ahead and re-use this command buffer before the GPU is done.
+        // Wait for imageAvailable (swapchain image is ready to write),
+        // signal renderFinished (present can start), signal the in-flight fence
+        // (CPU waits on this at the top of the next BeginFrame).
+        // The single fence now covers ALL scene renders AND the blit, so no
+        // command buffer can be reused while the GPU is still executing it.
+        // Wait at TRANSFER stage because the blit (vkCmdBlitImage) is the first
+        // operation that actually writes to the swapchain image.
         VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-        VkSemaphore waitSem   = vkWindow->GetSceneFinishedSemaphore();
+        VkSemaphore waitSem   = vkWindow->GetImageAvailableSemaphore();
         VkSemaphore signalSem = vkWindow->GetRenderFinishedSemaphore();
         submitInfo.waitSemaphoreCount   = 1;
         submitInfo.pWaitSemaphores      = &waitSem;
@@ -404,6 +411,8 @@ namespace GraphicsCore {
         submitInfo.pSignalSemaphores    = &signalSem;
 
         vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, vkWindow->GetInFlightFenceRef());
+
+        m_pendingCommandBuffers.clear();
     }
 
     void VulkanRenderer::Present(IWindow* window) {
@@ -421,10 +430,21 @@ namespace GraphicsCore {
         presentInfo.pSwapchains = swapchains;
         presentInfo.pImageIndices = &vkWindow->GetCurrentImageIndex();
 
-        vkQueuePresentKHR(m_graphicsQueue, &presentInfo);
+        VkResult result = vkQueuePresentKHR(m_graphicsQueue, &presentInfo);
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+            vkWindow->HandleResize();
+        } else if (result != VK_SUCCESS) {
+            throw std::runtime_error("Failed to present swapchain image");
+        }
     }
 
     void VulkanRenderer::WaitIdle() {
         vkDeviceWaitIdle(m_device);
     }
+
+    void VulkanRenderer::PollEvents() {
+        glfwPollEvents();
+    }
 }
+

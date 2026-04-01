@@ -29,14 +29,18 @@ void Engine::SetUp()
 
 void Engine::Tick()
 {
+    m_renderer->PollEvents();
+
     m_worldController.Update();
     for (auto& [id, window] : m_windows)
     {
-        window->Update();
-
         auto it = m_windowScenes.find(id);
         if (it != m_windowScenes.end())
+        {
+            for (Scene* scene : it->second)
+                if (scene) scene->Update();
             window->Render(it->second);
+        }
         else
             window->Render({});
     }
@@ -59,6 +63,7 @@ void Engine::Shutdown()
 
     m_scenes.clear();
     m_windows.clear();
+    m_assetManager.ReleaseAllGPUResources();
     m_renderer.reset();
 }
 
@@ -72,12 +77,14 @@ Window& Engine::CreateWindow(const std::string& title, int width, int height)
         static_cast<uint32_t>(width),
         static_cast<uint32_t>(height));
 
+    window->SetCloseCallback([this]() { RequestClose(); });
+
     m_windows[id] = std::move(window);
     m_windowScenes[id] = {};
     return *m_windows[id];
 }
 
-Scene& Engine::CreateScene(Window& window, int width, int height)
+Scene& Engine::CreateScene(Window& window, int width, int height, int xpos, int ypos)
 {
     const int sceneId = m_nextSceneId++;
 
@@ -94,12 +101,13 @@ Scene& Engine::CreateScene(Window& window, int width, int height)
     SceneDesc desc{};
     desc.width = static_cast<uint32_t>(width);
     desc.height = static_cast<uint32_t>(height);
-    desc.posX = 0;
-    desc.posY = 0;
+    desc.posX = xpos;
+    desc.posY = ypos;
     desc.zIndex = static_cast<int>(m_windowScenes[windowId].size()) + 1;
 
     auto scene = std::make_unique<Scene>(m_renderer.get(), &m_assetManager, &window, desc);
     Scene* scenePtr = scene.get();
+    scenePtr->AttachToWindow(window);
 
     m_scenes[sceneId] = std::move(scene);
 

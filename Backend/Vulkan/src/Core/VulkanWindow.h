@@ -25,7 +25,6 @@ namespace GraphicsCore {
         uint32_t AcquireNextImage();
         uint32_t& GetCurrentImageIndex() { return m_currentImageIndex; }
         VkSemaphore GetImageAvailableSemaphore() const { return m_imageAvailableSemaphore; }
-        VkSemaphore GetSceneFinishedSemaphore()  const { return m_sceneFinishedSemaphore; }
         VkSemaphore GetRenderFinishedSemaphore() const { return m_renderFinishedSemaphore; }
         VkFence GetInFlightFence() const { return m_inFlightFence; }
         VkFence& GetInFlightFenceRef() { return m_inFlightFence; }
@@ -35,6 +34,7 @@ namespace GraphicsCore {
         bool WasResized() const { return m_framebufferResized; }
         void ResetResizeFlag() { m_framebufferResized = false; }
         bool IsFrameReady() const override { return m_frameReady; }
+        void SetTitle(const char* title) override;
 
     private:
         void CreatePlatformWindow();
@@ -48,6 +48,8 @@ namespace GraphicsCore {
         static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
         static void MouseMoveCallback(GLFWwindow* window, double xpos, double ypos);
         static void MouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+        static void WindowCloseCallback(GLFWwindow* window);
+        static void WindowFocusCallback(GLFWwindow* window, int focused);
 
         WindowDesc m_desc;
         VulkanRenderer* m_renderer;
@@ -61,7 +63,6 @@ namespace GraphicsCore {
         uint32_t m_currentImageIndex;
 
         VkSemaphore m_imageAvailableSemaphore;
-        VkSemaphore m_sceneFinishedSemaphore;
         VkSemaphore m_renderFinishedSemaphore;
         VkFence m_inFlightFence;
 

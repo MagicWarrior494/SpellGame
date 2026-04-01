@@ -52,6 +52,13 @@ project "Vulkan"
         systemversion "latest"
         linkoptions { "/IMPLIB:../../bin/" .. outputdir .. "/Vulkan/Vulkan.lib" }
 
+        -- Keep SpellGame's output folder in sync so a Vulkan-only rebuild
+        -- never leaves a stale DLL (e.g. Release) next to a Debug executable.
+        postbuildcommands
+        {
+            'xcopy /Q /Y "%{wks.location}bin\\' .. outputdir .. '\\Vulkan\\Vulkan.dll" "%{wks.location}bin\\' .. outputdir .. '\\SpellGame\\" > nul',
+        }
+
     filter "configurations:Debug"
         runtime "Debug"
         symbols "on"

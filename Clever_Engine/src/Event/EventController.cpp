@@ -25,6 +25,12 @@ void EventController::PostMouseButtonEvent(int glfwButton, int glfwAction, doubl
     Dispatch(ev);
 }
 
+void EventController::ResetMouseDelta()
+{
+    lastFrameMouseX = -1;
+    lastFrameMouseY = -1;
+}
+
 void EventController::PostMouseMoveEvent(double xpos, double ypos)
 {
     if (lastFrameMouseX == -1 || lastFrameMouseY == -1)

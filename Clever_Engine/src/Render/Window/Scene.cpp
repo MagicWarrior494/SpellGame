@@ -2,6 +2,7 @@
 #include "Window.h"
 #include "World/Assets/Mesh.h"
 #include "World/Assets/Shader.h"
+#include "World/Assets/Texture.h"
 #include "World/ECS/Components.h"
 #include <chrono>
 
@@ -10,6 +11,7 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtx/quaternion.hpp>
 #include <GLFW/glfw3.h>
+#include <iostream>
 
 Scene::Scene(GraphicsCore::IRenderer* renderer,
          AssetManager*            assetManager,
@@ -21,6 +23,8 @@ Scene::Scene(GraphicsCore::IRenderer* renderer,
 , m_desc(desc)
 {
 m_registry = std::make_unique<Registry>();
+m_eventController = std::make_unique<EventController>();
+m_eventController->AttachLayer(this);
 
     // --- Offscreen color target ---
     GraphicsCore::TextureDesc colorDesc{};
@@ -67,7 +71,62 @@ Scene::~Scene()
 
 void Scene::AttachToWindow(Window& window)
 {
-    window.GetEventController().AttachLayer(this);
+    window.RegisterScene(this);
+}
+
+void Scene::Resize(uint32_t width, uint32_t height)
+{
+    if (width == 0 || height == 0)
+        return;
+    if (width == m_desc.width && height == m_desc.height)
+        return;
+
+    m_renderer->WaitIdle();
+
+    if (m_colorTarget) m_renderer->DestroyTexture(m_colorTarget);
+    if (m_depthTarget) m_renderer->DestroyTexture(m_depthTarget);
+
+    m_desc.width  = width;
+    m_desc.height = height;
+
+    GraphicsCore::TextureDesc colorDesc{};
+    colorDesc.width       = width;
+    colorDesc.height      = height;
+    colorDesc.depth       = 1;
+    colorDesc.mipLevels   = 1;
+    colorDesc.arrayLayers = 1;
+    colorDesc.type        = GraphicsCore::TextureType::Texture2D;
+    colorDesc.format      = GraphicsCore::TextureFormat::RGBA8;
+    colorDesc.usage       = GraphicsCore::TextureUsage_RenderTarget
+                          | GraphicsCore::TextureUsage_TransferSrc
+                          | GraphicsCore::TextureUsage_ShaderResource;
+    m_colorTarget = m_renderer->CreateTexture(colorDesc);
+
+    GraphicsCore::TextureDesc depthDesc{};
+    depthDesc.width       = width;
+    depthDesc.height      = height;
+    depthDesc.depth       = 1;
+    depthDesc.mipLevels   = 1;
+    depthDesc.arrayLayers = 1;
+    depthDesc.type        = GraphicsCore::TextureType::Texture2D;
+    depthDesc.format      = GraphicsCore::TextureFormat::Depth32F;
+    depthDesc.usage       = GraphicsCore::TextureUsage_DepthStencil;
+    m_depthTarget = m_renderer->CreateTexture(depthDesc);
+}
+void Scene::ResetInputState()
+{
+    m_keysHeld.fill(false);
+    if (m_mouseLocked)
+    {
+        m_mouseLocked = false;
+        m_eventController->ResetMouseDelta();
+        GLFWwindow* glfwWin = static_cast<GLFWwindow*>(m_window->GetIWindow()->GetPlatformHandle());
+        if (glfwRawMouseMotionSupported())
+            glfwSetInputMode(glfwWin, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+        glfwSetInputMode(glfwWin, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+    m_mouseDeltaX = 0.0f;
+    m_mouseDeltaY = 0.0f;
 }
 
 void Scene::OnInput(InputEvent& event)
@@ -79,17 +138,31 @@ void Scene::OnInput(InputEvent& event)
             if (event.action == Input::Action::PRESS)
             {
                 m_mouseLocked = true;
+                m_eventController->ResetMouseDelta();
                 GLFWwindow* glfwWin = static_cast<GLFWwindow*>(m_window->GetIWindow()->GetPlatformHandle());
                 glfwSetInputMode(glfwWin, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                if (glfwRawMouseMotionSupported())
+                    glfwSetInputMode(glfwWin, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
             }
             else if (event.action == Input::Action::RELEASE)
             {
                 m_mouseLocked = false;
+                m_eventController->ResetMouseDelta();
                 GLFWwindow* glfwWin = static_cast<GLFWwindow*>(m_window->GetIWindow()->GetPlatformHandle());
+                if (glfwRawMouseMotionSupported())
+                    glfwSetInputMode(glfwWin, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
                 glfwSetInputMode(glfwWin, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             }
             event.Consume();
         }
+        return;
+    }
+
+    if (event.type == InputEvent::Type::MouseMove && m_mouseLocked)
+    {
+        m_mouseDeltaX += static_cast<float>(event.deltaX);
+        m_mouseDeltaY += static_cast<float>(event.deltaY);
+        event.Consume();
         return;
     }
 
@@ -102,27 +175,10 @@ void Scene::OnInput(InputEvent& event)
         case Input::KEY_S: m_keysHeld[1] = pressed; break;
         case Input::KEY_A: m_keysHeld[2] = pressed; break;
         case Input::KEY_D: m_keysHeld[3] = pressed; break;
-        case Input::KEY_Q: m_keysHeld[4] = pressed; break;
-        case Input::KEY_E: m_keysHeld[5] = pressed; break;
+        case Input::KEY_LEFT_SHIFT: m_keysHeld[4] = pressed; break;
+        case Input::KEY_SPACE: m_keysHeld[5] = pressed; break;
         default: break;
         }
-        return;
-    }
-
-    if (event.type == InputEvent::Type::MouseMove && m_mouseLocked)
-    {
-        auto& cameras = m_registry->GetAllComponents<CameraComponent>();
-        for (auto& [entity, cam] : cameras)
-        {
-            cam.yaw   -= static_cast<float>(event.deltaX) * cam.sensitivity;
-            cam.pitch -= static_cast<float>(event.deltaY) * cam.sensitivity;
-            cam.pitch  = glm::clamp(cam.pitch, -89.0f, 89.0f);
-
-            glm::quat qYaw   = glm::angleAxis(glm::radians(cam.yaw),   glm::vec3(0, 1, 0));
-            glm::quat qPitch = glm::angleAxis(glm::radians(cam.pitch), glm::vec3(1, 0, 0));
-            cam.rotation = qYaw * qPitch;
-        }
-        event.Consume();
     }
 }
 
@@ -142,6 +198,18 @@ void Scene::Update()
     auto& cameras = m_registry->GetAllComponents<CameraComponent>();
     for (auto& [entity, cam] : cameras)
     {
+        // Apply accumulated mouse delta once per frame
+        if (m_mouseDeltaX != 0.0f || m_mouseDeltaY != 0.0f)
+        {
+            cam.yaw   -= m_mouseDeltaX * cam.sensitivity;
+            cam.pitch -= m_mouseDeltaY * cam.sensitivity;
+            cam.pitch  = glm::clamp(cam.pitch, -89.0f, 89.0f);
+
+            glm::quat qYaw   = glm::angleAxis(glm::radians(cam.yaw),   glm::vec3(0, 1, 0));
+            glm::quat qPitch = glm::angleAxis(glm::radians(cam.pitch),  glm::vec3(1, 0, 0));
+            cam.rotation = qYaw * qPitch;
+        }
+
         glm::vec3 move(0.0f);
         if (m_keysHeld[0]) move += cam.GetForward();
         if (m_keysHeld[1]) move -= cam.GetForward();
@@ -153,6 +221,9 @@ void Scene::Update()
         if (glm::length(move) > 0.0f)
             cam.position += glm::normalize(move) * cam.moveSpeed * dt;
     }
+
+    m_mouseDeltaX = 0.0f;
+    m_mouseDeltaY = 0.0f;
 }
 
 void Scene::Render()
@@ -164,8 +235,9 @@ void Scene::Render()
     if (iWindowCheck && !iWindowCheck->IsFrameReady())
         return;
 
-    auto& meshComponents   = m_registry->GetAllComponents<MeshComponent>();
-    auto& shaderComponents = m_registry->GetAllComponents<ShaderComponent>();
+    auto& meshComponents     = m_registry->GetAllComponents<MeshComponent>();
+    auto& shaderComponents   = m_registry->GetAllComponents<ShaderComponent>();
+    auto& textureComponents  = m_registry->GetAllComponents<TextureComponent>();
 
     m_commandList->Begin();
 
@@ -226,12 +298,10 @@ void Scene::Render()
     if (!cameras.empty())
     {
         const CameraComponent& cam = cameras.begin()->second;
-        glm::vec3 eye    = cam.position;
-        glm::vec3 target = cam.position + cam.GetForward();
-        glm::vec3 up     = cam.GetUp();
-        view   = glm::lookAt(eye, target, up);
+        glm::mat4 rotMatrix = glm::toMat4(glm::conjugate(cam.rotation));
+        view   = rotMatrix * glm::translate(glm::mat4(1.0f), -cam.position);
         fov    = cam.fov;
-        aspect = cam.aspectRatio;
+        aspect = static_cast<float>(m_desc.width) / static_cast<float>(m_desc.height);
         nearP  = cam.nearPlane;
         farP   = cam.farPlane;
     }
@@ -265,8 +335,32 @@ void Scene::Render()
 
         glm::mat4 mvp = proj * view * model;
 
+        struct VertexPushConstants
+        {
+            glm::mat4 mvp;
+            glm::mat4 model;
+        } vpc;
+        vpc.mvp   = mvp;
+        vpc.model = model;
+
         m_commandList->BindPipeline(shader->pipeline);
-        m_commandList->PushConstants(shader->vertexShader, 0, sizeof(glm::mat4), &mvp);
+        m_commandList->PushConstants(shader->vertexShader, 0, sizeof(VertexPushConstants), &vpc);
+
+        // Bind texture for this entity if present
+        auto textureIt = textureComponents.find(entity);
+        if (textureIt != textureComponents.end()
+            && textureIt->second.texture
+            && textureIt->second.texture->texture
+            && shader->textureLayout
+            && shader->sampler)
+        {
+            GraphicsCore::IResourceSet* resourceSet =
+                m_renderer->CreateResourceSet(shader->textureLayout);
+            resourceSet->UpdateTexture(0, textureIt->second.texture->texture, shader->sampler);
+            m_commandList->BindResourceSet(0, resourceSet);
+            m_renderer->DestroyResourceSet(resourceSet);
+        }
+
         m_commandList->BindVertexBuffer(0, mesh->vertexBuffer, 0);
         m_commandList->BindIndexBuffer(mesh->indexBuffer, 0, false);
         m_commandList->DrawIndexed(

@@ -72,8 +72,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>IF EXIST "$(SolutionDir)bin\Debug-windows-x86_64\Clever_Engine\Clever_Engine.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)bin\Debug-windows-x86_64\Clever_Engine\Clever_Engine.dll" "..\bin\Debug-windows-x86_64\SpellGame" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)bin\Debug-windows-x86_64\Clever_Engine\Clever_Engine.dll" "..\bin\Debug-windows-x86_64\SpellGame" &gt; nul)
-IF EXIST "$(SolutionDir)bin\Debug-windows-x86_64\Vulkan\Vulkan.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)bin\Debug-windows-x86_64\Vulkan\Vulkan.dll"              "..\bin\Debug-windows-x86_64\SpellGame" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)bin\Debug-windows-x86_64\Vulkan\Vulkan.dll"              "..\bin\Debug-windows-x86_64\SpellGame" &gt; nul)</Command>
+      <Command>xcopy /Q /Y "$(SolutionDir)bin\Debug-windows-x86_64\Clever_Engine\Clever_Engine.dll" "../bin/Debug-windows-x86_64/SpellGame\" &gt; nul
+xcopy /Q /Y "$(SolutionDir)bin\Debug-windows-x86_64\Vulkan\Vulkan.dll"              "../bin/Debug-windows-x86_64/SpellGame\" &gt; nul</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -98,8 +98,8 @@ IF EXIST "$(SolutionDir)bin\Debug-windows-x86_64\Vulkan\Vulkan.dll"\ (xcopy /Q /
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PostBuildEvent>
-      <Command>IF EXIST "$(SolutionDir)bin\Release-windows-x86_64\Clever_Engine\Clever_Engine.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)bin\Release-windows-x86_64\Clever_Engine\Clever_Engine.dll" "..\bin\Release-windows-x86_64\SpellGame" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)bin\Release-windows-x86_64\Clever_Engine\Clever_Engine.dll" "..\bin\Release-windows-x86_64\SpellGame" &gt; nul)
-IF EXIST "$(SolutionDir)bin\Release-windows-x86_64\Vulkan\Vulkan.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)bin\Release-windows-x86_64\Vulkan\Vulkan.dll"              "..\bin\Release-windows-x86_64\SpellGame" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)bin\Release-windows-x86_64\Vulkan\Vulkan.dll"              "..\bin\Release-windows-x86_64\SpellGame" &gt; nul)</Command>
+      <Command>xcopy /Q /Y "$(SolutionDir)bin\Release-windows-x86_64\Clever_Engine\Clever_Engine.dll" "../bin/Release-windows-x86_64/SpellGame\" &gt; nul
+xcopy /Q /Y "$(SolutionDir)bin\Release-windows-x86_64\Vulkan\Vulkan.dll"              "../bin/Release-windows-x86_64/SpellGame\" &gt; nul</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

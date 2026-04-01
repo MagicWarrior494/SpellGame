@@ -18,10 +18,10 @@ layout(push_constant) uniform PushConstants
 // -------------------------
 // Output to Fragment Shader
 // -------------------------
-layout(location = 0) out vec4 fragColor;
+layout(location = 0) out vec2 fragUV;
 
 void main()
 {
     gl_Position = pc.mvp * vec4(inPosition, 1.0);
-    fragColor = vec4(inNormal * 0.5 + 0.5, 1.0);
+    fragUV = inUV;
 }

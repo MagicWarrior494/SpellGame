@@ -24,6 +24,8 @@ namespace GraphicsCore
         virtual void OnMouseButton(int button, int action, double x, double y, int mods) = 0;
         virtual void OnMouseMove(double x, double y) = 0;
         virtual void OnMouseScroll(double xoffset, double yoffset) = 0;
+        virtual void OnFocus(bool focused) = 0;
+        virtual void OnClose() = 0;
     };
 
     class IWindow
@@ -37,5 +39,6 @@ namespace GraphicsCore
         virtual void BeginFrame() = 0;
         virtual bool IsFrameReady() const = 0;
         virtual void SetEventSink(IWindowEventSink* sink) = 0;
+        virtual void SetTitle(const char* title) = 0;
     };
 }

@@ -87,8 +87,10 @@ namespace GraphicsCore
 
         // --- Transfers & Data Movement ---
         virtual void CopyBuffer(IBuffer* srcBuffer, IBuffer* dstBuffer, size_t size, size_t srcOffset, size_t dstOffset) = 0;
+        virtual void CopyBufferToTexture(IBuffer* srcBuffer, ITexture* dstTexture, uint32_t width, uint32_t height) = 0;
         virtual void TextureBarrier(ITexture* texture, TextureUsageFlags oldUsage, TextureUsageFlags newUsage) = 0;
         virtual void BlitTexture(ITexture* src, ITexture* dst) = 0;
+        virtual void BlitTexture(ITexture* src, ITexture* dst, int32_t dstX, int32_t dstY) = 0;
 
         virtual void BindResourceSet(uint32_t setIndex, IResourceSet* resourceSet) = 0;
         virtual void PushConstants(IShader* shader, uint32_t offset, uint32_t size, const void* data) = 0;

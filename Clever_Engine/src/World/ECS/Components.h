@@ -10,6 +10,7 @@
 #include "World/Assets/Shader.h"
 #include "World/Assets/Material.h"
 #include "World/Assets/Mesh.h"
+#include "World/Assets/Texture.h"
 
 
 class Material;
@@ -69,6 +70,11 @@ struct MaterialComponent
 struct ShaderComponent
 {
     std::shared_ptr<Shader> shader;
+};
+
+struct TextureComponent
+{
+    std::shared_ptr<Texture> texture;
 };
 
 struct MaterialInstanceComponent

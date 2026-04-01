@@ -32,8 +32,10 @@ namespace GraphicsCore {
         void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
         void CopyBuffer(IBuffer* srcBuffer, IBuffer* dstBuffer, size_t size, size_t srcOffset, size_t dstOffset) override;
+        void CopyBufferToTexture(IBuffer* srcBuffer, ITexture* dstTexture, uint32_t width, uint32_t height) override;
         void TextureBarrier(ITexture* texture, TextureUsageFlags oldUsage, TextureUsageFlags newUsage) override;
         void BlitTexture(ITexture* src, ITexture* dst) override;
+        void BlitTexture(ITexture* src, ITexture* dst, int32_t dstX, int32_t dstY) override;
 
         void BindResourceSet(uint32_t setIndex, IResourceSet* resourceSet) override;
         void PushConstants(IShader* shader, uint32_t offset, uint32_t size, const void* data) override;

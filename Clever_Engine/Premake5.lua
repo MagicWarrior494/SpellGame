@@ -9,7 +9,6 @@ targetdir ("../bin/" .. outputdir .. "/%{prj.name}")
 objdir   ("../bin-int/" .. outputdir .. "/%{prj.name}")
 
 warnings "Extra"
-fatalwarnings { "All" }
 disablewarnings { "4251", "4275" }
 
 files
@@ -40,7 +39,8 @@ includedirs
 
 externalincludedirs
 {
-    "../Dependencies/tinyobjloader"
+    "../Dependencies/tinyobjloader",
+    "../Dependencies/stb_image"
 }
 
 externalwarnings "Off"
@@ -72,8 +72,14 @@ filter "files:src/World/Assets/Helper/spirv_reflect.c"
     warnings "Off"
 
 filter "system:windows"
-    systemversion "latest"
-    linkoptions { "/IMPLIB:../bin/" .. outputdir .. "/Clever_Engine/Clever_Engine.lib" }
+systemversion "latest"
+linkoptions { "/IMPLIB:../bin/" .. outputdir .. "/Clever_Engine/Clever_Engine.lib" }
+
+-- Keep SpellGame's output folder in sync whenever Clever_Engine rebuilds
+postbuildcommands
+{
+    'xcopy /Q /Y "%{wks.location}bin\\' .. outputdir .. '\\Clever_Engine\\Clever_Engine.dll" "%{wks.location}bin\\' .. outputdir .. '\\SpellGame\\" > nul',
+}
 
 filter "configurations:Debug"
     runtime "Debug"

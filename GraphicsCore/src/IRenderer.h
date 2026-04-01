@@ -58,10 +58,16 @@ namespace GraphicsCore
         virtual void Submit(ICommandList* commandList, IWindow* window = nullptr) = 0;
         virtual void SubmitBlit(ICommandList* commandList, IWindow* window) = 0;
 
+        // Immediately submits and blocks until the GPU has finished — for one-shot uploads
+        virtual void SubmitImmediate(ICommandList* commandList) = 0;
+
         // Swaps the buffers for the specific window
         virtual void Present(IWindow* window) = 0;
 
         // Wait for GPU to finish all work (useful during shutdown)
         virtual void WaitIdle() = 0;
+
+        // Process platform/window events (must run in the DLL that owns the windowing system)
+        virtual void PollEvents() = 0;
     };
 }

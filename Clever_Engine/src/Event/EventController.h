@@ -38,6 +38,8 @@ public:
     void PostWindowCloseEvent(GLFWwindow* ptr);
     void PostResizeEvent(uint8_t windowId, int width, int height);
     
+    void ResetMouseDelta();
+
     // Layer Management
     void AttachLayer(IInputLayer* layer);
     void DetachLayer(IInputLayer* layer);

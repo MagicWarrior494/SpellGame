@@ -21,6 +21,7 @@
 // Forward declare asset types so we can extern-template LoadInternal
 class Mesh;
 class Shader;
+class Texture;
 
 class CLEVER_ENGINE_API AssetManager
 {
@@ -41,6 +42,8 @@ public:
     }
 
     GraphicsCore::IRenderer* GetRenderer() const { return m_renderer; }
+
+    void ReleaseAllGPUResources();
 
     template<typename T>
     std::shared_ptr<T> Get(const std::string& relativePath)
@@ -78,5 +81,6 @@ private:
 };
 
 // Tell consumers that these instantiations live in the DLL — do not instantiate locally
-extern template CLEVER_ENGINE_API std::shared_ptr<Mesh>   AssetManager::LoadInternal<Mesh>  (const std::filesystem::path&);
-extern template CLEVER_ENGINE_API std::shared_ptr<Shader> AssetManager::LoadInternal<Shader>(const std::filesystem::path&);
+extern template CLEVER_ENGINE_API std::shared_ptr<Mesh>    AssetManager::LoadInternal<Mesh>   (const std::filesystem::path&);
+extern template CLEVER_ENGINE_API std::shared_ptr<Shader>  AssetManager::LoadInternal<Shader> (const std::filesystem::path&);
+extern template CLEVER_ENGINE_API std::shared_ptr<Texture> AssetManager::LoadInternal<Texture>(const std::filesystem::path&);

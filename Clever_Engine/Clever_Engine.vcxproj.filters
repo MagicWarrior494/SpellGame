@@ -89,6 +89,9 @@
     <ClInclude Include="src\World\AssetLoaders\ShaderLoader.h">
       <Filter>World\AssetLoaders</Filter>
     </ClInclude>
+    <ClInclude Include="src\World\AssetLoaders\TextureLoader.h">
+      <Filter>World\AssetLoaders</Filter>
+    </ClInclude>
     <ClInclude Include="src\World\AssetManager.h">
       <Filter>World</Filter>
     </ClInclude>
@@ -111,6 +114,9 @@
       <Filter>World\Assets</Filter>
     </ClInclude>
     <ClInclude Include="src\World\Assets\ShaderReflected.h">
+      <Filter>World\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\Assets\Texture.h">
       <Filter>World\Assets</Filter>
     </ClInclude>
     <ClInclude Include="src\World\Assets\Vertex.h">
@@ -144,6 +150,9 @@
       <Filter>World\AssetLoaders</Filter>
     </ClCompile>
     <ClCompile Include="src\World\AssetLoaders\ShaderLoader.cpp">
+      <Filter>World\AssetLoaders</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World\AssetLoaders\TextureLoader.cpp">
       <Filter>World\AssetLoaders</Filter>
     </ClCompile>
     <ClCompile Include="src\World\AssetManager.cpp">

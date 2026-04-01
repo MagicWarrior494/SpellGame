@@ -50,8 +50,8 @@ staticruntime "off"
         -- Copy runtime DLLs next to the executable after each build
         postbuildcommands
         {
-            '{COPY} "%{wks.location}bin/' .. outputdir .. '/Clever_Engine/Clever_Engine.dll" "%{cfg.targetdir}"',
-            '{COPY} "%{wks.location}bin/' .. outputdir .. '/Vulkan/Vulkan.dll"              "%{cfg.targetdir}"',
+            'xcopy /Q /Y "%{wks.location}bin\\' .. outputdir .. '\\Clever_Engine\\Clever_Engine.dll" "%{cfg.targetdir}\\" > nul',
+            'xcopy /Q /Y "%{wks.location}bin\\' .. outputdir .. '\\Vulkan\\Vulkan.dll"              "%{cfg.targetdir}\\" > nul',
         }
 
     filter "configurations:Debug"

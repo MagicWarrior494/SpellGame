@@ -186,9 +186,35 @@ namespace GraphicsCore {
         vkCmdCopyBuffer(m_commandBuffer, src->GetBuffer(), dst->GetBuffer(), 1, &copyRegion);
     }
 
+    void VulkanCommandList::CopyBufferToTexture(IBuffer* srcBuffer, ITexture* dstTexture, uint32_t width, uint32_t height) {
+        VulkanBuffer*  src = static_cast<VulkanBuffer*>(srcBuffer);
+        VulkanTexture* dst = static_cast<VulkanTexture*>(dstTexture);
+
+        VkBufferImageCopy region = {};
+        region.bufferOffset      = 0;
+        region.bufferRowLength   = 0;
+        region.bufferImageHeight = 0;
+        region.imageSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel       = 0;
+        region.imageSubresource.baseArrayLayer = 0;
+        region.imageSubresource.layerCount     = 1;
+        region.imageOffset = { 0, 0, 0 };
+        region.imageExtent = { width, height, 1 };
+
+        vkCmdCopyBufferToImage(m_commandBuffer, src->GetBuffer(), dst->GetImage(),
+                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+    }
+
     void VulkanCommandList::BlitTexture(ITexture* src, ITexture* dst) {
+        BlitTexture(src, dst, 0, 0);
+    }
+
+    void VulkanCommandList::BlitTexture(ITexture* src, ITexture* dst, int32_t dstX, int32_t dstY) {
         VulkanTexture* vkSrc = static_cast<VulkanTexture*>(src);
         VulkanTexture* vkDst = static_cast<VulkanTexture*>(dst);
+
+        int32_t srcW = (int32_t)vkSrc->GetDesc().width;
+        int32_t srcH = (int32_t)vkSrc->GetDesc().height;
 
         VkImageBlit region = {};
         region.srcSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -196,14 +222,14 @@ namespace GraphicsCore {
         region.srcSubresource.baseArrayLayer = 0;
         region.srcSubresource.layerCount     = 1;
         region.srcOffsets[0]                 = { 0, 0, 0 };
-        region.srcOffsets[1]                 = { (int32_t)vkSrc->GetDesc().width, (int32_t)vkSrc->GetDesc().height, 1 };
+        region.srcOffsets[1]                 = { srcW, srcH, 1 };
 
         region.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
         region.dstSubresource.mipLevel       = 0;
         region.dstSubresource.baseArrayLayer = 0;
         region.dstSubresource.layerCount     = 1;
-        region.dstOffsets[0]                 = { 0, 0, 0 };
-        region.dstOffsets[1]                 = { (int32_t)vkDst->GetDesc().width, (int32_t)vkDst->GetDesc().height, 1 };
+        region.dstOffsets[0]                 = { dstX, dstY, 0 };
+        region.dstOffsets[1]                 = { dstX + srcW, dstY + srcH, 1 };
 
         vkCmdBlitImage(m_commandBuffer,
             vkSrc->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
@@ -251,8 +277,82 @@ namespace GraphicsCore {
             barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
         }
 
-        VkPipelineStageFlags sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        // Source: derive access mask and stage from the old layout
+        VkPipelineStageFlags sourceStage      = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        VkAccessFlags        srcAccessMask    = 0;
+
+        switch (barrier.oldLayout) {
+        case VK_IMAGE_LAYOUT_UNDEFINED:
+            sourceStage   = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            srcAccessMask = 0;
+            break;
+        case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+            sourceStage   = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            break;
+        case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+            sourceStage   = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+            srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+            break;
+        case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+            sourceStage   = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            break;
+        case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+            sourceStage   = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            break;
+        case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+            sourceStage   = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            break;
+        case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR:
+            sourceStage   = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+            srcAccessMask = 0;
+            break;
+        default:
+            sourceStage   = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+            srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+            break;
+        }
+
+        // Destination: derive access mask and stage from the new layout
         VkPipelineStageFlags destinationStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        VkAccessFlags        dstAccessMask    = 0;
+
+        switch (barrier.newLayout) {
+        case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+            destinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            dstAccessMask    = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+            break;
+        case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+            destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+            dstAccessMask    = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+            break;
+        case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+            destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            dstAccessMask    = VK_ACCESS_TRANSFER_READ_BIT;
+            break;
+        case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+            destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            dstAccessMask    = VK_ACCESS_TRANSFER_WRITE_BIT;
+            break;
+        case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+            destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            dstAccessMask    = VK_ACCESS_SHADER_READ_BIT;
+            break;
+        case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR:
+            destinationStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+            dstAccessMask    = 0;
+            break;
+        default:
+            destinationStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+            dstAccessMask    = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+            break;
+        }
+
+        barrier.srcAccessMask = srcAccessMask;
+        barrier.dstAccessMask = dstAccessMask;
 
         vkCmdPipelineBarrier(m_commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 

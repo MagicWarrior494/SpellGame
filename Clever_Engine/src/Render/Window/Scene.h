@@ -47,6 +47,7 @@ public:
 
     void Update();
     void Render();
+    void Resize(uint32_t width, uint32_t height);
     void AttachToWindow(Window& window);
 
     GraphicsCore::ITexture* GetColorTarget() const { return m_colorTarget; }
@@ -54,9 +55,12 @@ public:
 
     const SceneDesc& GetDesc()     const { return m_desc; }
     Registry& GetRegistry() { return *m_registry; }
+    EventController& GetEventController() { return *m_eventController; }
 
     void OnInput(InputEvent& event) override;
     int  GetZIndex() const override { return m_desc.zIndex; }
+
+    void ResetInputState();
 
 private:
     SceneDesc m_desc;
@@ -69,12 +73,15 @@ private:
     GraphicsCore::ITexture* m_depthTarget = nullptr;
     GraphicsCore::ICommandList* m_commandList = nullptr;
 
-    std::unique_ptr<Registry>   m_registry;
-    std::vector<RenderStage>    m_renderStages;
+    std::unique_ptr<Registry>       m_registry;
+    std::unique_ptr<EventController> m_eventController;
+    std::vector<RenderStage>        m_renderStages;
 
     // Camera input state
     std::array<bool, 6> m_keysHeld = {};  // W S A D Q E
-    bool  m_mouseLocked = false;
+    bool    m_mouseLocked  = false;
+    float   m_mouseDeltaX  = 0.0f;
+    float   m_mouseDeltaY  = 0.0f;
     std::chrono::steady_clock::time_point m_lastFrameTime;
     bool  m_firstFrame = true;
 };

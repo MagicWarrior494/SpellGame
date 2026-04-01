@@ -29,8 +29,11 @@ public:
     void EndFrame();
     void Shutdown();
 
+    bool IsRunning()    const { return m_running; }
+    void RequestClose()       { m_running = false; }
+
     Window& CreateWindow(const std::string& title, int width, int height);
-    Scene&  CreateScene(Window& window, int width, int height);
+    Scene&  CreateScene(Window& window, int width, int height, int xpos = 0, int ypos = 0);
 
     AssetManager& GetAssetManager() { return m_assetManager; }
 
@@ -44,6 +47,7 @@ private:
     AssetManager    m_assetManager;
     WorldController m_worldController;
 
-    int m_nextWindowId = 0;
-    int m_nextSceneId  = 0;
+    int  m_nextWindowId = 0;
+    int  m_nextSceneId  = 0;
+    bool m_running      = true;
 };

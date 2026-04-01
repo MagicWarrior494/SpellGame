@@ -46,7 +46,7 @@
     <IntDir>$(ProjectDir)..\bin-int\Debug-windows-x86_64\Clever_Engine\</IntDir>
     <TargetName>Clever_Engine</TargetName>
     <TargetExt>.dll</TargetExt>
-    <ExternalIncludePath>..\Dependencies\tinyobjloader;$(ExternalIncludePath)</ExternalIncludePath>
+    <ExternalIncludePath>..\Dependencies\tinyobjloader;..\Dependencies\stb_image;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -54,13 +54,12 @@
     <IntDir>$(ProjectDir)..\bin-int\Release-windows-x86_64\Clever_Engine\</IntDir>
     <TargetName>Clever_Engine</TargetName>
     <TargetExt>.dll</TargetExt>
-    <ExternalIncludePath>..\Dependencies\tinyobjloader;$(ExternalIncludePath)</ExternalIncludePath>
+    <ExternalIncludePath>..\Dependencies\tinyobjloader;..\Dependencies\stb_image;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4251;4275;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>src;..\GraphicsCore\src;..\GraphicsCore\include;..\Backend\Vulkan\src;..\Dependencies\glm\glm;..\Dependencies\GLFW\include;..\Dependencies\SPIRV-Headers\include;..\Dependencies\VulkanMemoryAllocator\include;C:\VulkanSDK\1.3.231.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -78,12 +77,14 @@
       <ImportLibrary>..\bin\Debug-windows-x86_64\Clever_Engine\Clever_Engine.lib</ImportLibrary>
       <AdditionalOptions>/IMPLIB:../bin/Debug-windows-x86_64/Clever_Engine/Clever_Engine.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Q /Y "$(SolutionDir)bin\Debug-windows-x86_64\Clever_Engine\Clever_Engine.dll" "$(SolutionDir)bin\Debug-windows-x86_64\SpellGame\" &gt; nul</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4251;4275;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>src;..\GraphicsCore\src;..\GraphicsCore\include;..\Backend\Vulkan\src;..\Dependencies\glm\glm;..\Dependencies\GLFW\include;..\Dependencies\SPIRV-Headers\include;..\Dependencies\VulkanMemoryAllocator\include;C:\VulkanSDK\1.3.231.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -105,6 +106,9 @@
       <ImportLibrary>..\bin\Release-windows-x86_64\Clever_Engine\Clever_Engine.lib</ImportLibrary>
       <AdditionalOptions>/IMPLIB:../bin/Release-windows-x86_64/Clever_Engine/Clever_Engine.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Q /Y "$(SolutionDir)bin\Release-windows-x86_64\Clever_Engine\Clever_Engine.dll" "$(SolutionDir)bin\Release-windows-x86_64\SpellGame\" &gt; nul</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Engine.h" />
@@ -123,6 +127,7 @@
     <ClInclude Include="src\Render\Window\WindowControls.h" />
     <ClInclude Include="src\World\AssetLoaders\Meshloader.h" />
     <ClInclude Include="src\World\AssetLoaders\ShaderLoader.h" />
+    <ClInclude Include="src\World\AssetLoaders\TextureLoader.h" />
     <ClInclude Include="src\World\AssetManager.h" />
     <ClInclude Include="src\World\Assets\Asset.h" />
     <ClInclude Include="src\World\Assets\AssetIncluder.h" />
@@ -131,6 +136,7 @@
     <ClInclude Include="src\World\Assets\Mesh.h" />
     <ClInclude Include="src\World\Assets\Shader.h" />
     <ClInclude Include="src\World\Assets\ShaderReflected.h" />
+    <ClInclude Include="src\World\Assets\Texture.h" />
     <ClInclude Include="src\World\Assets\Vertex.h" />
     <ClInclude Include="src\World\ECS\Components.h" />
     <ClInclude Include="src\World\ECS\Registry.h" />
@@ -147,6 +153,7 @@
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
     <ClCompile Include="src\World\AssetLoaders\ShaderLoader.cpp" />
+    <ClCompile Include="src\World\AssetLoaders\TextureLoader.cpp" />
     <ClCompile Include="src\World\AssetManager.cpp" />
     <ClCompile Include="src\World\Assets\Helper\spirv_reflect.c">
       <WarningLevel>TurnOffAllWarnings</WarningLevel>

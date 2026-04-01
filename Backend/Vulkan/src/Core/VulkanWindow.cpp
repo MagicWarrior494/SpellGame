@@ -20,7 +20,7 @@ namespace GraphicsCore {
         : m_desc(desc), m_renderer(renderer), m_platformHandle(nullptr), 
           m_surface(VK_NULL_HANDLE), m_swapchain(VK_NULL_HANDLE), 
           m_swapchainFormat(VK_FORMAT_B8G8R8A8_UNORM), m_currentImageIndex(0),
-          m_imageAvailableSemaphore(VK_NULL_HANDLE), m_sceneFinishedSemaphore(VK_NULL_HANDLE),
+          m_imageAvailableSemaphore(VK_NULL_HANDLE),
           m_renderFinishedSemaphore(VK_NULL_HANDLE), m_inFlightFence(VK_NULL_HANDLE),
           m_framebufferResized(false), m_frameReady(false)
     {
@@ -38,7 +38,6 @@ namespace GraphicsCore {
 
         VkDevice device = renderer->GetDevice();
         vkCreateSemaphore(device, &semaphoreInfo, nullptr, &m_imageAvailableSemaphore);
-        vkCreateSemaphore(device, &semaphoreInfo, nullptr, &m_sceneFinishedSemaphore);
         vkCreateSemaphore(device, &semaphoreInfo, nullptr, &m_renderFinishedSemaphore);
         vkCreateFence(device, &fenceInfo, nullptr, &m_inFlightFence);
     }
@@ -50,9 +49,6 @@ namespace GraphicsCore {
 
         if (m_imageAvailableSemaphore != VK_NULL_HANDLE) {
             vkDestroySemaphore(device, m_imageAvailableSemaphore, nullptr);
-        }
-        if (m_sceneFinishedSemaphore != VK_NULL_HANDLE) {
-            vkDestroySemaphore(device, m_sceneFinishedSemaphore, nullptr);
         }
         if (m_renderFinishedSemaphore != VK_NULL_HANDLE) {
             vkDestroySemaphore(device, m_renderFinishedSemaphore, nullptr);
@@ -92,56 +88,69 @@ namespace GraphicsCore {
     void VulkanWindow::BeginFrame() {
         m_frameReady = false;
 
-        GLFWwindow* glfwWindow = static_cast<GLFWwindow*>(m_platformHandle);
-        
-        // Wait for fence with periodic event polling to keep window responsive
-        // Poll events every 1ms while waiting for GPU
         VkDevice device = m_renderer->GetDevice();
-        VkResult fenceResult = VK_TIMEOUT;
-        
-        while (fenceResult == VK_TIMEOUT) {
-            // Wait for fence with 1ms timeout (1,000,000 nanoseconds)
-            fenceResult = vkWaitForFences(device, 1, &m_inFlightFence, VK_TRUE, 1000000);
-            
-            if (fenceResult == VK_TIMEOUT) {
-                // Fence not ready yet, poll events to keep window responsive
-                glfwPollEvents();
-            }
+
+        // Wait for the previous frame to finish (3 second timeout to detect hangs)
+        VkResult fenceResult = vkWaitForFences(device, 1, &m_inFlightFence, VK_TRUE, 3000000000ULL);
+
+        if (fenceResult == VK_TIMEOUT)
+        {
+            OutputDebugStringA("[BeginFrame] vkWaitForFences TIMED OUT — fence was never signalled. "
+                               "SubmitBlit likely never ran or the GPU is hung.\n");
+            fprintf(stderr,    "[BeginFrame] vkWaitForFences TIMED OUT — fence was never signalled. "
+                               "SubmitBlit likely never ran or the GPU is hung.\n");
+            fflush(stderr);
+            return;
         }
-        
-        if (fenceResult != VK_SUCCESS) {
-            throw std::runtime_error("vkWaitForFences failed");
-        }
-        
+
+        if (fenceResult != VK_SUCCESS)
+            return;
+
+        // Reset the fence only after we know it was signalled successfully.
         vkResetFences(device, 1, &m_inFlightFence);
 
-        // Acquire next image with zero timeout to avoid blocking
-        // If not available immediately, poll events and try again
-        VkResult result = VK_TIMEOUT;
-        while (result == VK_TIMEOUT) {
-            result = vkAcquireNextImageKHR(device, m_swapchain,
-                                          0, m_imageAvailableSemaphore, VK_NULL_HANDLE,
-                                          &m_currentImageIndex);
-            
-            if (result == VK_TIMEOUT) {
-                // Image not available yet, poll events and try again
-                glfwPollEvents();
-                // Small sleep to avoid busy-waiting
-                std::this_thread::sleep_for(std::chrono::microseconds(100));
-            }
+        // Handle pending resize before acquiring
+        if (m_framebufferResized) {
+            RecreateSwapchain();
+            m_framebufferResized = false;
+        }
+
+        // Acquire the next swapchain image (3 second timeout to detect hangs)
+        VkResult result = vkAcquireNextImageKHR(device, m_swapchain,
+                                               3000000000ULL, m_imageAvailableSemaphore, VK_NULL_HANDLE,
+                                               &m_currentImageIndex);
+
+        if (result == VK_TIMEOUT)
+        {
+            OutputDebugStringA("[BeginFrame] vkAcquireNextImageKHR TIMED OUT — "
+                               "swapchain image was never available.\n");
+            fprintf(stderr,    "[BeginFrame] vkAcquireNextImageKHR TIMED OUT — "
+                               "swapchain image was never available.\n");
+            fflush(stderr);
+            // Re-signal the fence so next BeginFrame doesn't deadlock.
+            vkQueueSubmit(m_renderer->GetGraphicsQueue(), 0, nullptr, m_inFlightFence);
+            return;
+        }
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+            // Re-signal the fence so the next BeginFrame doesn't deadlock on a reset fence.
+            vkQueueSubmit(m_renderer->GetGraphicsQueue(), 0, nullptr, m_inFlightFence);
+            RecreateSwapchain();
+            return;
         }
 
         if (result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR) {
             m_frameReady = true;
-        } else if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-            RecreateSwapchain();
-        } else {
-            throw std::runtime_error("Failed to acquire swapchain image");
         }
     }
 
     uint32_t VulkanWindow::AcquireNextImage() {
         return m_currentImageIndex;
+    }
+
+    void VulkanWindow::SetTitle(const char* title) {
+        if (m_platformHandle)
+            glfwSetWindowTitle(static_cast<GLFWwindow*>(m_platformHandle), title);
     }
 
     void VulkanWindow::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -166,6 +175,17 @@ namespace GraphicsCore {
     void VulkanWindow::MouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
         auto* w = reinterpret_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
         if (w->m_eventSink) w->m_eventSink->OnMouseScroll(xoffset, yoffset);
+    }
+
+    void VulkanWindow::WindowCloseCallback(GLFWwindow* window) {
+        auto* w = reinterpret_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+        if (w->m_eventSink) w->m_eventSink->OnClose();
+    }
+
+    void VulkanWindow::WindowFocusCallback(GLFWwindow* window, int focused) {
+        auto* w = reinterpret_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
+        if (w->m_eventSink) w->m_eventSink->OnFocus(focused == GLFW_TRUE);
     }
 
     void VulkanWindow::HandleResize() {
@@ -221,6 +241,8 @@ namespace GraphicsCore {
         glfwSetMouseButtonCallback(window, MouseButtonCallback);
         glfwSetCursorPosCallback(window, MouseMoveCallback);
         glfwSetScrollCallback(window, MouseScrollCallback);
+        glfwSetWindowCloseCallback(window, WindowCloseCallback);
+        glfwSetWindowFocusCallback(window, WindowFocusCallback);
     }
 
     void VulkanWindow::CreateSurface() {
@@ -350,11 +372,11 @@ namespace GraphicsCore {
         GLFWwindow* window = static_cast<GLFWwindow*>(m_platformHandle);
         glfwGetFramebufferSize(window, &width, &height);
 
-        // Wait while window is minimized
-        while (width == 0 || height == 0) {
-            glfwGetFramebufferSize(window, &width, &height);
-            glfwWaitEvents();
-        }
+        // If the window is minimized (0x0), skip recreation this frame.
+        // BeginFrame will return with m_frameReady=false and the caller will retry
+        // next tick, by which point the window will have been un-minimized.
+        if (width == 0 || height == 0)
+            return;
 
         vkDeviceWaitIdle(m_renderer->GetDevice());
 
@@ -377,3 +399,4 @@ namespace GraphicsCore {
         }
     }
 }
+

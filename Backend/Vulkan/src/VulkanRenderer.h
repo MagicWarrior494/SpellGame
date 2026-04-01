@@ -63,8 +63,10 @@ namespace GraphicsCore {
         // Execution
         void Submit(ICommandList* commandList, IWindow* window = nullptr) override;
         void SubmitBlit(ICommandList* commandList, IWindow* window) override;
+        void SubmitImmediate(ICommandList* commandList) override;
         void Present(IWindow* window) override;
         void WaitIdle() override;
+        void PollEvents() override;
 
         // Internal Vulkan objects
         VkInstance GetInstance() const { return m_instance; }
@@ -82,6 +84,8 @@ namespace GraphicsCore {
         void CreateAllocator();
         void CreateCommandPool();
         void CreateDescriptorPool();
+
+        std::vector<VkCommandBuffer> m_pendingCommandBuffers;
 
         VkInstance m_instance;
         VkPhysicalDevice m_physicalDevice;
