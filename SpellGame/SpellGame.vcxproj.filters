@@ -21,7 +21,7 @@
     <ClCompile Include="src\WorldViewer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\WorldEditor.cpp">
+    <ClCompile Include="src\Example.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

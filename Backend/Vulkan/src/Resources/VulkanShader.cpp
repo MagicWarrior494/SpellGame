@@ -119,16 +119,28 @@ namespace GraphicsCore {
         VkDescriptorBufferInfo bufferInfo = {};
         bufferInfo.buffer = vkBuffer->GetBuffer();
         bufferInfo.offset = offset;
-        bufferInfo.range = range;
+        bufferInfo.range  = (range > 0) ? range : VK_WHOLE_SIZE;
+
+        // Determine the correct descriptor type from the layout
+        VkDescriptorType descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        for (const auto& rb : m_layout->GetDesc().bindings)
+        {
+            if (rb.binding == binding)
+            {
+                if (rb.type == ResourceType::StorageBuffer)
+                    descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                break;
+            }
+        }
 
         VkWriteDescriptorSet write = {};
-        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write.dstSet = m_descriptorSet;
-        write.dstBinding = binding;
+        write.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.dstSet          = m_descriptorSet;
+        write.dstBinding      = binding;
         write.dstArrayElement = 0;
         write.descriptorCount = 1;
-        write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // Could be storage buffer too
-        write.pBufferInfo = &bufferInfo;
+        write.descriptorType  = descriptorType;
+        write.pBufferInfo     = &bufferInfo;
 
         vkUpdateDescriptorSets(m_device, 1, &write, 0, nullptr);
     }

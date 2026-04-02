@@ -40,5 +40,8 @@ namespace GraphicsCore
         virtual bool IsFrameReady() const = 0;
         virtual void SetEventSink(IWindowEventSink* sink) = 0;
         virtual void SetTitle(const char* title) = 0;
+        virtual void GetPosition(int& x, int& y) const = 0;
+        virtual void SetPosition(int x, int y) = 0;
+        virtual void SetSize(uint32_t width, uint32_t height) = 0;
     };
 }

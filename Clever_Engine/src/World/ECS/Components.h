@@ -11,6 +11,9 @@
 #include "World/Assets/Material.h"
 #include "World/Assets/Mesh.h"
 #include "World/Assets/Texture.h"
+#include "World/Assets/ShaderBinding.h"
+#include "World/Assets/StorageBufferComponent.h"
+#include <vector>
 
 
 class Material;
@@ -75,6 +78,37 @@ struct ShaderComponent
 struct TextureComponent
 {
     std::shared_ptr<Texture> texture;
+};
+
+// Flexible per-entity shader data. Declare buffer and texture bindings by their
+// GLSL name; the renderer resolves them against the shader's reflection at draw time.
+// Standard data (mvp, model matrix) is always provided automatically.
+// Set instanceCount > 1 to use instanced rendering via DrawIndexed instanceCount.
+struct ShaderDataComponent
+{
+    std::vector<BufferBinding>  buffers;
+    std::vector<TextureBinding> textures;
+    uint32_t                    instanceCount = 1;
+
+    ShaderDataComponent& BindBuffer(const std::string& name, GraphicsCore::IBuffer* buffer,
+                                    size_t offset = 0, size_t range = 0)
+    {
+        buffers.push_back({ name, buffer, offset, range });
+        return *this;
+    }
+
+    ShaderDataComponent& BindTexture(const std::string& name, GraphicsCore::ITexture* texture,
+                                     GraphicsCore::ISampler* sampler = nullptr)
+    {
+        textures.push_back({ name, texture, sampler });
+        return *this;
+    }
+
+    ShaderDataComponent& SetInstanceCount(uint32_t count)
+    {
+        instanceCount = count;
+        return *this;
+    }
 };
 
 struct MaterialInstanceComponent

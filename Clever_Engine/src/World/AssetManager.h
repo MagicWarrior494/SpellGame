@@ -43,6 +43,8 @@ public:
 
     GraphicsCore::IRenderer* GetRenderer() const { return m_renderer; }
 
+    const std::filesystem::path& GetAssetRoot() const { return m_assetRoot; }
+
     void ReleaseAllGPUResources();
 
     template<typename T>

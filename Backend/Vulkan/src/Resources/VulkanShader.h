@@ -28,7 +28,7 @@ namespace GraphicsCore {
 
         void* GetNativeHandle() const override { return (void*)m_descriptorSetLayout; }
         VkDescriptorSetLayout GetDescriptorSetLayout() const { return m_descriptorSetLayout; }
-        const ResourceLayoutDesc& GetDesc() const { return m_desc; }
+        const ResourceLayoutDesc& GetDesc() const override { return m_desc; }
 
     private:
         ResourceLayoutDesc m_desc;

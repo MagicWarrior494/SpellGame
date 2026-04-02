@@ -153,6 +153,27 @@ namespace GraphicsCore {
             glfwSetWindowTitle(static_cast<GLFWwindow*>(m_platformHandle), title);
     }
 
+    void VulkanWindow::GetPosition(int& x, int& y) const {
+        if (m_platformHandle)
+            glfwGetWindowPos(static_cast<GLFWwindow*>(m_platformHandle), &x, &y);
+        else
+            x = y = 0;
+    }
+
+    void VulkanWindow::SetPosition(int x, int y) {
+        if (m_platformHandle)
+            glfwSetWindowPos(static_cast<GLFWwindow*>(m_platformHandle), x, y);
+    }
+
+    void VulkanWindow::SetSize(uint32_t width, uint32_t height) {
+        if (!m_platformHandle) return;
+        glfwSetWindowSize(static_cast<GLFWwindow*>(m_platformHandle),
+                          static_cast<int>(width), static_cast<int>(height));
+        m_desc.width  = width;
+        m_desc.height = height;
+        m_framebufferResized = true;
+    }
+
     void VulkanWindow::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
         auto* w = reinterpret_cast<VulkanWindow*>(glfwGetWindowUserPointer(window));
         if (w->m_eventSink) w->m_eventSink->OnKey(key, scancode, action, mods);

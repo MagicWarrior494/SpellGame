@@ -134,10 +134,15 @@ public:
 	std::unordered_map<EntityID, ComponentType>& GetAllComponents()
 	{
 		std::type_index type = std::type_index(typeid(ComponentType));
-		auto* storage = static_cast<ComponentStorage<ComponentType>*>(
-			componentStorages.at(type).get()
-		);
 
+		auto it = componentStorages.find(type);
+		if (it == componentStorages.end())
+		{
+			RegisterComponentType<ComponentType>();
+			it = componentStorages.find(type);
+		}
+
+		auto* storage = static_cast<ComponentStorage<ComponentType>*>(it->second.get());
 		return storage->GetAll();
 	}
 private:

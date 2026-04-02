@@ -51,6 +51,7 @@ namespace GraphicsCore
     {
     public:
         virtual ~IResourceLayout() = default;
+        virtual const ResourceLayoutDesc& GetDesc() const = 0;
         virtual void* GetNativeHandle() const = 0;
     };
 

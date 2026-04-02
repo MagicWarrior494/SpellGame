@@ -209,27 +209,70 @@ namespace GraphicsCore {
         BlitTexture(src, dst, 0, 0);
     }
 
+    void VulkanCommandList::ClearTexture(ITexture* texture, float r, float g, float b, float a) {
+        VulkanTexture* vkTex = static_cast<VulkanTexture*>(texture);
+
+        VkClearColorValue clearColor{};
+        clearColor.float32[0] = r;
+        clearColor.float32[1] = g;
+        clearColor.float32[2] = b;
+        clearColor.float32[3] = a;
+
+        VkImageSubresourceRange range{};
+        range.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+        range.baseMipLevel   = 0;
+        range.levelCount     = 1;
+        range.baseArrayLayer = 0;
+        range.layerCount     = 1;
+
+        vkCmdClearColorImage(m_commandBuffer,
+            vkTex->GetImage(),
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            &clearColor,
+            1, &range);
+    }
+
     void VulkanCommandList::BlitTexture(ITexture* src, ITexture* dst, int32_t dstX, int32_t dstY) {
         VulkanTexture* vkSrc = static_cast<VulkanTexture*>(src);
         VulkanTexture* vkDst = static_cast<VulkanTexture*>(dst);
 
         int32_t srcW = (int32_t)vkSrc->GetDesc().width;
         int32_t srcH = (int32_t)vkSrc->GetDesc().height;
+        int32_t dstW = (int32_t)vkDst->GetDesc().width;
+        int32_t dstH = (int32_t)vkDst->GetDesc().height;
+
+        // Clip destination rect to the backbuffer bounds.
+        // If the layer's render target is larger than the window (e.g. after the
+        // window was shrunk), only blit the visible portion to avoid a validation error.
+        int32_t dstX1 = std::max<int32_t>(dstX, 0);
+        int32_t dstY1 = std::max<int32_t>(dstY, 0);
+        int32_t dstX2 = std::min<int32_t>(dstX + srcW, dstW);
+        int32_t dstY2 = std::min<int32_t>(dstY + srcH, dstH);
+
+        // Nothing visible — skip.
+        if (dstX2 <= dstX1 || dstY2 <= dstY1)
+            return;
+
+        // Derive the matching source crop so the blit is 1:1 (no scaling).
+        int32_t srcX1 = dstX1 - dstX;
+        int32_t srcY1 = dstY1 - dstY;
+        int32_t srcX2 = srcX1 + (dstX2 - dstX1);
+        int32_t srcY2 = srcY1 + (dstY2 - dstY1);
 
         VkImageBlit region = {};
         region.srcSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
         region.srcSubresource.mipLevel       = 0;
         region.srcSubresource.baseArrayLayer = 0;
         region.srcSubresource.layerCount     = 1;
-        region.srcOffsets[0]                 = { 0, 0, 0 };
-        region.srcOffsets[1]                 = { srcW, srcH, 1 };
+        region.srcOffsets[0]                 = { srcX1, srcY1, 0 };
+        region.srcOffsets[1]                 = { srcX2, srcY2, 1 };
 
         region.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
         region.dstSubresource.mipLevel       = 0;
         region.dstSubresource.baseArrayLayer = 0;
         region.dstSubresource.layerCount     = 1;
-        region.dstOffsets[0]                 = { dstX, dstY, 0 };
-        region.dstOffsets[1]                 = { dstX + srcW, dstY + srcH, 1 };
+        region.dstOffsets[0]                 = { dstX1, dstY1, 0 };
+        region.dstOffsets[1]                 = { dstX2, dstY2, 1 };
 
         vkCmdBlitImage(m_commandBuffer,
             vkSrc->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
@@ -366,17 +409,13 @@ namespace GraphicsCore {
                                m_currentPipelineLayout, setIndex, 1, &descriptorSet, 0, nullptr);
     }
 
-    void VulkanCommandList::PushConstants(IShader* shader, uint32_t offset, uint32_t size, const void* data) {
-        VulkanShader* vkShader = static_cast<VulkanShader*>(shader);
-        VkShaderStageFlags stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
-
-        switch (vkShader->GetDesc().stage) {
-        case ShaderStage::Vertex: stageFlags = VK_SHADER_STAGE_VERTEX_BIT; break;
-        case ShaderStage::Fragment: stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT; break;
-        case ShaderStage::Compute: stageFlags = VK_SHADER_STAGE_COMPUTE_BIT; break;
-        default: break;
-        }
-
-        vkCmdPushConstants(m_commandBuffer, m_currentPipelineLayout, stageFlags, offset, size, data);
+    void VulkanCommandList::PushConstants(IShader* /*shader*/, uint32_t offset, uint32_t size, const void* data) {
+        // The stage flags passed to vkCmdPushConstants must cover ALL stages declared in every
+        // overlapping push constant range in the bound pipeline layout. Since the layout always
+        // declares a single range for VERTEX | FRAGMENT, we always use that full mask regardless
+        // of which shader the caller associates the data with.
+        vkCmdPushConstants(m_commandBuffer, m_currentPipelineLayout,
+            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            offset, size, data);
     }
 }

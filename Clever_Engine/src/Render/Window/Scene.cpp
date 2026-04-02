@@ -5,6 +5,7 @@
 #include "World/Assets/Texture.h"
 #include "World/ECS/Components.h"
 #include <chrono>
+#include <map>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm.hpp>
@@ -235,18 +236,15 @@ void Scene::Render()
     if (iWindowCheck && !iWindowCheck->IsFrameReady())
         return;
 
-    auto& meshComponents     = m_registry->GetAllComponents<MeshComponent>();
-    auto& shaderComponents   = m_registry->GetAllComponents<ShaderComponent>();
-    auto& textureComponents  = m_registry->GetAllComponents<TextureComponent>();
+    auto& meshComponents   = m_registry->GetAllComponents<MeshComponent>();
+    auto& shaderComponents = m_registry->GetAllComponents<ShaderComponent>();
 
     m_commandList->Begin();
 
-    // Transition color target: undefined -> color attachment
     m_commandList->TextureBarrier(m_colorTarget,
         GraphicsCore::TextureUsage_ShaderResource,
         GraphicsCore::TextureUsage_RenderTarget);
 
-    // Transition depth target: undefined -> depth attachment
     m_commandList->TextureBarrier(m_depthTarget,
         GraphicsCore::TextureUsage_ShaderResource,
         GraphicsCore::TextureUsage_DepthStencil);
@@ -284,7 +282,7 @@ void Scene::Render()
     scissor.height = m_desc.height;
     m_commandList->SetScissor(scissor);
 
-    // Build view/projection from CameraComponent if present, otherwise use defaults
+    // Build view/projection from CameraComponent
     glm::mat4 view = glm::lookAt(
         glm::vec3(0.0f, 3.0f, 8.0f),
         glm::vec3(0.0f, 1.0f, 0.0f),
@@ -307,12 +305,18 @@ void Scene::Render()
     }
 
     glm::mat4 proj = glm::perspective(glm::radians(fov), aspect, nearP, farP);
-    proj[1][1] *= -1.0f; // Vulkan Y flip
+    proj[1][1] *= -1.0f;
 
-    auto& transformComponents = m_registry->GetAllComponents<Transform>();
+    auto& transformComponents  = m_registry->GetAllComponents<Transform>();
 
-    // Draw each entity that has both a mesh and a shader
-    int drawCount = 0;
+    // Optional per-entity user data
+    auto& shaderDataMap   = m_registry->GetAllComponents<ShaderDataComponent>();
+    auto& ssboComponents  = m_registry->GetAllComponents<StorageBufferComponent>();
+
+    // Upload any dirty SSBOs before the draw loop
+    for (auto& [entity, ssbo] : ssboComponents)
+        ssbo.Upload(*m_renderer);
+
     for (auto& [entity, meshComp] : meshComponents)
     {
         auto shaderIt = shaderComponents.find(entity);
@@ -324,7 +328,6 @@ void Scene::Render()
 
         if (!shader || !shader->pipeline || !mesh)
             continue;
-
         if (!mesh->vertexBuffer || !mesh->indexBuffer)
             continue;
 
@@ -346,31 +349,105 @@ void Scene::Render()
         m_commandList->BindPipeline(shader->pipeline);
         m_commandList->PushConstants(shader->vertexShader, 0, sizeof(VertexPushConstants), &vpc);
 
-        // Bind texture for this entity if present
-        auto textureIt = textureComponents.find(entity);
-        if (textureIt != textureComponents.end()
-            && textureIt->second.texture
-            && textureIt->second.texture->texture
-            && shader->textureLayout
-            && shader->sampler)
+        // ---------------------------------------------------------------
+        // Bind descriptor sets driven by ShaderDataComponent.
+        // For each descriptor set in the shader, collect all bindings that
+        // the user provided and create a resource set for that set index.
+        // ---------------------------------------------------------------
+        if (!shader->layouts.empty())
         {
-            GraphicsCore::IResourceSet* resourceSet =
-                m_renderer->CreateResourceSet(shader->textureLayout);
-            resourceSet->UpdateTexture(0, textureIt->second.texture->texture, shader->sampler);
-            m_commandList->BindResourceSet(0, resourceSet);
-            m_renderer->DestroyResourceSet(resourceSet);
+            auto dataIt = shaderDataMap.find(entity);
+            if (dataIt != shaderDataMap.end())
+            {
+                const ShaderDataComponent& data = dataIt->second;
+
+                // Group user-provided bindings by set index using reflection lookup.
+                // set index ? list of (binding index, buffer* or texture*)
+                std::map<uint32_t, std::vector<const BufferBinding*>>  buffersBySet;
+                std::map<uint32_t, std::vector<const TextureBinding*>> texturesBySet;
+
+                for (const BufferBinding& bb : data.buffers)
+                {
+                    auto it = shader->bindingsByName.find(bb.name);
+                    if (it != shader->bindingsByName.end())
+                        buffersBySet[it->second.set].push_back(&bb);
+                }
+
+                // Merge SSBO bindings from StorageBufferComponent (stored temporarily)
+                std::vector<BufferBinding> ssboBindings;
+                auto ssboIt = ssboComponents.find(entity);
+                if (ssboIt != ssboComponents.end())
+                    ssboBindings = ssboIt->second.GetBindings();
+                for (const BufferBinding& bb : ssboBindings)
+                {
+                    auto it = shader->bindingsByName.find(bb.name);
+                    if (it != shader->bindingsByName.end())
+                        buffersBySet[it->second.set].push_back(&bb);
+                }
+                for (const TextureBinding& tb : data.textures)
+                {
+                    auto it = shader->bindingsByName.find(tb.name);
+                    if (it != shader->bindingsByName.end())
+                        texturesBySet[it->second.set].push_back(&tb);
+                }
+
+                // Create and bind one resource set per set index that has a layout.
+                // Only create a set if every binding slot declared in the layout has
+                // been provided by the user — an unwritten descriptor causes a validation error.
+                for (uint32_t setIdx = 0; setIdx < static_cast<uint32_t>(shader->layouts.size()); ++setIdx)
+                {
+                    GraphicsCore::IResourceLayout* layout = shader->layouts[setIdx];
+                    if (!layout)
+                        continue;
+
+                    // Count how many bindings the user supplied for this set
+                    size_t userSupplied = buffersBySet[setIdx].size() + texturesBySet[setIdx].size();
+                    size_t layoutNeeds  = layout->GetDesc().bindings.size();
+                    if (userSupplied < layoutNeeds)
+                        continue;
+
+                    GraphicsCore::IResourceSet* resourceSet = m_renderer->CreateResourceSet(layout);
+
+                    for (const BufferBinding* bb : buffersBySet[setIdx])
+                    {
+                        auto reflIt = shader->bindingsByName.find(bb->name);
+                        if (reflIt == shader->bindingsByName.end()) continue;
+
+                        const ShaderResource& res = reflIt->second;
+                        resourceSet->UpdateBuffer(res.binding, bb->buffer, bb->offset, bb->range);
+                    }
+
+                    for (const TextureBinding* tb : texturesBySet[setIdx])
+                    {
+                        auto reflIt = shader->bindingsByName.find(tb->name);
+                        if (reflIt == shader->bindingsByName.end()) continue;
+
+                        const ShaderResource& res = reflIt->second;
+                        GraphicsCore::ISampler* sampler = tb->sampler ? tb->sampler : shader->sampler;
+                        resourceSet->UpdateTexture(res.binding, tb->texture, sampler);
+                    }
+
+                    m_commandList->BindResourceSet(setIdx, resourceSet);
+                    m_renderer->DestroyResourceSet(resourceSet);
+                }
+            }
+        }
+
+        uint32_t instanceCount = 1;
+        {
+            auto dataIt = shaderDataMap.find(entity);
+            if (dataIt != shaderDataMap.end())
+                instanceCount = dataIt->second.instanceCount;
         }
 
         m_commandList->BindVertexBuffer(0, mesh->vertexBuffer, 0);
         m_commandList->BindIndexBuffer(mesh->indexBuffer, 0, false);
         m_commandList->DrawIndexed(
-            static_cast<uint32_t>(mesh->indices.size()), 1, 0, 0, 0);
-        ++drawCount;
+            static_cast<uint32_t>(mesh->indices.size()), instanceCount, 0, 0, 0);
     }
 
     m_commandList->EndRendering();
 
-    // Transition color target back: color attachment -> transfer src (window will blit it)
     m_commandList->TextureBarrier(m_colorTarget,
         GraphicsCore::TextureUsage_RenderTarget,
         GraphicsCore::TextureUsage_TransferSrc);

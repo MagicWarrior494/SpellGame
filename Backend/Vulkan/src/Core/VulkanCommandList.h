@@ -36,6 +36,7 @@ namespace GraphicsCore {
         void TextureBarrier(ITexture* texture, TextureUsageFlags oldUsage, TextureUsageFlags newUsage) override;
         void BlitTexture(ITexture* src, ITexture* dst) override;
         void BlitTexture(ITexture* src, ITexture* dst, int32_t dstX, int32_t dstY) override;
+        void ClearTexture(ITexture* texture, float r, float g, float b, float a) override;
 
         void BindResourceSet(uint32_t setIndex, IResourceSet* resourceSet) override;
         void PushConstants(IShader* shader, uint32_t offset, uint32_t size, const void* data) override;

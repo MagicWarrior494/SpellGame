@@ -104,7 +104,7 @@ xcopy /Q /Y "$(SolutionDir)bin\Release-windows-x86_64\Vulkan\Vulkan.dll"        
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
-    <ClCompile Include="src\WorldEditor.cpp" />
+    <ClCompile Include="src\Example.cpp" />
     <ClCompile Include="src\WorldViewer.cpp" />
   </ItemGroup>
   <ItemGroup>

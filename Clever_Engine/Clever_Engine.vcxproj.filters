@@ -28,6 +28,9 @@
     <Filter Include="Render\Window\Scene\Object">
       <UniqueIdentifier>{8F64E6F4-7B74-92C5-E42D-F7E3D05C815E}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{83755900-6F01-880B-D8AF-880BC45A880B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="World">
       <UniqueIdentifier>{4D25640E-B939-8CBF-82BB-2F1FEE8E88F0}</UniqueIdentifier>
     </Filter>
@@ -65,6 +68,9 @@
     <ClInclude Include="src\Render\ShaderProviders\GlobalProviders.h">
       <Filter>Render\ShaderProviders</Filter>
     </ClInclude>
+    <ClInclude Include="src\Render\Window\ISceneLayer.h">
+      <Filter>Render\Window</Filter>
+    </ClInclude>
     <ClInclude Include="src\Render\Window\Scene.h">
       <Filter>Render\Window</Filter>
     </ClInclude>
@@ -82,6 +88,12 @@
     </ClInclude>
     <ClInclude Include="src\Render\Window\WindowControls.h">
       <Filter>Render\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UI\UIScene.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UI\UIWidget.h">
+      <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="src\World\AssetLoaders\Meshloader.h">
       <Filter>World\AssetLoaders</Filter>
@@ -113,7 +125,13 @@
     <ClInclude Include="src\World\Assets\Shader.h">
       <Filter>World\Assets</Filter>
     </ClInclude>
+    <ClInclude Include="src\World\Assets\ShaderBinding.h">
+      <Filter>World\Assets</Filter>
+    </ClInclude>
     <ClInclude Include="src\World\Assets\ShaderReflected.h">
+      <Filter>World\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\Assets\StorageBufferComponent.h">
       <Filter>World\Assets</Filter>
     </ClInclude>
     <ClInclude Include="src\World\Assets\Texture.h">
@@ -145,6 +163,9 @@
     </ClCompile>
     <ClCompile Include="src\Render\Window\Window.cpp">
       <Filter>Render\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UI\UIScene.cpp">
+      <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="src\World\AssetLoaders\Meshloader.cpp">
       <Filter>World\AssetLoaders</Filter>

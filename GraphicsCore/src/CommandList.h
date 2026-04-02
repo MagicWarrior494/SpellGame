@@ -91,6 +91,7 @@ namespace GraphicsCore
         virtual void TextureBarrier(ITexture* texture, TextureUsageFlags oldUsage, TextureUsageFlags newUsage) = 0;
         virtual void BlitTexture(ITexture* src, ITexture* dst) = 0;
         virtual void BlitTexture(ITexture* src, ITexture* dst, int32_t dstX, int32_t dstY) = 0;
+        virtual void ClearTexture(ITexture* texture, float r, float g, float b, float a) = 0;
 
         virtual void BindResourceSet(uint32_t setIndex, IResourceSet* resourceSet) = 0;
         virtual void PushConstants(IShader* shader, uint32_t offset, uint32_t size, const void* data) = 0;

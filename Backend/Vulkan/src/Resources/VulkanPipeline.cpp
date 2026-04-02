@@ -98,7 +98,7 @@ namespace GraphicsCore {
         }
 
         VkPushConstantRange pushConstantRange = {};
-        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pushConstantRange.offset     = 0;
         pushConstantRange.size       = 128; // enough for two mat4s
 
@@ -179,7 +179,7 @@ namespace GraphicsCore {
         // Rasterizer
         VkPipelineRasterizationStateCreateInfo rasterizer = {};
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        rasterizer.depthClampEnable = m_desc.rasterizerState.depthClipEnable ? VK_FALSE : VK_TRUE;
+        rasterizer.depthClampEnable = VK_FALSE;
         rasterizer.rasterizerDiscardEnable = VK_FALSE;
         rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
         rasterizer.cullMode = GetVulkanCullMode(m_desc.rasterizerState.cullMode);

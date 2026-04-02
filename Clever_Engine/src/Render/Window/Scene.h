@@ -13,6 +13,7 @@
 #include "World/ECS/Registry.h"
 #include "Scene/RenderStage.h"
 #include "Render/Window/WindowControls.h"
+#include "Render/Window/ISceneLayer.h"
 #include "World/AssetManager.h"
 
 #ifndef CLEVER_ENGINE_API
@@ -35,7 +36,7 @@ struct CLEVER_ENGINE_API SceneDesc
 class Window;
 
 
-class CLEVER_ENGINE_API Scene : public IInputLayer
+class CLEVER_ENGINE_API Scene : public IInputLayer, public ISceneLayer
 {
 public:
     Scene(GraphicsCore::IRenderer* renderer,
@@ -45,22 +46,24 @@ public:
 
     ~Scene();
 
-    void Update();
-    void Render();
-    void Resize(uint32_t width, uint32_t height);
+    void Update()   override;
+    void Render()   override;
+    void Resize(uint32_t width, uint32_t height) override;
     void AttachToWindow(Window& window);
 
-    GraphicsCore::ITexture* GetColorTarget() const { return m_colorTarget; }
+    GraphicsCore::ITexture* GetColorTarget() const override { return m_colorTarget; }
     GraphicsCore::ITexture* GetDepthTarget() const { return m_depthTarget; }
 
-    const SceneDesc& GetDesc()     const { return m_desc; }
+    const SceneDesc& GetDesc()     const override { return m_desc; }
     Registry& GetRegistry() { return *m_registry; }
     EventController& GetEventController() { return *m_eventController; }
 
     void OnInput(InputEvent& event) override;
     int  GetZIndex() const override { return m_desc.zIndex; }
 
-    void ResetInputState();
+    void ResetInputState() override;
+    void SetPosition(int x, int y) override { m_desc.posX = x; m_desc.posY = y; }
+    void SetWindow(Window* window)  override { m_window = window; }
 
 private:
     SceneDesc m_desc;

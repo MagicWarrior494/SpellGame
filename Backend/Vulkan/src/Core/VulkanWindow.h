@@ -35,6 +35,9 @@ namespace GraphicsCore {
         void ResetResizeFlag() { m_framebufferResized = false; }
         bool IsFrameReady() const override { return m_frameReady; }
         void SetTitle(const char* title) override;
+        void GetPosition(int& x, int& y) const override;
+        void SetPosition(int x, int y) override;
+        void SetSize(uint32_t width, uint32_t height) override;
 
     private:
         void CreatePlatformWindow();
